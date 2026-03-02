@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 type Formation = {
@@ -59,7 +59,7 @@ export default function AdminPage() {
     checkAdmin();
   }, []);
 
-  async function adminLogin(e: React.FormEvent) {
+ async function adminLogin(e: FormEvent) {
     e.preventDefault();
     const { error } = await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPassword });
     if (error) {
