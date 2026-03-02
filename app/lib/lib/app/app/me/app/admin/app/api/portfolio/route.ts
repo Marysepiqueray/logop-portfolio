@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabaseServer";
+import React from "react";
 import { pdf, Document, Page, Text, View, Image } from "@react-pdf/renderer";
 
 export const runtime = "nodejs";
+
+const e = React.createElement;
 
 export async function GET(request: Request) {
   const s = supabaseServer();
@@ -34,53 +37,76 @@ export async function GET(request: Request) {
   const origin = new URL(request.url).origin;
   const logoUrl = `${origin}/logo.png`;
 
-  const PortfolioDoc = (
-    <Document>
-      <Page size="A4" style={{ padding: 32, fontSize: 11 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Image src={logoUrl} style={{ width: 140 }} />
-          <View>
-            <Text style={{ fontSize: 16, marginBottom: 4 }}>Portfolio de formations</Text>
-            <Text>Logop’Aide et vous</Text>
-          </View>
-        </View>
-
-        <View style={{ marginTop: 18, padding: 12, borderWidth: 1, borderColor: "#ddd" }}>
-          <Text><Text style={{ fontWeight: 700 }}>Membre :</Text> {membre.nom}</Text>
-          <Text><Text style={{ fontWeight: 700 }}>Email :</Text> {membre.email}</Text>
-          <Text><Text style={{ fontWeight: 700 }}>Date :</Text> {new Date().toLocaleDateString("fr-BE")}</Text>
-          <Text><Text style={{ fontWeight: 700 }}>Formations validées :</Text> {validations?.length ?? 0}</Text>
-          <Text><Text style={{ fontWeight: 700 }}>Total heures :</Text> {totalHeures}</Text>
-        </View>
-
-        <Text style={{ marginTop: 18, fontSize: 13, fontWeight: 700 }}>Détail des formations</Text>
-
-        <View style={{ marginTop: 8, borderWidth: 1, borderColor: "#ddd" }}>
-          <View style={{ flexDirection: "row", padding: 8, borderBottomWidth: 1, borderColor: "#ddd", fontWeight: 700 }}>
-            <Text style={{ width: "40%" }}>Formation</Text>
-            <Text style={{ width: "18%" }}>Date</Text>
-            <Text style={{ width: "12%" }}>Durée</Text>
-            <Text style={{ width: "30%" }}>Compétences</Text>
-          </View>
-
-          {(validations ?? []).map((v: any, idx: number) => (
-            <View key={idx} style={{ flexDirection: "row", padding: 8, borderBottomWidth: 1, borderColor: "#eee" }}>
-              <Text style={{ width: "40%" }}>{v.formation?.titre ?? ""}</Text>
-              <Text style={{ width: "18%" }}>{v.date_validation}</Text>
-              <Text style={{ width: "12%" }}>{Number(v.formation?.duree_heures ?? 0)}h</Text>
-              <Text style={{ width: "30%" }}>{v.formation?.competences ?? ""}</Text>
-            </View>
-          ))}
-        </View>
-
-        <Text style={{ position: "absolute", bottom: 24, left: 32, right: 32, fontSize: 9, color: "#666" }}>
-          Document interne – Logop’Aide et vous
-        </Text>
-      </Page>
-    </Document>
+  const header = e(
+    View,
+    { style: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" } },
+    e(Image, { src: logoUrl, style: { width: 140 } }),
+    e(
+      View,
+      null,
+      e(Text, { style: { fontSize: 16, marginBottom: 4 } }, "Portfolio de formations"),
+      e(Text, null, "Logop’Aide et vous")
+    )
   );
 
-  const buffer = await pdf(PortfolioDoc).toBuffer();
+  const infoBox = e(
+    View,
+    { style: { marginTop: 18, padding: 12, borderWidth: 1, borderColor: "#ddd" } },
+    e(Text, null, e(Text, { style: { fontWeight: 700 } }, "Membre : "), membre.nom),
+    e(Text, null, e(Text, { style: { fontWeight: 700 } }, "Email : "), membre.email),
+    e(Text, null, e(Text, { style: { fontWeight: 700 } }, "Date : "), new Date().toLocaleDateString("fr-BE")),
+    e(Text, null, e(Text, { style: { fontWeight: 700 } }, "Formations validées : "), String(validations?.length ?? 0)),
+    e(Text, null, e(Text, { style: { fontWeight: 700 } }, "Total heures : "), String(totalHeures))
+  );
+
+  const tableHeader = e(
+    View,
+    { style: { flexDirection: "row", padding: 8, borderBottomWidth: 1, borderColor: "#ddd" } },
+    e(Text, { style: { width: "40%", fontWeight: 700 } }, "Formation"),
+    e(Text, { style: { width: "18%", fontWeight: 700 } }, "Date"),
+    e(Text, { style: { width: "12%", fontWeight: 700 } }, "Durée"),
+    e(Text, { style: { width: "30%", fontWeight: 700 } }, "Compétences")
+  );
+
+  const tableRows = (validations ?? []).map((v: any, idx: number) =>
+    e(
+      View,
+      { key: idx, style: { flexDirection: "row", padding: 8, borderBottomWidth: 1, borderColor: "#eee" } },
+      e(Text, { style: { width: "40%" } }, v.formation?.titre ?? ""),
+      e(Text, { style: { width: "18%" } }, String(v.date_validation ?? "")),
+      e(Text, { style: { width: "12%" } }, `${Number(v.formation?.duree_heures ?? 0)}h`),
+      e(Text, { style: { width: "30%" } }, v.formation?.competences ?? "")
+    )
+  );
+
+  const table = e(
+    View,
+    { style: { marginTop: 8, borderWidth: 1, borderColor: "#ddd" } },
+    tableHeader,
+    ...tableRows
+  );
+
+  const footer = e(
+    Text,
+    { style: { position: "absolute", bottom: 24, left: 32, right: 32, fontSize: 9, color: "#666" } },
+    "Document interne – Logop’Aide et vous"
+  );
+
+  const doc = e(
+    Document,
+    null,
+    e(
+      Page,
+      { size: "A4", style: { padding: 32, fontSize: 11 } },
+      header,
+      infoBox,
+      e(Text, { style: { marginTop: 18, fontSize: 13, fontWeight: 700 } }, "Détail des formations"),
+      table,
+      footer
+    )
+  );
+
+  const buffer = await pdf(doc).toBuffer();
 
   return new NextResponse(buffer, {
     headers: {
