@@ -1,8 +1,10 @@
+import type { ReactNode } from "react";
+
 export const metadata = {
   title: "Portfolio – Logop’Aide et vous",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fr">
       <body style={{ fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial" }}>
