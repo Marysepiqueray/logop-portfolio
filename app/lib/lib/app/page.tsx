@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function HomePage() {
@@ -12,7 +12,7 @@ export default function HomePage() {
     supabase.auth.getUser().then(({ data }) => setSessionEmail(data.user?.email ?? null));
   }, []);
 
-  async function sendMagicLink(e: React.FormEvent) {
+  async function sendMagicLink(e: FormEvent) {
     e.preventDefault();
     setSent(false);
 
