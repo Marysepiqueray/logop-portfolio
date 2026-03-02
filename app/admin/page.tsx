@@ -62,15 +62,22 @@ export default function AdminPage() {
     checkAdmin();
   }, []);
 
-  async function adminLogin(e: FormEvent) {
-    e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email: adminEmail, password: adminPassword });
-    if (error) {
-      alert(error.message);
-      return;
-    }
-    await checkAdmin();
+async function adminLogin(e: FormEvent) {
+  e.preventDefault();
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email: adminEmail,
+    password: adminPassword,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
   }
+
+  // Important : force la page à relire la session Supabase
+  window.location.href = "/admin";
+}
 
   async function logout() {
     await supabase.auth.signOut();
