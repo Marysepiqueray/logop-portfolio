@@ -34,7 +34,7 @@ export default function HomePage() {
     setSent(false);
   }
 
-   return (
+  return (
     <main className="card">
       <h1 className="h1">Connexion</h1>
 
@@ -56,11 +56,18 @@ export default function HomePage() {
             </button>
           </form>
 
-          {sent && <p className="small" style={{ marginTop: 12 }}>Lien envoyé ✅ Vérifiez votre boîte mail.</p>}
+          {sent && (
+            <p className="small" style={{ marginTop: 12 }}>
+              Lien envoyé ✅ Vérifiez votre boîte mail.
+            </p>
+          )}
 
           <hr className="hr" />
           <p className="p">
-            Admin : <a href="/admin"><b>accéder à l’espace admin</b></a>
+            Admin :{" "}
+            <a href="/admin">
+              <b>accéder à l’espace admin</b>
+            </a>
           </p>
         </>
       ) : (
@@ -69,11 +76,18 @@ export default function HomePage() {
             Connecté en tant que : <b>{sessionEmail}</b>
           </p>
           <div className="row">
-            <a className="button secondary" href="/me">Mon espace</a>
-            <a className="button secondary" href="/admin">Espace admin</a>
-            <button className="button" onClick={logout}>Déconnexion</button>
+            <a className="button secondary" href="/me">
+              Mon espace
+            </a>
+            <a className="button secondary" href="/admin">
+              Espace admin
+            </a>
+            <button className="button" onClick={logout}>
+              Déconnexion
+            </button>
           </div>
         </>
       )}
     </main>
   );
+}
