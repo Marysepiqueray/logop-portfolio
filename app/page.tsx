@@ -34,49 +34,46 @@ export default function HomePage() {
     setSent(false);
   }
 
-  return (
-    <main>
-      <h1>Portfolio – Logop’Aide et vous</h1>
+   return (
+    <main className="card">
+      <h1 className="h1">Connexion</h1>
 
       {!sessionEmail ? (
         <>
-          <p>Connexion membre via lien magique (email).</p>
+          <p className="p">Connexion membre via lien magique (email).</p>
 
-          <form onSubmit={sendMagicLink} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <form onSubmit={sendMagicLink} className="row">
             <input
+              className="input"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Votre email"
               type="email"
               required
-              style={{ padding: 10, minWidth: 280 }}
             />
-            <button type="submit" style={{ padding: "10px 14px" }}>
+            <button className="button" type="submit">
               Envoyer le lien
             </button>
           </form>
 
-          {sent && <p style={{ marginTop: 12 }}>Lien envoyé ✅ Vérifiez votre boîte mail.</p>}
+          {sent && <p className="small" style={{ marginTop: 12 }}>Lien envoyé ✅ Vérifiez votre boîte mail.</p>}
 
-          <hr style={{ margin: "24px 0" }} />
-          <p>
-            Admin : <a href="/admin">accéder à l’espace admin</a>
+          <hr className="hr" />
+          <p className="p">
+            Admin : <a href="/admin"><b>accéder à l’espace admin</b></a>
           </p>
         </>
       ) : (
         <>
-          <p>
+          <p className="p">
             Connecté en tant que : <b>{sessionEmail}</b>
           </p>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <a href="/me">Accéder à mon espace</a>
-            <a href="/admin">Espace admin</a>
-            <button onClick={logout} style={{ padding: "6px 10px" }}>
-              Déconnexion
-            </button>
+          <div className="row">
+            <a className="button secondary" href="/me">Mon espace</a>
+            <a className="button secondary" href="/admin">Espace admin</a>
+            <button className="button" onClick={logout}>Déconnexion</button>
           </div>
         </>
       )}
     </main>
   );
-}
