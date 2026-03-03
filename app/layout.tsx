@@ -10,16 +10,37 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="fr">
       <body>
         <div className="container">
-          <div className="topbar">
-            <div className="brand">
-              <img src="/logo.png" alt="Logo" />
-              <div>
-                <div className="brand-title">Portfolio</div>
-                <div className="brand-sub">Logop’Aide et vous</div>
+          <header className="header">
+            <div className="header-row">
+              <div className="brand">
+                <img src="/logo.png" alt="Logo Logop’Aide et vous" />
               </div>
+
+              <div style={{ flex: 1 }}>
+                <div className="brand-title">
+                  Logop’<span className="red">Aide</span> <span style={{ fontStyle: "italic", color: "#9CA3AF" }}>et vous</span>
+                </div>
+                <div className="brand-sub">Espace portfolio formations</div>
+              </div>
+
+              <div className="badge">Espace privé</div>
             </div>
-            <span className="badge">Espace privé</span>
-          </div>
+
+            <nav className="navbar" aria-label="Menu">
+              <a href="/">Accueil</a>
+              <a href="/me">Mon portfolio</a>
+              <a href="/admin">Admin</a>
+            </nav>
+          </header>
+
+          {/* Optionnel : une grande bannière comme sur ton site */}
+          {/* Si tu veux une image, on l’ajoute dans /public/hero.jpg puis on dé-commente ci-dessous */}
+          {/*
+          <section className="hero">
+            <img src="/hero.jpg" alt="Bannière" />
+            <div className="hero-caption">Bienvenue !</div>
+          </section>
+          */}
 
           {children}
         </div>
