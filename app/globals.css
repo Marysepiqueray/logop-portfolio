@@ -150,3 +150,49 @@ body{
   color: var(--muted);
   font-size: 13px;
 }
+/* --- Médaille formation --- */
+
+.medal-card{
+  border:1px solid var(--border);
+  background:#fff;
+  border-radius:18px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  display:flex;
+  gap:16px;
+  align-items:flex-start;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.medal-card:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(0,0,0,0.14);
+}
+
+.medal-icon{
+  min-width:60px;
+  height:60px;
+  border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, #fff8c7, #fbbf24, #d97706);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  box-shadow: inset 0 4px 8px rgba(255,255,255,0.5),
+              inset 0 -4px 10px rgba(0,0,0,0.15),
+              0 4px 10px rgba(0,0,0,0.15);
+}
+
+.medal-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:4px;
+}
+
+.medal-certified{
+  font-size:12px;
+  font-weight:700;
+  color:#b45309;
+  margin-bottom:6px;
+}
