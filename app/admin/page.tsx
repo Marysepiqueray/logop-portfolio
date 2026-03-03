@@ -274,9 +274,7 @@ export default function AdminPage() {
           onChange={(e) => setSelectedMembreId(e.target.value)}
         >
           <option value="">Choisir un membre</option>
-          {membres
-            .filter((m) => m.role === "membre")
-            .map((m) => (
+         {membres.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.nom} — {m.email}
               </option>
