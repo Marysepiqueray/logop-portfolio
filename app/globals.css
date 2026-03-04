@@ -241,3 +241,22 @@ body{
   color: var(--muted);
   line-height: 1.35;
 }
+.badge-medal{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  margin:0 auto 12px auto;
+
+  background: radial-gradient(circle at 30% 30%, #fff8c7, #fbbf24, #d97706);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size:30px;
+
+  box-shadow:
+    inset 0 4px 8px rgba(255,255,255,0.6),
+    inset 0 -4px 10px rgba(0,0,0,0.2),
+    0 6px 12px rgba(0,0,0,0.2);
+}
