@@ -7,35 +7,41 @@ export async function GET() {
   const { data: userData } = await s.auth.getUser();
   const userId = userData.user?.id;
 
-  if (!userId) {
-    return new NextResponse("Not authenticated", { status: 401 });
-  }
+  if (!userId) return new NextResponse("Not authenticated", { status: 401 });
 
   const { data: membre } = await s
     .from("membres")
-    .select("id, nom")
+    .select("id, nom, email")
     .eq("auth_id", userId)
     .maybeSingle();
 
-  if (!membre) {
-    return new NextResponse("Membre introuvable", { status: 404 });
-  }
+  if (!membre) return new NextResponse("Membre introuvable", { status: 404 });
 
-  const { data: validations } = await s
+  const { data: vals, error } = await s
     .from("validations")
-    .select("date_validation, formation:formations(titre, duree_heures)")
-    .eq("membre_id", membre.id);
+    .select("date_validation, formation:formations(titre, duree_heures, niveau)")
+    .eq("membre_id", membre.id)
+    .order("date_validation", { ascending: false });
 
-  let contenu = `Portfolio de ${membre.nom}\n\n`;
+  if (error) return new NextResponse(error.message, { status: 500 });
 
-  validations?.forEach((v) => {
-    contenu += `• ${v.formation.titre} (${v.formation.duree_heures}h)\n`;
+  const lines: string[] = [];
+  lines.push(`Portfolio – ${membre.nom}`);
+  lines.push(`Email : ${membre.email}`);
+  lines.push("");
+  lines.push(`Formations validées : ${vals?.length ?? 0}`);
+  lines.push("");
+
+  (vals ?? []).forEach((v: any) => {
+    lines.push(`• ${v.formation?.titre ?? "Formation"} — ${v.formation?.duree_heures ?? 0}h — ${v.date_validation}`);
   });
+
+  const contenu = lines.join("\n");
 
   return new NextResponse(contenu, {
     headers: {
-      "Content-Type": "text/plain",
-      "Content-Disposition": "attachment; filename=portfolio.txt",
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Disposition": `attachment; filename="Portfolio-${membre.nom}.txt"`,
     },
   });
 }
