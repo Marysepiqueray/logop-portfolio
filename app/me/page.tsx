@@ -97,7 +97,7 @@ export default function MePage() {
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = `Portfolio-${membre?.nom ?? "membre"}.txt`;
+ a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
   a.click();
 
   window.URL.revokeObjectURL(url);
