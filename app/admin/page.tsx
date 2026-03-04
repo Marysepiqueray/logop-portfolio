@@ -3,24 +3,60 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+type Formation = {
+  id: string;
+  titre: string;
+  description: string;
+  competences: string;
+  duree_heures: number;
+  niveau: string;
+};
+
+type Membre = {
+  id: string;
+  nom: string;
+  email: string;
+  role: "admin" | "membre";
+};
+
 export default function AdminPage() {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
 
-  const [formations, setFormations] = useState<any[]>([]);
-  const [membres, setMembres] = useState<any[]>([]);
+  const [formations, setFormations] = useState<Formation[]>([]);
+  const [membres, setMembres] = useState<Membre[]>([]);
+
+  const [newFormation, setNewFormation] = useState<Partial<Formation>>({
+    duree_heures: 0,
+    niveau: "",
+  });
+
+  const [newMembre, setNewMembre] = useState<Partial<Membre>>({
+    nom: "",
+    email: "",
+  });
 
   const [selectedMembreId, setSelectedMembreId] = useState("");
   const [selectedFormationId, setSelectedFormationId] = useState("");
 
   async function refresh() {
-    const { data: f } = await supabase.from("formations").select("*");
-    const { data: m } = await supabase.from("membres").select("*");
+    const { data: f, error: fe } = await supabase
+      .from("formations")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    setFormations(f ?? []);
-    setMembres(m ?? []);
+    const { data: m, error: me } = await supabase
+      .from("membres")
+      .select("id, nom, email, role")
+      .order("created_at", { ascending: false });
+
+    if (fe) alert(fe.message);
+    if (me) alert(me.message);
+
+    setFormations((f ?? []) as any);
+    setMembres((m ?? []) as any);
   }
 
   async function checkAdmin() {
@@ -40,6 +76,7 @@ export default function AdminPage() {
 
     const ok = me?.role === "admin";
     setIsAdmin(ok);
+
     if (ok) await refresh();
   }
 
@@ -66,6 +103,45 @@ export default function AdminPage() {
   async function logout() {
     await supabase.auth.signOut();
     setIsAdmin(false);
+    window.location.href = "/";
+  }
+
+  async function createFormation() {
+    if (!newFormation.titre) return alert("Titre obligatoire.");
+
+    const { error } = await supabase.from("formations").insert([
+      {
+        titre: newFormation.titre ?? "",
+        description: newFormation.description ?? "",
+        competences: newFormation.competences ?? "",
+        duree_heures: Number(newFormation.duree_heures ?? 0),
+        niveau: newFormation.niveau ?? "",
+      },
+    ]);
+
+    if (error) return alert(error.message);
+
+    setNewFormation({ duree_heures: 0, niveau: "" });
+    await refresh();
+    alert("Formation créée ✅");
+  }
+
+  async function createMembre() {
+    if (!newMembre.email || !newMembre.nom) return alert("Nom et email obligatoires.");
+
+    const { error } = await supabase.from("membres").insert([
+      {
+        nom: newMembre.nom ?? "",
+        email: (newMembre.email ?? "").toLowerCase(),
+        role: "membre",
+      },
+    ]);
+
+    if (error) return alert(error.message);
+
+    setNewMembre({ nom: "", email: "" });
+    await refresh();
+    alert("Membre ajouté ✅");
   }
 
   async function validateFormation() {
@@ -78,18 +154,17 @@ export default function AdminPage() {
       .eq("auth_id", userId)
       .maybeSingle();
 
-    if (!adminRow) {
-      alert("Admin introuvable.");
-      return;
-    }
+    if (!adminRow) return alert("Admin introuvable.");
 
-    await supabase.from("validations").insert([
+    const { error } = await supabase.from("validations").insert([
       {
         membre_id: selectedMembreId,
         formation_id: selectedFormationId,
         valide_par: adminRow.id,
       },
     ]);
+
+    if (error) return alert(error.message);
 
     alert("Validation enregistrée ✅");
   }
@@ -99,10 +174,18 @@ export default function AdminPage() {
   if (!isAdmin) {
     return (
       <main className="card">
-        <h1 className="h1">Admin</h1>
-        <p className="p">Connexion administrateur</p>
+        <div className="row" style={{ justifyContent: "space-between" }}>
+          <h1 className="h1" style={{ marginBottom: 0 }}>
+            Admin
+          </h1>
+          <a className="button secondary" href="/">
+            Retour accueil
+          </a>
+        </div>
 
-        <form onSubmit={adminLogin} style={{ display: "grid", gap: 10 }}>
+        <p className="p">Connexion administrateur.</p>
+
+        <form onSubmit={adminLogin} style={{ display: "grid", gap: 10, maxWidth: 360 }}>
           <input
             className="input"
             type="email"
@@ -129,22 +212,87 @@ export default function AdminPage() {
 
   return (
     <main className="card">
-      <h1 className="h1">Espace admin</h1>
+      <div className="row" style={{ justifyContent: "space-between" }}>
+        <h1 className="h1" style={{ marginBottom: 0 }}>
+          Espace admin
+        </h1>
+        <div className="row">
+          <a className="button secondary" href="/">
+            Retour accueil
+          </a>
+          <button className="button" onClick={logout}>
+            Déconnexion
+          </button>
+        </div>
+      </div>
 
-      <button className="button secondary" onClick={logout}>
-        Déconnexion
-      </button>
+      <hr className="hr" />
+
+      <h2>Créer une formation</h2>
+      <div style={{ display: "grid", gap: 8, maxWidth: 620 }}>
+        <input
+          className="input"
+          placeholder="Titre"
+          value={newFormation.titre ?? ""}
+          onChange={(e) => setNewFormation((s) => ({ ...s, titre: e.target.value }))}
+        />
+        <input
+          className="input"
+          placeholder="Durée (heures)"
+          type="number"
+          value={String(newFormation.duree_heures ?? 0)}
+          onChange={(e) => setNewFormation((s) => ({ ...s, duree_heures: Number(e.target.value) }))}
+        />
+        <input
+          className="input"
+          placeholder="Niveau (optionnel)"
+          value={newFormation.niveau ?? ""}
+          onChange={(e) => setNewFormation((s) => ({ ...s, niveau: e.target.value }))}
+        />
+        <textarea
+          className="input"
+          placeholder="Description"
+          value={newFormation.description ?? ""}
+          onChange={(e) => setNewFormation((s) => ({ ...s, description: e.target.value }))}
+        />
+        <textarea
+          className="input"
+          placeholder="Compétences (séparées par virgules)"
+          value={newFormation.competences ?? ""}
+          onChange={(e) => setNewFormation((s) => ({ ...s, competences: e.target.value }))}
+        />
+        <button className="button" onClick={createFormation}>
+          Créer
+        </button>
+      </div>
+
+      <hr className="hr" />
+
+      <h2>Ajouter un membre</h2>
+      <div style={{ display: "grid", gap: 8, maxWidth: 420 }}>
+        <input
+          className="input"
+          placeholder="Nom"
+          value={newMembre.nom ?? ""}
+          onChange={(e) => setNewMembre((s) => ({ ...s, nom: e.target.value }))}
+        />
+        <input
+          className="input"
+          placeholder="Email"
+          type="email"
+          value={newMembre.email ?? ""}
+          onChange={(e) => setNewMembre((s) => ({ ...s, email: e.target.value }))}
+        />
+        <button className="button" onClick={createMembre}>
+          Ajouter
+        </button>
+      </div>
 
       <hr className="hr" />
 
       <h2>Valider une formation</h2>
-
       <div className="row">
-        <select
-          className="input"
-          value={selectedMembreId}
-          onChange={(e) => setSelectedMembreId(e.target.value)}
-        >
+        <select className="input" value={selectedMembreId} onChange={(e) => setSelectedMembreId(e.target.value)}>
           <option value="">Choisir un membre</option>
           {membres.map((m) => (
             <option key={m.id} value={m.id}>
@@ -166,11 +314,7 @@ export default function AdminPage() {
           ))}
         </select>
 
-        <button
-          className="button"
-          disabled={!selectedMembreId || !selectedFormationId}
-          onClick={validateFormation}
-        >
+        <button className="button" disabled={!selectedMembreId || !selectedFormationId} onClick={validateFormation}>
           Valider
         </button>
       </div>
