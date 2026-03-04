@@ -1,5 +1,9 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { Document, Page, Text, View, Image, StyleSheet, pdf } from "@react-pdf/renderer";
 import { Document, Page, Text, View, Image, StyleSheet, pdf } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
