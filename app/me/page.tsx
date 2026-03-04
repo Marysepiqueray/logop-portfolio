@@ -143,8 +143,23 @@ a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
         <p className="p">Aucune formation validée pour le moment.</p>
       ) : (
         <>
-          {validations.map((v, idx) => (
-            <div key={idx} className="medal-card">
+        <div className="badge-grid">
+  {validations.map((v, idx) => (
+    <div key={idx} className="badge-tile">
+      <div className="badge-medal">🏅</div>
+
+      <div>
+        <div className="badge-tile-title">{v.formation?.titre ?? "Formation"}</div>
+        <div className="badge-tile-meta">
+          Formation certifiée<br/>
+          Validée le {v.date_validation}<br/>
+          Durée : {Number(v.formation?.duree_heures ?? 0)}h
+          {v.formation?.niveau ? <> • Niveau : {v.formation.niveau}</> : null}
+        </div>
+      </div>
+    </div>
+  ))}
+</div>
               <div className="medal-icon">🏅</div>
 
               <div>
