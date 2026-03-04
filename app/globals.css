@@ -196,11 +196,13 @@ body{
   color:#b45309;
   margin-bottom:6px;
 }
-.badge-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 14px;
-  margin-top: 12px;
+.badge-tile{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px 14px;
+  box-shadow:0 10px 22px rgba(0,0,0,0.08);
+  transition: transform .15s ease, box-shadow .15s ease;
 }
 
 .badge-tile{
