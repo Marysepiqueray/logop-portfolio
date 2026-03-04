@@ -15,6 +15,20 @@ type ValidationRow = {
   };
 };
 
+function getBadgeIcon(titre: string = "", competences: string = "") {
+  const text = `${titre} ${competences}`.toLowerCase();
+
+  if (text.includes("neuro")) return "🧠";
+  if (text.includes("langage")) return "🗣️";
+  if (text.includes("articulation")) return "👄";
+  if (text.includes("oro")) return "👄";
+  if (text.includes("biling")) return "🌍";
+  if (text.includes("voix")) return "🎤";
+  if (text.includes("enfant") || text.includes("pédi") || text.includes("pedi")) return "👶";
+
+  return "🏅";
+}
+
 export default function MePage() {
   const [loading, setLoading] = useState(true);
   const [membre, setMembre] = useState<Membre | null>(null);
@@ -22,7 +36,7 @@ export default function MePage() {
 
   useEffect(() => {
     (async () => {
-      // 1) Vérifier session
+      // 1) Session
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
 
@@ -31,7 +45,7 @@ export default function MePage() {
         return;
       }
 
-      // 2) Trouver le membre lié à cet utilisateur
+      // 2) Membre lié
       const { data: m, error: mErr } = await supabase
         .from("membres")
         .select("id, nom, email, role")
@@ -47,7 +61,7 @@ export default function MePage() {
 
       setMembre(m);
 
-      // 3) Charger UNIQUEMENT les validations de ce membre
+      // 3) Validations du membre
       const { data: v, error: vErr } = await supabase
         .from("validations")
         .select("date_validation, formation:formations(titre, competences, duree_heures, niveau)")
@@ -69,39 +83,34 @@ export default function MePage() {
     return validations.reduce((sum, v) => sum + Number(v.formation?.duree_heures ?? 0), 0);
   }, [validations]);
 
- async function downloadPdf() {
+  async function downloadPdf() {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const token = sessionData.session?.access_token;
-
-  if (!token) {
-    alert("Vous n'êtes pas connecté(e).");
-    window.location.href = "/";
-    return;
-  }
-
-  const res = await fetch("/api/portfolio", {
-    headers: {
-      Authorization: `Bearer ${token}`
+    if (!token) {
+      alert("Vous n'êtes pas connecté(e).");
+      window.location.href = "/";
+      return;
     }
-  });
 
-  if (!res.ok) {
-    const txt = await res.text().catch(() => "");
-    alert("Impossible de générer le fichier.\n" + txt);
-    return;
+    const res = await fetch("/api/portfolio", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const txt = await res.text().catch(() => "");
+      alert("Impossible de générer le PDF.\n" + txt);
+      return;
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
-
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
-  a.click();
-
-  window.URL.revokeObjectURL(url);
-}
 
   if (loading) return <main className="card">Chargement…</main>;
 
@@ -137,52 +146,38 @@ a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
 
       <hr className="hr" />
 
-      <h2 style={{ margin: "0 0 10px" }}>Mes formations certifiées</h2>
+      <h2 style={{ margin: "0 0 10px" }}>Mes badges</h2>
 
       {validations.length === 0 ? (
         <p className="p">Aucune formation validée pour le moment.</p>
       ) : (
-        <>
         <div className="badge-grid">
-  {validations.map((v, idx) => (
-    <div key={idx} className="badge-tile">
-      <div className="badge-medal">🏅</div>
-
-      <div>
-        <div className="badge-tile-title">{v.formation?.titre ?? "Formation"}</div>
-        <div className="badge-tile-meta">
-          Formation certifiée<br/>
-          Validée le {v.date_validation}<br/>
-          Durée : {Number(v.formation?.duree_heures ?? 0)}h
-          {v.formation?.niveau ? <> • Niveau : {v.formation.niveau}</> : null}
-        </div>
-      </div>
-    </div>
-  ))}
-</div>
-              <div className="medal-icon">🏅</div>
+          {validations.map((v, idx) => (
+            <div key={idx} className="badge-tile">
+              <div className="badge-medal">
+                {getBadgeIcon(v.formation?.titre ?? "", v.formation?.competences ?? "")}
+              </div>
 
               <div>
-                <div className="medal-title">{v.formation?.titre ?? "Formation"}</div>
-
-                <div className="medal-certified">Formation certifiée</div>
-
-                <div className="small">Validée le {v.date_validation}</div>
-
-                <div className="small" style={{ marginTop: 6 }}>
+                <div className="badge-tile-title">{v.formation?.titre ?? "Formation"}</div>
+                <div className="badge-tile-meta">
+                  Formation certifiée
+                  <br />
+                  Validée le {v.date_validation}
+                  <br />
                   Durée : {Number(v.formation?.duree_heures ?? 0)}h
                   {v.formation?.niveau ? <> • Niveau : {v.formation.niveau}</> : null}
+                  {v.formation?.competences ? (
+                    <>
+                      <br />
+                      Compétences : {v.formation.competences}
+                    </>
+                  ) : null}
                 </div>
-
-                {v.formation?.competences ? (
-                  <div className="small" style={{ marginTop: 6 }}>
-                    Compétences : {v.formation.competences}
-                  </div>
-                ) : null}
               </div>
             </div>
           ))}
-        </>
+        </div>
       )}
     </main>
   );
