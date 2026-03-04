@@ -25,9 +25,11 @@ export default function AdminPage() {
     const { data: m, error: me } = await supabase.from("membres").select("*");
     const { data: f, error: fe } = await supabase.from("formations").select("*");
 
-    const { data: v, error: ve } = await supabase
-      .from("validations")
-      .select("*, membres(nom, email, role), formations(titre)")
+const { data: v, error: ve } = await supabase
+  .from("validations")
+  .select("id, date_validation, membres!validations_membre_id_fkey(nom, email), formations(titre)")
+  .order("date_validation", { ascending: false })
+  .limit(15);
       .order("date_validation", { ascending: false })
       .limit(15);
 
