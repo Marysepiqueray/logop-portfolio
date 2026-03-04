@@ -1,47 +1,55 @@
 import { NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabaseServer";
+import { createClient } from "@supabase/supabase-js";
 
-export async function GET() {
-  const s = supabaseServer();
+export async function GET(request: Request) {
 
-  const { data: userData } = await s.auth.getUser();
-  const userId = userData.user?.id;
+  const auth = request.headers.get("authorization") || "";
+  const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
 
-  if (!userId) return new NextResponse("Not authenticated", { status: 401 });
+  if (!token) {
+    return new NextResponse("Not authenticated", { status: 401 });
+  }
 
-  const { data: membre } = await s
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+
+  const { data: userData } = await supabase.auth.getUser(token);
+
+  if (!userData.user) {
+    return new NextResponse("Not authenticated", { status: 401 });
+  }
+
+  const userId = userData.user.id;
+
+  const { data: membre } = await supabase
     .from("membres")
     .select("id, nom, email")
     .eq("auth_id", userId)
     .maybeSingle();
 
-  if (!membre) return new NextResponse("Membre introuvable", { status: 404 });
+  if (!membre) {
+    return new NextResponse("Membre introuvable", { status: 404 });
+  }
 
-  const { data: vals, error } = await s
+  const { data: validations } = await supabase
     .from("validations")
-    .select("date_validation, formation:formations(titre, duree_heures, niveau)")
-    .eq("membre_id", membre.id)
-    .order("date_validation", { ascending: false });
+    .select("date_validation, formation:formations(titre, duree_heures)")
+    .eq("membre_id", membre.id);
 
-  if (error) return new NextResponse(error.message, { status: 500 });
+  let contenu = `Portfolio de ${membre.nom}\n\n`;
 
-  const lines: string[] = [];
-  lines.push(`Portfolio – ${membre.nom}`);
-  lines.push(`Email : ${membre.email}`);
-  lines.push("");
-  lines.push(`Formations validées : ${vals?.length ?? 0}`);
-  lines.push("");
-
-  (vals ?? []).forEach((v: any) => {
-    lines.push(`• ${v.formation?.titre ?? "Formation"} — ${v.formation?.duree_heures ?? 0}h — ${v.date_validation}`);
+  validations?.forEach((v: any) => {
+    contenu += `• ${v.formation.titre} (${v.formation.duree_heures}h) - ${v.date_validation}\n`;
   });
-
-  const contenu = lines.join("\n");
 
   return new NextResponse(contenu, {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Content-Disposition": `attachment; filename="Portfolio-${membre.nom}.txt"`,
+      "Content-Type": "text/plain",
+      "Content-Disposition": `attachment; filename="portfolio-${membre.nom}.txt"`,
     },
   });
 }
