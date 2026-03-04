@@ -98,9 +98,11 @@ export async function GET(request: Request) {
     )
   );
 
-  const buffer = await pdf(doc).toBuffer();
+ const blob = await pdf(doc).toBlob();
+const arrayBuffer = await blob.arrayBuffer();
+const bytes = new Uint8Array(arrayBuffer);
 
-  return new NextResponse(buffer, {
+return new NextResponse(bytes, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="Portfolio-${membre.nom}.pdf"`,
