@@ -223,7 +223,7 @@ const { data: v, error: ve } = await supabase
       ) : (
         validations.map((v) => (
           <div key={v.id} className="small" style={{ marginBottom: 6 }}>
-            {v.membres?.nom} — {v.formations?.titre}
+         {v.membres?.nom} — {v.formations?.titre} (validé par {v.validateur?.nom})
           </div>
         ))
       )}
