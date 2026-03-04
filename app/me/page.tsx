@@ -69,21 +69,39 @@ export default function MePage() {
     return validations.reduce((sum, v) => sum + Number(v.formation?.duree_heures ?? 0), 0);
   }, [validations]);
 
-  async function downloadPdf() {
-    const res = await fetch("/api/portfolio");
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      alert("Impossible de générer le PDF.\n" + txt);
-      return;
-    }
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+ async function downloadPdf() {
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+
+  if (!token) {
+    alert("Vous n'êtes pas connecté(e).");
+    window.location.href = "/";
+    return;
   }
+
+  const res = await fetch("/api/portfolio", {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    alert("Impossible de générer le fichier.\n" + txt);
+    return;
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Portfolio-${membre?.nom ?? "membre"}.txt`;
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+}
 
   if (loading) return <main className="card">Chargement…</main>;
 
