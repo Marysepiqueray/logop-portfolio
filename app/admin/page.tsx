@@ -277,7 +277,84 @@ export default function AdminPage() {
           </div>
         </>
       )}
+<hr className="hr"/>
 
+<h2>Créer une formation interne</h2>
+
+<div style={{display:"grid",gap:10,maxWidth:700}}>
+
+<input
+className="input"
+placeholder="Titre de la formation"
+value={titreFormation}
+onChange={(e)=>setTitreFormation(e.target.value)}
+/>
+
+<div className="row">
+
+<select
+className="input"
+value={typeFormation}
+onChange={(e)=>setTypeFormation(e.target.value as any)}
+>
+<option value="formation_interne">Formation interne</option>
+<option value="conference_interne">Conférence interne</option>
+</select>
+
+<input
+className="input"
+type="number"
+placeholder="Durée (heures)"
+value={dureeFormation}
+onChange={(e)=>setDureeFormation(Number(e.target.value))}
+/>
+
+</div>
+
+<select
+className="input"
+value={domaineId}
+onChange={(e)=>setDomaineId(e.target.value)}
+>
+<option value="">Choisir un domaine</option>
+
+{domaines.map(d=>(
+<option key={d.id} value={d.id}>
+{d.nom}
+</option>
+))}
+
+</select>
+
+<input
+className="input"
+placeholder="Niveau (optionnel)"
+value={niveauFormation}
+onChange={(e)=>setNiveauFormation(e.target.value)}
+/>
+
+<textarea
+className="input"
+placeholder="Description"
+value={descriptionFormation}
+onChange={(e)=>setDescriptionFormation(e.target.value)}
+/>
+
+<textarea
+className="input"
+placeholder="Compétences"
+value={competencesFormation}
+onChange={(e)=>setCompetencesFormation(e.target.value)}
+/>
+
+<button
+className="button"
+onClick={createFormation}
+>
+Ajouter la formation
+</button>
+
+</div>
     </main>
   )
 }
