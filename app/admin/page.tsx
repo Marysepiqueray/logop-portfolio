@@ -45,7 +45,32 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    loadData(const { data: userData } = await supabase.auth.getUser();
+  (async () => {
+    // 1) Vérifier que l'utilisateur est connecté
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+
+    if (!userId) {
+      window.location.href = "/";
+      return;
+    }
+
+    // 2) Vérifier que c'est bien un admin
+    const { data: m, error } = await supabase
+      .from("membres")
+      .select("role")
+      .eq("auth_id", userId)
+      .maybeSingle();
+
+    if (error || !m || m.role !== "admin") {
+      window.location.href = "/";
+      return;
+    }
+
+    // 3) Charger les données admin
+    await loadData();
+  })();
+}, []);
 
 const { data: m } = await supabase
   .from("membres")
