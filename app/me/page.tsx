@@ -3,365 +3,345 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
-type Domaine = { id: string; ordre: number; nom: string; description: string };
-
-function medal(hours: number) {
-  if (hours >= 90) return { label: "OR", icon: "🥇", next: 90 };
-  if (hours >= 45) return { label: "ARGENT", icon: "🥈", next: 90 };
-  if (hours >= 15) return { label: "BRONZE", icon: "🥉", next: 45 };
-  return { label: "Aucun", icon: "⬜", next: 15 };
+function medal(hours:number){
+  if(hours>=90) return {label:"OR",icon:"🥇",next:90}
+  if(hours>=45) return {label:"ARGENT",icon:"🥈",next:90}
+  if(hours>=15) return {label:"BRONZE",icon:"🥉",next:45}
+  return {label:"Aucun",icon:"⬜",next:15}
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
+export default function MePage(){
+
+const[loading,setLoading]=useState(true)
+const[membre,setMembre]=useState<any>(null)
+
+const[domaines,setDomaines]=useState<any[]>([])
+const[validations,setValidations]=useState<any[]>([])
+const[activites,setActivites]=useState<any[]>([])
+const[formations,setFormations]=useState<any[]>([])
+
+const[typeAct,setTypeAct]=useState("formation_externe")
+const[titreAct,setTitreAct]=useState("")
+const[organismeAct,setOrganismeAct]=useState("")
+const[dateAct,setDateAct]=useState(new Date().toISOString().slice(0,10))
+const[heuresAct,setHeuresAct]=useState<number>(0)
+const[domaineAct,setDomaineAct]=useState("")
+
+useEffect(()=>{
+
+(async()=>{
+
+const{data:userData}=await supabase.auth.getUser()
+const userId=userData.user?.id
+
+if(!userId){
+window.location.href="/"
+return
 }
 
-export default function MePage() {
-  const [loading, setLoading] = useState(true);
+const{data:m}=await supabase
+.from("membres")
+.select("*")
+.eq("auth_id",userId)
+.maybeSingle()
 
-  const [membre, setMembre] = useState<any>(null);
-  const [domaines, setDomaines] = useState<Domaine[]>([]);
+if(!m){
+alert("Compte non lié")
+return
+}
 
-  // Validations internes (formations créées/validées via admin)
-  const [validations, setValidations] = useState<any[]>([]);
+setMembre(m)
 
-  // Activités déclarées par le membre (externes / conf / webinaire)
-  const [activites, setActivites] = useState<any[]>([]);
+const{data:d}=await supabase
+.from("domaines")
+.select("*")
+.order("ordre",{ascending:true})
 
-  // Formulaire déclaration
-  const [typeAct, setTypeAct] = useState<"formation_externe" | "conference" | "webinaire">("formation_externe");
-  const [titreAct, setTitreAct] = useState("");
-  const [organismeAct, setOrganismeAct] = useState("");
-  const [dateAct, setDateAct] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [heuresAct, setHeuresAct] = useState<number>(0);
-  const [domaineAct, setDomaineAct] = useState<string>("");
+setDomaines(d??[])
 
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+const{data:v}=await supabase
+.from("validations")
+.select("date_validation,formation:formations(titre,duree_heures,niveau,domaine_id,type)")
+.eq("membre_id",m.id)
 
-      if (!userId) {
-        window.location.href = "/";
-        return;
-      }
+setValidations(v??[])
 
-      const { data: m } = await supabase
-        .from("membres")
-        .select("*")
-        .eq("auth_id", userId)
-        .maybeSingle();
+const{data:a}=await supabase
+.from("activites")
+.select("*")
+.eq("membre_id",m.id)
 
-      if (!m) {
-        alert("Compte non lié à un membre.");
-        window.location.href = "/";
-        return;
-      }
+setActivites(a??[])
 
-      setMembre(m);
+const{data:f}=await supabase
+.from("formations")
+.select("*")
 
-      // Domaines
-      const { data: d } = await supabase
-        .from("domaines")
-        .select("id, ordre, nom, description")
-        .order("ordre", { ascending: true });
+setFormations(f??[])
 
-      setDomaines((d ?? []) as any);
+setLoading(false)
 
-      // Validations (formations internes validées)
-      const { data: v } = await supabase
-        .from("validations")
-        .select("date_validation, formation:formations(titre, duree_heures, niveau, domaine_id, type)")
-        .eq("membre_id", m.id)
-        .order("date_validation", { ascending: false });
+})()
 
-      setValidations(v ?? []);
+},[])
 
-      // Activités déclarées
-      const { data: a } = await supabase
-        .from("activites")
-        .select("id, titre, organisme, date, duree_heures, domaine_id, type, statut")
-        .eq("membre_id", m.id)
-        .order("created_at", { ascending: false });
+const heuresParDomaine=useMemo(()=>{
 
-      setActivites(a ?? []);
+const map:any={}
 
-      setLoading(false);
-    })();
-  }, []);
+validations.forEach(v=>{
+const d=v.formation?.domaine_id
+if(!d)return
+map[d]=(map[d]??0)+Number(v.formation?.duree_heures??0)
+})
 
-  const totalHeuresInternes = useMemo(() => {
-    return (validations ?? []).reduce((sum, v) => sum + Number(v.formation?.duree_heures ?? 0), 0);
-  }, [validations]);
+activites.forEach(a=>{
+const d=a.domaine_id
+if(!d)return
+map[d]=(map[d]??0)+Number(a.duree_heures??0)
+})
 
-  const totalHeuresDeclarees = useMemo(() => {
-    return (activites ?? []).reduce((sum, a) => sum + Number(a.duree_heures ?? 0), 0);
-  }, [activites]);
+return map
 
-  // Heures par domaine (internes + déclarées)
-  const heuresParDomaine = useMemo(() => {
-    const map: Record<string, number> = {};
+},[validations,activites])
 
-    for (const v of validations ?? []) {
-      const dom = v.formation?.domaine_id;
-      if (!dom) continue;
-      map[dom] = (map[dom] ?? 0) + Number(v.formation?.duree_heures ?? 0);
-    }
-    for (const a of activites ?? []) {
-      const dom = a.domaine_id;
-      if (!dom) continue;
-      map[dom] = (map[dom] ?? 0) + Number(a.duree_heures ?? 0);
-    }
+const passeport=useMemo(()=>{
 
-    return map;
-  }, [validations, activites]);
+return domaines.map(d=>{
 
-  async function downloadPdf() {
-    const { data: session } = await supabase.auth.getSession();
-    const token = session.session?.access_token;
+const h=Number(heuresParDomaine[d.id]??0)
+const m=medal(h)
+const next=m.next
+const missing=Math.max(0,next-h)
 
-    if (!token) {
-      alert("Vous n'êtes pas connecté(e).");
-      window.location.href = "/";
-      return;
-    }
+return{
+domaine:d,
+heures:h,
+medal:m,
+missing
+}
 
-    const res = await fetch("/api/portfolio", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+})
 
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      alert("Impossible de générer le PDF.\n" + txt);
-      return;
-    }
+},[domaines,heuresParDomaine])
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
+const objectif=useMemo(()=>{
 
-  async function addActivite() {
-    if (!titreAct.trim()) return alert("Titre obligatoire");
-    if (!domaineAct) return alert("Choisis un domaine");
-    if (!dateAct) return alert("Choisis une date");
+const candidates=passeport.filter(p=>p.missing>0)
 
-    const { error } = await supabase.from("activites").insert({
-      membre_id: membre.id,
-      type: typeAct,
-      titre: titreAct.trim(),
-      organisme: organismeAct.trim() || null,
-      date: dateAct,
-      duree_heures: Number(heuresAct ?? 0),
-      domaine_id: domaineAct,
-      statut: "non_validee",
-    });
+if(candidates.length===0)return null
 
-    if (error) return alert(error.message);
+candidates.sort((a,b)=>a.missing-b.missing)
 
-    setTitreAct("");
-    setOrganismeAct("");
-    setHeuresAct(0);
+return candidates[0]
 
-    const { data: a } = await supabase
-      .from("activites")
-      .select("id, titre, organisme, date, duree_heures, domaine_id, type, statut")
-      .eq("membre_id", membre.id)
-      .order("created_at", { ascending: false });
+},[passeport])
 
-    setActivites(a ?? []);
-    alert("Activité ajoutée (non validée) ✅");
-  }
+const recommandations=useMemo(()=>{
 
-  if (loading) return <main className="card">Chargement…</main>;
+if(!objectif)return[]
 
-  const nbInternes = (validations ?? []).filter((v) => (v.formation?.type ?? "formation_interne") === "formation_interne")
-    .length;
-  const nbDeclarees = (activites ?? []).length;
-  const nbConf = (activites ?? []).filter((a) => a.type === "conference").length;
+return formations
+.filter(f=>f.domaine_id===objectif.domaine.id)
+.slice(0,3)
 
-  return (
-    <main className="card">
-      <h1 className="h1">Passeport de compétences Logop’Aide et vous</h1>
+},[objectif,formations])
 
-      <p className="p">
-        Membre : <b>{membre?.nom}</b> — {membre?.email}
-      </p>
+async function addActivite(){
 
-      <div className="row" style={{ marginTop: 10 }}>
-        <span className="badge">
-          Formations internes : <b>{nbInternes}</b>
-        </span>
-        <span className="badge">
-          Activités déclarées : <b>{nbDeclarees}</b>
-        </span>
-        <span className="badge">
-          Conférences : <b>{nbConf}</b>
-        </span>
-        <span className="badge">
-          Total heures : <b>{totalHeuresInternes + totalHeuresDeclarees}h</b>
-        </span>
-      </div>
+if(!titreAct)return alert("Titre requis")
 
-      <div className="row" style={{ marginTop: 12 }}>
-        <button className="button" onClick={downloadPdf}>
-          Télécharger mon portfolio PDF
-        </button>
-      </div>
+const{error}=await supabase.from("activites").insert({
 
-      <hr className="hr" />
+membre_id:membre.id,
+type:typeAct,
+titre:titreAct,
+organisme:organismeAct,
+date:dateAct,
+duree_heures:heuresAct,
+domaine_id:domaineAct,
+statut:"non_validee"
 
-      <h2 style={{ marginBottom: 10 }}>Mes domaines</h2>
+})
 
-      <div className="badge-grid">
-        {domaines.map((d) => {
-          const h = Number(heuresParDomaine[d.id] ?? 0);
-          const m = medal(h);
-          const next = m.next;
-          const pct = clamp(next === 0 ? 0 : (h / next) * 100, 0, 100);
-          const missing = Math.max(0, next - h);
+if(error)return alert(error.message)
 
-          let message = "";
-          if (m.label === "OR") message = "Niveau maximal atteint";
-          else message = `Il vous manque ${missing}h pour atteindre le prochain niveau`;
+alert("Activité ajoutée")
 
-          return (
-            <div key={d.id} className="badge-tile">
-              <div className="badge-medal">{m.icon}</div>
+window.location.reload()
 
-              <div className="badge-tile-title">{d.nom}</div>
+}
 
-              <div className="badge-tile-meta" style={{ marginBottom: 10 }}>
-                {d.description}
-              </div>
+async function downloadPdf(){
 
-              <div className="badge-tile-meta" style={{ fontWeight: 700 }}>
-                {m.label} — {h}h
-              </div>
+const{data:session}=await supabase.auth.getSession()
+const token=session.session?.access_token
 
-              <div style={{ marginTop: 10 }}>
-                <div
-                  style={{
-                    height: 10,
-                    borderRadius: 999,
-                    border: "1px solid var(--border)",
-                    overflow: "hidden",
-                    background: "#fff",
-                  }}
-                >
-                  <div style={{ height: "100%", width: `${pct}%`, background: "#111827" }} />
-                </div>
-                <div className="badge-tile-meta" style={{ marginTop: 8 }}>
-                  {message}
-                </div>
-                {m.label !== "OR" && (
-                  <div className="badge-tile-meta" style={{ marginTop: 4 }}>
-                    Seuils : Bronze 15h • Argent 45h • Or 90h
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+const res=await fetch("/api/portfolio",{
+headers:{Authorization:`Bearer ${token}`}
+})
 
-      <hr className="hr" />
+const blob=await res.blob()
 
-      <h2>Déclarer une activité (non validée)</h2>
-      <p className="p">
-        Les activités déclarées apparaissent dans votre passeport et sont mentionnées comme{" "}
-        <b>non validées par Logop’Aide et vous</b>.
-      </p>
+const url=window.URL.createObjectURL(blob)
 
-      <div style={{ display: "grid", gap: 10, maxWidth: 720 }}>
-        <div className="row">
-          <select className="input" value={typeAct} onChange={(e) => setTypeAct(e.target.value as any)}>
-            <option value="formation_externe">Formation externe</option>
-            <option value="conference">Conférence</option>
-            <option value="webinaire">Webinaire</option>
-          </select>
+const a=document.createElement("a")
+a.href=url
+a.download="portfolio.pdf"
+a.click()
 
-          <input className="input" type="date" value={dateAct} onChange={(e) => setDateAct(e.target.value)} />
-        </div>
+}
 
-        <input className="input" placeholder="Titre" value={titreAct} onChange={(e) => setTitreAct(e.target.value)} />
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+if(loading)return<div className="card">Chargement...</div>
 
-  <input
-    className="input"
-    type="number"
-    min="0"
-    step="0.5"
-    style={{ maxWidth: 120 }}
-    value={heuresAct}
-    onChange={(e) => setHeuresAct(Number(e.target.value))}
-  />
+return(
 
-  <span className="small">heures</span>
+<main className="card">
+
+<h1 className="h1">Passeport de compétences</h1>
+
+<p className="p">
+Membre : <b>{membre.nom}</b>
+</p>
+
+<button className="button" onClick={downloadPdf}>
+Télécharger mon portfolio PDF
+</button>
+
+<hr className="hr"/>
+
+<h2>Objectif prochain niveau</h2>
+
+{objectif&&(
+
+<div className="card">
+
+<b>{objectif.domaine.nom}</b>
+
+<div className="small">
+Vous avez {objectif.heures}h — il vous manque {objectif.missing}h
+</div>
+
+<div className="small" style={{marginTop:10}}>
+Formations proposées :
+</div>
+
+<ul>
+
+{recommandations.map(f=>(
+<li key={f.id}>
+{f.titre} — {f.duree_heures}h
+</li>
+))}
+
+</ul>
 
 </div>
 
-<div className="row" style={{ marginTop: 6 }}>
+)}
 
-  <button type="button" className="button secondary" onClick={() => setHeuresAct(1)}>1h</button>
+<hr className="hr"/>
 
-  <button type="button" className="button secondary" onClick={() => setHeuresAct(2)}>2h</button>
+<h2>Mes domaines</h2>
 
-  <button type="button" className="button secondary" onClick={() => setHeuresAct(3)}>3h</button>
+<div className="badge-grid">
 
-  <button type="button" className="button secondary" onClick={() => setHeuresAct(7)}>7h</button>
+{passeport.map(p=>{
 
-  <button type="button" className="button secondary" onClick={() => setHeuresAct(14)}>14h</button>
+const pct=Math.min(100,(p.heures/p.medal.next)*100)
+
+return(
+
+<div key={p.domaine.id} className="badge-tile">
+
+<div className="badge-medal">
+{p.medal.icon}
+</div>
+
+<div>
+
+<div className="badge-tile-title">
+{p.domaine.nom}
+</div>
+
+<div className="badge-tile-meta">
+{p.medal.label} — {p.heures}h
+</div>
+
+<div className="progress" style={{marginTop:6}}>
+<div style={{width:`${pct}%`}}/>
+</div>
 
 </div>
 
-        <div className="row">
-          <input
-            className="input"
-            type="number"
-            placeholder="Durée (heures)"
-            value={heuresAct}
-            onChange={(e) => setHeuresAct(Number(e.target.value))}
-          />
+</div>
 
-          <select className="input" value={domaineAct} onChange={(e) => setDomaineAct(e.target.value)}>
-            <option value="">Choisir un domaine</option>
-            {domaines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nom}
-              </option>
-            ))}
-          </select>
-        </div>
+)
 
-        <button className="button" onClick={addActivite}>
-          Ajouter (non validée)
-        </button>
-      </div>
+})}
 
-      <hr className="hr" />
+</div>
 
-      <h2>Mes activités déclarées</h2>
-      {activites.length === 0 ? (
-        <p className="p">Aucune activité déclarée.</p>
-      ) : (
-        activites.map((a) => {
-          const dom = domaines.find((d) => d.id === a.domaine_id)?.nom ?? "Domaine non défini";
-          const labelType =
-            a.type === "conference" ? "Conférence" : a.type === "webinaire" ? "Webinaire" : "Formation externe";
+<hr className="hr"/>
 
-          return (
-            <div key={a.id} className="small" style={{ marginBottom: 8 }}>
-              <b>{a.titre}</b> — {labelType} — {Number(a.duree_heures ?? 0)}h — {dom} —{" "}
-              <i>non validée par Logop’Aide et vous</i>
-            </div>
-          );
-        })
-      )}
-    </main>
-  );
+<h2>Déclarer une activité</h2>
+
+<select
+className="input"
+value={typeAct}
+onChange={e=>setTypeAct(e.target.value)}
+>
+
+<option value="formation_externe">Formation externe</option>
+<option value="conference">Conférence</option>
+<option value="webinaire">Webinaire</option>
+
+</select>
+
+<input
+className="input"
+placeholder="Titre"
+value={titreAct}
+onChange={e=>setTitreAct(e.target.value)}
+/>
+
+<input
+className="input"
+placeholder="Organisme"
+value={organismeAct}
+onChange={e=>setOrganismeAct(e.target.value)}
+/>
+
+<input
+className="input"
+type="number"
+placeholder="Durée (heures)"
+value={heuresAct}
+onChange={e=>setHeuresAct(Number(e.target.value))}
+/>
+
+<select
+className="input"
+value={domaineAct}
+onChange={e=>setDomaineAct(e.target.value)}
+>
+
+<option value="">Choisir un domaine</option>
+
+{domaines.map(d=>(
+<option key={d.id} value={d.id}>
+{d.nom}
+</option>
+))}
+
+</select>
+
+<button className="button" onClick={addActivite}>
+Ajouter (non validée)
+</button>
+
+</main>
+
+)
+
 }
