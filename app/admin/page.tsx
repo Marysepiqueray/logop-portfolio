@@ -44,9 +44,9 @@ export default function AdminPage() {
     setValidations(v ?? []);
   }
 
-  useEffect(() => {
-  (async () => {
-    // 1) Vérifier que l'utilisateur est connecté
+useEffect(() => {
+  async function checkAdmin() {
+
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
 
@@ -55,17 +55,22 @@ export default function AdminPage() {
       return;
     }
 
-    // 2) Vérifier que c'est bien un admin
-    const { data: m, error } = await supabase
+    const { data: m } = await supabase
       .from("membres")
       .select("role")
       .eq("auth_id", userId)
       .maybeSingle();
 
-    if (error || !m || m.role !== "admin") {
+    if (!m || m.role !== "admin") {
       window.location.href = "/";
       return;
     }
+
+    loadData();
+  }
+
+  checkAdmin();
+}, []);
 
     // 3) Charger les données admin
     await loadData();
