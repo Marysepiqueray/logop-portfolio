@@ -38,15 +38,7 @@ export default function RootLayout({
 
             </div>
 
-            <nav className="navbar">
-
-              <a href="/">Accueil</a>
-
-              <a href="/me">Mon portfolio</a>
-
-              <a href="/admin">Admin</a>
-
-            </nav>
+          <NavBar />
 
           </header>
 
