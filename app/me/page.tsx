@@ -264,6 +264,42 @@ return(
 {p.domaine.nom}
 </div>
 
+<div className="badge-tile-meta" style={{marginBottom:8}}>
+{p.domaine.description}
+</div>
+
+<div className="badge-tile-meta">
+{p.medal.label} — {p.heures}h
+</div>
+
+<div className="progress">
+<div style={{width:`${pct}%`}}/>
+</div>
+
+</div>
+
+</div>
+
+)
+
+})}
+
+const pct=Math.min(100,(p.heures/p.medal.next)*100)
+
+return(
+
+<div key={p.domaine.id} className="badge-tile">
+
+<div className="badge-medal">
+{p.medal.icon}
+</div>
+
+<div>
+
+<div className="badge-tile-title">
+{p.domaine.nom}
+</div>
+
 <div className="badge-tile-meta">
 {p.medal.label} — {p.heures}h
 </div>
