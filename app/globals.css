@@ -230,10 +230,17 @@ body{
               0 4px 10px rgba(0,0,0,0.15);
 }
 
-.badge-tile-title{
-  font-weight:800;
-  font-size:15px;
-  margin-bottom:4px;
+.badge-tile{
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:#fff;
+  padding:16px;
+  box-shadow:0 8px 18px rgba(0,0,0,0.08);
+
+  display:grid;
+  grid-template-columns:70px 1fr;
+  gap:14px;
+  align-items:center;
 }
 
 .badge-tile-meta{
