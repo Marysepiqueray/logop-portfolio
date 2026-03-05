@@ -5,6 +5,17 @@ import { supabase } from "@/lib/supabaseClient";
 
 type Domaine = { id: string; ordre: number; nom: string; description: string };
 
+const SEUIL_BRONZE = 15;
+const SEUIL_ARGENT = 45;
+const SEUIL_OR = 90;
+
+function tier(hours: number) {
+  if (hours >= SEUIL_OR) return "OR";
+  if (hours >= SEUIL_ARGENT) return "ARGENT";
+  if (hours >= SEUIL_BRONZE) return "BRONZE";
+  return "AUCUN";
+}
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
@@ -12,6 +23,9 @@ export default function AdminPage() {
   const [formations, setFormations] = useState<any[]>([]);
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
+
+  // ✅ stats réseau anonymisées
+  const [reseau, setReseau] = useState<any>(null);
 
   // Recherche / sélection validation
   const [searchMembre, setSearchMembre] = useState("");
@@ -29,241 +43,66 @@ export default function AdminPage() {
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState<string>("");
 
-  async function loadData() {
-    const { data: m, error: me } = await supabase.from("membres").select("*");
-    const { data: d, error: de } = await supabase
-      .from("domaines")
-      .select("id, ordre, nom, description")
-      .order("ordre", { ascending: true });
+  async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
+    // On calcule sur les membres "membre" uniquement
+    const membresIds = (allMembres ?? []).filter((m) => m.role === "membre").map((m) => m.id);
 
-    const { data: f, error: fe } = await supabase
-      .from("formations")
-      .select("id, titre, duree_heures, niveau, domaine_id, type, created_at")
-      .order("created_at", { ascending: false });
-
+    // 1) Toutes les validations (internes)
     const { data: v, error: ve } = await supabase
       .from("validations")
-      .select(
-        "id, date_validation, membres!membre_id(nom,email), validateur:membres!valide_par(nom), formations(titre)"
-      )
-      .order("date_validation", { ascending: false })
-      .limit(20);
+      .select("membre_id, formation:formations(domaine_id, duree_heures)")
+      .in("membre_id", membresIds);
 
-    if (me) alert(me.message);
-    if (de) alert(de.message);
-    if (fe) alert(fe.message);
-    if (ve) alert(ve.message);
+    if (ve) throw ve;
 
-    setMembres(m ?? []);
-    setDomaines((d ?? []) as any);
-    setFormations(f ?? []);
-    setValidations(v ?? []);
-  }
+    // 2) Toutes les activités déclarées (externes / conf / webinaires)
+    const { data: a, error: ae } = await supabase
+      .from("activites")
+      .select("membre_id, domaine_id, duree_heures, type")
+      .in("membre_id", membresIds);
 
-  // ✅ Bloque /admin pour les non-admin
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+    if (ae) throw ae;
 
-      if (!userId) {
-        window.location.href = "/";
-        return;
-      }
+    // heures[membre_id][domaine_id] = total heures
+    const heures: Record<string, Record<string, number>> = {};
+    for (const mid of membresIds) heures[mid] = {};
 
-      const { data: row, error } = await supabase
-        .from("membres")
-        .select("role")
-        .eq("auth_id", userId)
-        .maybeSingle();
-
-      if (error || !row || row.role !== "admin") {
-        window.location.href = "/";
-        return;
-      }
-
-      await loadData();
-      setLoading(false);
-    })();
-  }, []);
-
-  async function createFormation() {
-    if (!titreFormation.trim()) return alert("Titre obligatoire");
-    if (!domaineId) return alert("Choisis un domaine");
-    if (!dureeFormation || dureeFormation < 0) return alert("Durée invalide");
-
-    const { error } = await supabase.from("formations").insert({
-      titre: titreFormation.trim(),
-      duree_heures: Number(dureeFormation),
-      niveau: niveauFormation || null,
-      description: descriptionFormation || null,
-      competences: competencesFormation || null,
-      domaine_id: domaineId,
-      type: typeFormation,
-    });
-
-    if (error) return alert(error.message);
-
-    setTitreFormation("");
-    setDureeFormation(14);
-    setNiveauFormation("");
-    setDescriptionFormation("");
-    setCompetencesFormation("");
-    setTypeFormation("formation_interne");
-    setDomaineId("");
-
-    await loadData();
-    alert("Formation ajoutée ✅");
-  }
-
-  async function validateFormation() {
-    if (!selectedMembre || !selectedFormation) {
-      alert("Choisir membre et formation");
-      return;
+    // Sommes internes
+    for (const row of v ?? []) {
+      const mid = row.membre_id as string;
+      const dom = row.formation?.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
+      const h = Number(row.formation?.duree_heures ?? 0);
+      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
     }
 
-    // anti-doublon
-    const { data: exist, error: exErr } = await supabase
-      .from("validations")
-      .select("id")
-      .eq("membre_id", selectedMembre)
-      .eq("formation_id", selectedFormation);
+    // Sommes déclarées (externes + conf + webinaire)
+    let totalExternes = 0;
+    let totalConferences = 0;
+    let totalWebinaires = 0;
 
-    if (exErr) return alert(exErr.message);
-    if (exist && exist.length > 0) return alert("Déjà validée ✅");
+    for (const row of a ?? []) {
+      const mid = row.membre_id as string;
+      const dom = row.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
 
-    // récupérer l'ID admin (membres.id) pour valide_par
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
+      const h = Number(row.duree_heures ?? 0);
+      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
 
-    const { data: adminRow, error: arErr } = await supabase
-      .from("membres")
-      .select("id")
-      .eq("auth_id", userId)
-      .maybeSingle();
+      if (row.type === "formation_externe") totalExternes += h;
+      if (row.type === "conference") totalConferences += h;
+      if (row.type === "webinaire") totalWebinaires += h;
+    }
 
-    if (arErr) return alert(arErr.message);
+    // Total internes (heures internes = somme des validations)
+    const totalInternes = (v ?? []).reduce((sum, row) => sum + Number(row.formation?.duree_heures ?? 0), 0);
 
-    const { error } = await supabase.from("validations").insert({
-      membre_id: selectedMembre,
-      formation_id: selectedFormation,
-      valide_par: adminRow?.id ?? null,
-    });
+    // 3) Calcul des compteurs par domaine
+    const parDomaine = allDomaines.map((d) => {
+      let nbOr = 0;
+      let nbArgent = 0;
+      let nbBronze = 0;
+      let nbAucun = 0;
 
-    if (error) return alert(error.message);
-
-    alert("Validation enregistrée ✅");
-    await loadData();
-  }
-
-  const membresFiltres = useMemo(() => {
-    return (membres ?? [])
-      .filter((m) => m.role === "membre")
-      .filter((m) => (m.nom + " " + m.email).toLowerCase().includes(searchMembre.toLowerCase()));
-  }, [membres, searchMembre]);
-
-  const formationsFiltrees = useMemo(() => {
-    return (formations ?? []).filter((f) => (f.titre ?? "").toLowerCase().includes(searchFormation.toLowerCase()));
-  }, [formations, searchFormation]);
-
-  const nombreMembres = (membres ?? []).filter((m) => m.role === "membre").length;
-
-  if (loading) return <main className="card">Chargement…</main>;
-
-  return (
-    <main className="card">
-      <h1 className="h1">Administration</h1>
-
-      <div className="small">Membres inscrits : {nombreMembres} / 300</div>
-
-      <hr className="hr" />
-
-      <h2>Créer une formation interne</h2>
-
-      <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
-        <input className="input" placeholder="Titre" value={titreFormation} onChange={(e) => setTitreFormation(e.target.value)} />
-
-        <div className="row">
-          <select className="input" value={typeFormation} onChange={(e) => setTypeFormation(e.target.value as any)}>
-            <option value="formation_interne">Formation interne</option>
-            <option value="conference_interne">Conférence interne</option>
-          </select>
-
-          <input
-            className="input"
-            type="number"
-            placeholder="Durée (heures)"
-            value={dureeFormation}
-            onChange={(e) => setDureeFormation(Number(e.target.value))}
-          />
-        </div>
-
-        <select className="input" value={domaineId} onChange={(e) => setDomaineId(e.target.value)}>
-          <option value="">Choisir un domaine</option>
-          {domaines.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nom}
-            </option>
-          ))}
-        </select>
-
-        <input className="input" placeholder="Niveau (optionnel)" value={niveauFormation} onChange={(e) => setNiveauFormation(e.target.value)} />
-
-        <textarea className="input" placeholder="Description (optionnel)" value={descriptionFormation} onChange={(e) => setDescriptionFormation(e.target.value)} />
-
-        <textarea className="input" placeholder="Compétences (optionnel)" value={competencesFormation} onChange={(e) => setCompetencesFormation(e.target.value)} />
-
-        <button className="button" onClick={createFormation}>
-          Ajouter
-        </button>
-      </div>
-
-      <hr className="hr" />
-
-      <h2>Valider une formation pour un membre</h2>
-
-      <div className="row">
-        <input className="input" placeholder="Rechercher membre" value={searchMembre} onChange={(e) => setSearchMembre(e.target.value)} />
-        <input className="input" placeholder="Rechercher formation" value={searchFormation} onChange={(e) => setSearchFormation(e.target.value)} />
-      </div>
-
-      <div className="row" style={{ marginTop: 8 }}>
-        <select className="input" value={selectedMembre} onChange={(e) => setSelectedMembre(e.target.value)}>
-          <option value="">Choisir un membre</option>
-          {membresFiltres.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom} — {m.email}
-            </option>
-          ))}
-        </select>
-
-        <select className="input" value={selectedFormation} onChange={(e) => setSelectedFormation(e.target.value)}>
-          <option value="">Choisir une formation</option>
-          {formationsFiltrees.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.titre}
-            </option>
-          ))}
-        </select>
-
-        <button className="button" onClick={validateFormation}>
-          Valider
-        </button>
-      </div>
-
-      <hr className="hr" />
-
-      <h2>Validations récentes</h2>
-
-      {validations.length === 0 ? (
-        <p className="p">Aucune validation récente.</p>
-      ) : (
-        validations.map((v) => (
-          <div key={v.id} className="small" style={{ marginBottom: 6 }}>
-            {v.membres?.nom} — {v.formations?.titre} (validé par {v.validateur?.nom})
-          </div>
-        ))
-      )}
-    </main>
-  );
-}
+      for (const mid of membresIds) {
+        const h = Number(heures[mid]?.[d.id
