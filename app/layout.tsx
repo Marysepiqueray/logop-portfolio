@@ -26,11 +26,17 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <div className="badge">Espace privé</div>
             </div>
 
-            <nav className="navbar" aria-label="Menu">
-              <a href="/">Accueil</a>
-              <a href="/me">Mon portfolio</a>
-              <a href="/admin">Admin</a>
-            </nav>
+        <nav className="navbar">
+
+  <a href="/">Accueil</a>
+
+  <a href="/me">Mon portfolio</a>
+
+  {membre?.role === "admin" && (
+    <a href="/admin">Admin</a>
+  )}
+
+</nav>
           </header>
 
           {/* Optionnel : une grande bannière comme sur ton site */}
