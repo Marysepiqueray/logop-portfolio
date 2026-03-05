@@ -1,9 +1,8 @@
 import "./globals.css";
-import NavBar from "./components/NavBar";
 
 export const metadata = {
-  title: "Portfolio Logop'aide & Vous",
-  description: "Portfolio de formation des membres",
+  title: "Logop'Aide et vous",
+  description: "Passeport de compétences",
 };
 
 export default function RootLayout({
@@ -14,25 +13,49 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body>
+
         <div className="container">
+
           <header className="header">
+
             <div className="header-row">
+
               <div className="brand">
-                <img src="/logo.png" alt="Logo" />
+
+                <img src="/logo.png" />
+
                 <div>
+
                   <div className="brand-title">
-                    Portfolio <span className="red">Logop'aide & Vous</span>
+                    Logop'Aide <span className="red">et vous</span>
                   </div>
-                  <div className="brand-sub">Formations et certifications</div>
+
+                  <div className="brand-sub">
+                    Passeport de compétences
+                  </div>
+
                 </div>
+
               </div>
+
             </div>
 
-            <NavBar />
+            <nav className="navbar">
+
+              <a href="/">Accueil</a>
+
+              <a href="/me">Mon portfolio</a>
+
+              <a href="/admin">Admin</a>
+
+            </nav>
+
           </header>
 
           {children}
+
         </div>
+
       </body>
     </html>
   );
