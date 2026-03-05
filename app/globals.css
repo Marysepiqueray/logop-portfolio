@@ -1,414 +1,203 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-
-type Domaine = { id: string; ordre: number; nom: string; description: string };
-
-function medal(hours: number) {
-  if (hours >= 90) return { label: "OR", icon: "🥇", next: 90 };
-  if (hours >= 45) return { label: "ARGENT", icon: "🥈", next: 90 };
-  if (hours >= 15) return { label: "BRONZE", icon: "🥉", next: 45 };
-  return { label: "Aucun", icon: "⬜", next: 15 };
+:root{
+  --bg:#d4cfd1;
+  --card:#ffffff;
+  --text:#1f2937;
+  --muted:#6b7280;
+  --border:#d1d5db;
+  --nav:#6f717c;
+  --navText:#ffffff;
+  --radius:14px;
+  --shadow: 0 10px 25px rgba(0,0,0,.10);
 }
 
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
+*{ box-sizing:border-box; }
+html,body{ padding:0; margin:0; }
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-export default function MePage() {
-  const [loading, setLoading] = useState(true);
-
-  const [membre, setMembre] = useState<any>(null);
-  const [domaines, setDomaines] = useState<Domaine[]>([]);
-  const [validations, setValidations] = useState<any[]>([]);
-  const [activites, setActivites] = useState<any[]>([]);
-  const [formations, setFormations] = useState<any[]>([]);
-
-  // Form déclaration
-  const [typeAct, setTypeAct] = useState<"formation_externe" | "conference" | "webinaire">("formation_externe");
-  const [titreAct, setTitreAct] = useState("");
-  const [organismeAct, setOrganismeAct] = useState("");
-  const [dateAct, setDateAct] = useState<string>(() => new Date().toISOString().slice(0, 10));
-  const [heuresAct, setHeuresAct] = useState<number>(0);
-  const [domaineAct, setDomaineAct] = useState<string>("");
-
-  useEffect(() => {
-    (async () => {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
-
-      if (!userId) {
-        window.location.href = "/";
-        return;
-      }
-
-      const { data: m } = await supabase.from("membres").select("*").eq("auth_id", userId).maybeSingle();
-      if (!m) {
-        alert("Compte non lié à un membre.");
-        window.location.href = "/";
-        return;
-      }
-      setMembre(m);
-
-      const { data: d } = await supabase
-        .from("domaines")
-        .select("id, ordre, nom, description")
-        .order("ordre", { ascending: true });
-      setDomaines((d ?? []) as any);
-
-      const { data: v } = await supabase
-        .from("validations")
-        .select("date_validation, formation:formations(titre, duree_heures, niveau, domaine_id, type)")
-        .eq("membre_id", m.id)
-        .order("date_validation", { ascending: false });
-      setValidations(v ?? []);
-
-      const { data: a } = await supabase
-        .from("activites")
-        .select("id, titre, organisme, date, duree_heures, domaine_id, type, statut, created_at")
-        .eq("membre_id", m.id)
-        .order("created_at", { ascending: false });
-      setActivites(a ?? []);
-
-      const { data: f } = await supabase
-        .from("formations")
-        .select("id, titre, duree_heures, domaine_id, type")
-        .order("titre", { ascending: true });
-      setFormations(f ?? []);
-
-      setLoading(false);
-    })();
-  }, []);
-
-  const totalHeuresInternes = useMemo(
-    () => (validations ?? []).reduce((sum, v) => sum + Number(v.formation?.duree_heures ?? 0), 0),
-    [validations]
-  );
-
-  const totalHeuresDeclarees = useMemo(
-    () => (activites ?? []).reduce((sum, a) => sum + Number(a.duree_heures ?? 0), 0),
-    [activites]
-  );
-
-  const heuresParDomaine = useMemo(() => {
-    const map: Record<string, number> = {};
-
-    for (const v of validations ?? []) {
-      const dom = v.formation?.domaine_id;
-      if (!dom) continue;
-      map[dom] = (map[dom] ?? 0) + Number(v.formation?.duree_heures ?? 0);
-    }
-
-    for (const a of activites ?? []) {
-      const dom = a.domaine_id;
-      if (!dom) continue;
-      map[dom] = (map[dom] ?? 0) + Number(a.duree_heures ?? 0);
-    }
-
-    return map;
-  }, [validations, activites]);
-
-  const passeport = useMemo(() => {
-    return domaines.map((d) => {
-      const h = Number(heuresParDomaine[d.id] ?? 0);
-      const m = medal(h);
-      const next = m.next;
-      const missing = m.label === "OR" ? 0 : Math.max(0, next - h);
-      return { domaine: d, heures: h, medal: m, missing };
-    });
-  }, [domaines, heuresParDomaine]);
-
-  const objectif = useMemo(() => {
-    const c = passeport.filter((p) => p.missing > 0);
-    if (c.length === 0) return null;
-    c.sort((a, b) => a.missing - b.missing);
-    return c[0];
-  }, [passeport]);
-
-  const recommandations = useMemo(() => {
-    if (!objectif) return [];
-
-    const alreadyValidated = new Set((validations ?? []).map((v) => (v.formation?.titre ?? "").toLowerCase()));
-
-    return (formations ?? [])
-      .filter((f) => (f.type ?? "formation_interne") === "formation_interne")
-      .filter((f) => f.domaine_id === objectif.domaine.id)
-      .filter((f) => !alreadyValidated.has((f.titre ?? "").toLowerCase()))
-      .slice(0, 3);
-  }, [objectif, formations, validations]);
-
-  async function downloadPdf() {
-    const { data: session } = await supabase.auth.getSession();
-    const token = session.session?.access_token;
-
-    if (!token) {
-      alert("Vous n'êtes pas connecté(e).");
-      window.location.href = "/";
-      return;
-    }
-
-    const res = await fetch("/api/portfolio", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      alert("Impossible de générer le PDF.\n" + txt);
-      return;
-    }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Portfolio-${membre?.nom ?? "membre"}.pdf`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  async function addActivite() {
-    if (!titreAct.trim()) return alert("Titre obligatoire");
-    if (!domaineAct) return alert("Choisis un domaine");
-    if (!dateAct) return alert("Choisis une date");
-
-    const { error } = await supabase.from("activites").insert({
-      membre_id: membre.id,
-      type: typeAct,
-      titre: titreAct.trim(),
-      organisme: organismeAct.trim() || null,
-      date: dateAct,
-      duree_heures: Number(heuresAct ?? 0),
-      domaine_id: domaineAct,
-      statut: "non_validee",
-    });
-
-    if (error) return alert(error.message);
-
-    setTitreAct("");
-    setOrganismeAct("");
-    setHeuresAct(0);
-
-    const { data: a } = await supabase
-      .from("activites")
-      .select("id, titre, organisme, date, duree_heures, domaine_id, type, statut, created_at")
-      .eq("membre_id", membre.id)
-      .order("created_at", { ascending: false });
-
-    setActivites(a ?? []);
-    alert("Activité ajoutée (non validée) ✅");
-  }
-
-  if (loading) return <main className="card">Chargement…</main>;
-
-  const nbInternes = (validations ?? []).filter((v) => (v.formation?.type ?? "formation_interne") === "formation_interne")
-    .length;
-  const nbDeclarees = activites.length;
-  const nbConf = activites.filter((a) => a.type === "conference").length;
-
-  return (
-    <main className="card">
-      <h1 className="h1">Passeport de compétences Logop’Aide et vous</h1>
-
-      <p className="p">
-        Membre : <b>{membre?.nom}</b> — {membre?.email}
-      </p>
-
-      <div className="row" style={{ marginTop: 10 }}>
-        <span className="badge">
-          Formations internes : <b>{nbInternes}</b>
-        </span>
-        <span className="badge">
-          Activités déclarées : <b>{nbDeclarees}</b>
-        </span>
-        <span className="badge">
-          Conférences : <b>{nbConf}</b>
-        </span>
-        <span className="badge">
-          Total heures : <b>{totalHeuresInternes + totalHeuresDeclarees}h</b>
-        </span>
-      </div>
-
-      <div className="row" style={{ marginTop: 12 }}>
-        <button className="button" onClick={downloadPdf}>
-          Télécharger mon portfolio PDF
-        </button>
-      </div>
-
-      <hr className="hr" />
-
-      <h2 style={{ marginBottom: 10 }}>Objectif prochain niveau</h2>
-
-      {objectif ? (
-        <div className="card" style={{ marginTop: 0 }}>
-          <div className="small" style={{ fontWeight: 800 }}>
-            {objectif.domaine.nom}
-          </div>
-
-          <div className="small" style={{ marginTop: 6 }}>
-            Vous avez <b>{objectif.heures}h</b> — il vous manque <b>{objectif.missing}h</b> pour atteindre le prochain niveau.
-          </div>
-
-          <div className="small" style={{ marginTop: 10 }}>
-            <b>Formations proposées :</b>
-          </div>
-
-          {recommandations.length === 0 ? (
-            <div className="small" style={{ marginTop: 6 }}>
-              Aucune proposition pour le moment (pense à attribuer un <b>domaine</b> aux formations internes dans l’admin).
-            </div>
-          ) : (
-            <ul style={{ marginTop: 8, marginBottom: 0 }}>
-              {recommandations.map((f) => (
-                <li key={f.id} className="small">
-                  {f.titre} — {Number(f.duree_heures ?? 0)}h
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      ) : (
-        <p className="p">Bravo 🎉 Tous les domaines sont au niveau OR ou aucun domaine n’est renseigné.</p>
-      )}
-
-      <hr className="hr" />
-
-      <h2 style={{ marginBottom: 10 }}>Mes domaines</h2>
-
-      <div className="badge-grid">
-        {passeport.map((p) => {
-          const pct = clamp((p.heures / p.medal.next) * 100, 0, 100);
-
-          return (
-            <div key={p.domaine.id} className="badge-tile">
-              <div className="badge-medal">{p.medal.icon}</div>
-
-              <div>
-                <div className="badge-tile-title">{p.domaine.nom}</div>
-
-                <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
-                  {p.domaine.description}
-                </div>
-
-                <div className="badge-tile-meta" style={{ fontWeight: 700 }}>
-                  {p.medal.label} — {p.heures}h
-                </div>
-
-                <div className="progress">
-                  <div style={{ width: `${pct}%` }} />
-                </div>
-
-                {p.medal.label !== "OR" ? (
-                  <div className="badge-tile-meta" style={{ marginTop: 8 }}>
-                    Il vous manque <b>{p.missing}h</b> pour atteindre le prochain niveau.
-                  </div>
-                ) : (
-                  <div className="badge-tile-meta" style={{ marginTop: 8 }}>
-                    Niveau maximal atteint.
-                  </div>
-                )}
-
-                <div className="badge-tile-meta" style={{ marginTop: 6 }}>
-                  Seuils : Bronze 15h • Argent 45h • Or 90h
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <hr className="hr" />
-
-      <h2>Déclarer une activité (non validée)</h2>
-      <p className="p">
-        Les activités déclarées apparaissent dans votre passeport et sont mentionnées comme{" "}
-        <b>non validées par Logop’Aide et vous</b>.
-      </p>
-
-      <div style={{ display: "grid", gap: 10, maxWidth: 720 }}>
-        <div className="row">
-          <select className="input" value={typeAct} onChange={(e) => setTypeAct(e.target.value as any)}>
-            <option value="formation_externe">Formation externe</option>
-            <option value="conference">Conférence</option>
-            <option value="webinaire">Webinaire</option>
-          </select>
-
-          <input className="input" type="date" value={dateAct} onChange={(e) => setDateAct(e.target.value)} />
-        </div>
-
-        <input className="input" placeholder="Titre" value={titreAct} onChange={(e) => setTitreAct(e.target.value)} />
-        <input
-          className="input"
-          placeholder="Organisme (optionnel)"
-          value={organismeAct}
-          onChange={(e) => setOrganismeAct(e.target.value)}
-        />
-
-        <div className="row">
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input
-              className="input"
-              type="number"
-              min="0"
-              step="0.5"
-              style={{ maxWidth: 120 }}
-              value={heuresAct}
-              onChange={(e) => setHeuresAct(Number(e.target.value))}
-            />
-            <span className="small">heures</span>
-          </div>
-
-          <select className="input" value={domaineAct} onChange={(e) => setDomaineAct(e.target.value)}>
-            <option value="">Choisir un domaine</option>
-            {domaines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nom}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="row" style={{ marginTop: -2 }}>
-          <button type="button" className="button secondary" onClick={() => setHeuresAct(1)}>
-            1h
-          </button>
-          <button type="button" className="button secondary" onClick={() => setHeuresAct(2)}>
-            2h
-          </button>
-          <button type="button" className="button secondary" onClick={() => setHeuresAct(3)}>
-            3h
-          </button>
-          <button type="button" className="button secondary" onClick={() => setHeuresAct(7)}>
-            7h
-          </button>
-          <button type="button" className="button secondary" onClick={() => setHeuresAct(14)}>
-            14h
-          </button>
-        </div>
-
-        <button className="button" onClick={addActivite}>
-          Ajouter (non validée)
-        </button>
-      </div>
-
-      <hr className="hr" />
-
-      <h2>Mes activités déclarées</h2>
-      {activites.length === 0 ? (
-        <p className="p">Aucune activité déclarée.</p>
-      ) : (
-        activites.map((a) => {
-          const dom = domaines.find((d) => d.id === a.domaine_id)?.nom ?? "Domaine non défini";
-          const labelType = a.type === "conference" ? "Conférence" : a.type === "webinaire" ? "Webinaire" : "Formation externe";
-
-          return (
-            <div key={a.id} className="small" style={{ marginBottom: 8 }}>
-              <b>{a.titre}</b> — {labelType} — {Number(a.duree_heures ?? 0)}h — {dom} —{" "}
-              <i>non validée par Logop’Aide et vous</i>
-            </div>
-          );
-        })
-      )}
-    </main>
-  );
+.container{ max-width:1100px; margin:0 auto; padding:18px; }
+
+.header{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:14px 18px;
+}
+
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.brand img{
+  width:120px;
+  height:120px;
+  object-fit:contain;
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:6px;
+  background:#fff;
+}
+
+.brand-title{
+  text-align:center;
+  font-size:48px;
+  letter-spacing:-.02em;
+}
+
+.brand-title .red{ color:#c81e1e; font-weight:700; }
+
+.brand-sub{
+  text-align:center;
+  color:var(--muted);
+  margin-top:6px;
+  font-size:18px;
+  font-style:italic;
+}
+
+.navbar{
+  margin-top:12px;
+  background: var(--nav);
+  color: var(--navText);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:10px 12px;
+  display:flex;
+  gap:18px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+
+.navbar a{
+  color: var(--navText);
+  text-decoration:none;
+  font-weight:700;
+  font-size:13px;
+  letter-spacing:.02em;
+  text-transform: uppercase;
+}
+
+.navbar a:hover{ text-decoration: underline; }
+
+.card{
+  margin-top:16px;
+  background: var(--card);
+  border:1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding:20px;
+}
+
+.h1{ font-size:28px; margin:0 0 12px; }
+.p{ color: var(--muted); line-height:1.5; margin: 0 0 12px; }
+.small{ font-size:13px; color:var(--muted); }
+
+.row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+
+.input{
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+  min-width:220px;
+}
+
+.button{
+  padding:12px 16px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:#111827;
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.button.secondary{
+  background:#fff;
+  color:var(--text);
+}
+
+.button:disabled{ opacity:.5; cursor:not-allowed; }
+
+.badge{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.hr{ border:0; border-top:1px solid var(--border); margin:20px 0; }
+
+/* Grille domaines */
+.badge-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+  margin-top:14px;
+}
+
+.badge-tile{
+  border:1px solid var(--border);
+  border-radius:18px;
+  background:#fff;
+  padding:18px;
+  box-shadow:0 8px 18px rgba(0,0,0,0.08);
+
+  display:grid;
+  grid-template-columns:70px 1fr;
+  gap:14px;
+  align-items:center;
+}
+
+.badge-medal{
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background: radial-gradient(circle at 30% 30%, #fff8c7, #fbbf24, #d97706);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  justify-self:center;
+  box-shadow:
+    inset 0 4px 8px rgba(255,255,255,0.5),
+    inset 0 -4px 10px rgba(0,0,0,0.15),
+    0 4px 10px rgba(0,0,0,0.15);
+}
+
+.badge-tile-title{ font-weight:800; font-size:16px; margin-bottom:4px; }
+.badge-tile-meta{ font-size:13px; color:var(--muted); line-height:1.4; }
+
+.progress{
+  height:10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  overflow:hidden;
+  background:#fff;
+  margin-top:8px;
+}
+
+.progress > div{ height:100%; background:#111827; }
+
+.badge-tile:hover{
+  transform: translateY(-3px);
+  box-shadow:0 14px 28px rgba(0,0,0,0.14);
+  transition:all .15s ease;
 }
