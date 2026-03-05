@@ -289,12 +289,35 @@ export default function MePage() {
         </div>
 
         <input className="input" placeholder="Titre" value={titreAct} onChange={(e) => setTitreAct(e.target.value)} />
-        <input
-          className="input"
-          placeholder="Organisme (optionnel)"
-          value={organismeAct}
-          onChange={(e) => setOrganismeAct(e.target.value)}
-        />
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+
+  <input
+    className="input"
+    type="number"
+    min="0"
+    step="0.5"
+    style={{ maxWidth: 120 }}
+    value={heuresAct}
+    onChange={(e) => setHeuresAct(Number(e.target.value))}
+  />
+
+  <span className="small">heures</span>
+
+</div>
+
+<div className="row" style={{ marginTop: 6 }}>
+
+  <button type="button" className="button secondary" onClick={() => setHeuresAct(1)}>1h</button>
+
+  <button type="button" className="button secondary" onClick={() => setHeuresAct(2)}>2h</button>
+
+  <button type="button" className="button secondary" onClick={() => setHeuresAct(3)}>3h</button>
+
+  <button type="button" className="button secondary" onClick={() => setHeuresAct(7)}>7h</button>
+
+  <button type="button" className="button secondary" onClick={() => setHeuresAct(14)}>14h</button>
+
+</div>
 
         <div className="row">
           <input
