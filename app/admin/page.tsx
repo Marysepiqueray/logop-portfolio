@@ -45,7 +45,18 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
-    loadData();
+    loadData(const { data: userData } = await supabase.auth.getUser();
+
+const { data: m } = await supabase
+  .from("membres")
+  .select("*")
+  .eq("auth_id", userData.user?.id)
+  .maybeSingle();
+
+if (!m || m.role !== "admin") {
+  window.location.href = "/";
+  return;
+});
   }, []);
 
   async function createFormation() {
