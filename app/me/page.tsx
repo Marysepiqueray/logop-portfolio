@@ -54,7 +54,7 @@ setMembre(m)
 
 const{data:d}=await supabase
 .from("domaines")
-.select("*")
+.select("id, ordre, nom, description")
 .order("ordre",{ascending:true})
 
 setDomaines(d??[])
