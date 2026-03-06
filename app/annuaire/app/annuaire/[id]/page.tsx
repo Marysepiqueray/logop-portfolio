@@ -11,10 +11,10 @@ type Domaine = {
 };
 
 function medal(hours: number) {
-  if (hours >= 90) return { label: "OR", icon: "🥇" };
-  if (hours >= 45) return { label: "ARGENT", icon: "🥈" };
-  if (hours >= 15) return { label: "BRONZE", icon: "🥉" };
-  return { label: "AUCUN", icon: "⬜" };
+  if (hours >= 90) return { label: "OR", icon: "🥇", score: 3 };
+  if (hours >= 45) return { label: "ARGENT", icon: "🥈", score: 2 };
+  if (hours >= 15) return { label: "BRONZE", icon: "🥉", score: 1 };
+  return { label: "AUCUN", icon: "⬜", score: 0 };
 }
 
 export default function ProfilAnnuairePage({
@@ -106,8 +106,13 @@ export default function ProfilAnnuairePage({
         };
       })
       .filter((x) => x.medal.label !== "AUCUN")
-      .sort((a, b) => b.heures - a.heures);
+      .sort((a, b) => {
+        if (b.medal.score !== a.medal.score) return b.medal.score - a.medal.score;
+        return b.heures - a.heures;
+      });
   }, [domaines, validations, activites]);
+
+  const top3 = passeport.slice(0, 3);
 
   if (loading) {
     return <main className="card">Chargement…</main>;
@@ -125,26 +130,35 @@ export default function ProfilAnnuairePage({
         </a>
       </div>
 
-      {membre.ville ? (
-        <p className="p">📍 {membre.ville}</p>
-      ) : null}
+      {membre.ville ? <p className="p">📍 {membre.ville}</p> : null}
 
-      {membre.presentation ? (
-        <p className="p">{membre.presentation}</p>
-      ) : null}
+      {membre.presentation ? <p className="p">{membre.presentation}</p> : null}
 
-   <div style={{ marginBottom: 16 }}>
-  <a
-    className="button secondary"
-    href={`mailto:${membre.email}`}
-  >
-    Contacter
-  </a>
-</div>
+      <div style={{ marginBottom: 16 }}>
+        <a className="button secondary" href={`mailto:${membre.email}`}>
+          Contacter
+        </a>
+      </div>
 
       <hr className="hr" />
 
-      <h2>Domaines de compétence</h2>
+      <h2>Domaines principaux</h2>
+
+      {top3.length === 0 ? (
+        <p className="p">Aucun domaine encore atteint.</p>
+      ) : (
+        <div className="row" style={{ marginTop: 10 }}>
+          {top3.map((p) => (
+            <span key={p.domaine.id} className="badge">
+              {p.medal.icon} {p.domaine.nom} — {p.heures}h
+            </span>
+          ))}
+        </div>
+      )}
+
+      <hr className="hr" />
+
+      <h2>Tous les domaines de compétence</h2>
 
       {passeport.length === 0 ? (
         <p className="p">Aucun domaine encore atteint.</p>
