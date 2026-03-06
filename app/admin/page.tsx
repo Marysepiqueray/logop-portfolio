@@ -43,10 +43,11 @@ export default function AdminPage() {
   const [competencesFormation, setCompetencesFormation] = useState("");
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState("");
-const [nomInvite, setNomInvite] = useState("");
-const [emailInvite, setEmailInvite] = useState("");
-const [roleInvite, setRoleInvite] = useState("membre");
-  
+
+  const [nomInvite, setNomInvite] = useState("");
+  const [emailInvite, setEmailInvite] = useState("");
+  const [roleInvite, setRoleInvite] = useState("membre");
+
   async function loadBaseData() {
     const { data: m, error: me } = await supabase.from("membres").select("*");
     if (me) throw me;
@@ -101,7 +102,9 @@ const [roleInvite, setRoleInvite] = useState("membre");
     if (ae) throw ae;
 
     const heures: Record<string, Record<string, number>> = {};
-    for (const mid of membresIds) heures[mid] = {};
+    for (const mid of membresIds) {
+      heures[mid] = {};
+    }
 
     for (const row of (v ?? []) as any[]) {
       const mid = row.membre_id as string;
@@ -168,47 +171,7 @@ const [roleInvite, setRoleInvite] = useState("membre");
     if (!titreFormation.trim()) return alert("Titre obligatoire");
     if (!domaineId) return alert("Choisir un domaine");
     if (!dureeFormation || dureeFormation < 1) return alert("Durée invalide");
-async function inviteMembre() {
-  if (!nomInvite.trim()) return alert("Nom obligatoire");
-  if (!emailInvite.trim()) return alert("Email obligatoire");
 
-  const email = emailInvite.trim().toLowerCase();
-
-  const { data: exist, error: checkError } = await supabase
-    .from("membres")
-    .select("id")
-    .ilike("email", email);
-
-  if (checkError) {
-    alert(checkError.message);
-    return;
-  }
-
-  if (exist && exist.length > 0) {
-    alert("Cet email existe déjà dans les membres.");
-    return;
-  }
-
-  const { error } = await supabase.from("membres").insert({
-    nom: nomInvite.trim(),
-    email,
-    role: roleInvite,
-    annuaire_visible: false,
-  });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Membre ajouté ✅");
-
-  setNomInvite("");
-  setEmailInvite("");
-  setRoleInvite("membre");
-
-  await loadBaseData();
-}
     const { error } = await supabase.from("formations").insert({
       titre: titreFormation.trim(),
       duree_heures: Number(dureeFormation),
@@ -218,48 +181,7 @@ async function inviteMembre() {
       domaine_id: domaineId,
       type: typeFormation,
     });
-async function inviteMembre() {
-  if (!nomInvite.trim()) return alert("Nom obligatoire");
-  if (!emailInvite.trim()) return alert("Email obligatoire");
 
-  const email = emailInvite.trim().toLowerCase();
-
-  const { data: exist, error: checkError } = await supabase
-    .from("membres")
-    .select("id")
-    .ilike("email", email);
-
-  if (checkError) {
-    alert(checkError.message);
-    return;
-  }
-
-  if (exist && exist.length > 0) {
-    alert("Cet email existe déjà dans les membres.");
-    return;
-  }
-
-  const { error } = await supabase.from("membres").insert({
-    nom: nomInvite.trim(),
-    email,
-    role: roleInvite,
-    annuaire_visible: false,
-  });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Membre ajouté ✅");
-
-  setNomInvite("");
-  setEmailInvite("");
-  setRoleInvite("membre");
-
-  await loadBaseData();
-}
-    
     if (error) return alert(error.message);
 
     alert("Formation ajoutée ✅");
@@ -295,6 +217,48 @@ async function inviteMembre() {
     if (error) return alert(error.message);
 
     alert("Validation enregistrée ✅");
+    await loadBaseData();
+  }
+
+  async function inviteMembre() {
+    if (!nomInvite.trim()) return alert("Nom obligatoire");
+    if (!emailInvite.trim()) return alert("Email obligatoire");
+
+    const email = emailInvite.trim().toLowerCase();
+
+    const { data: exist, error: checkError } = await supabase
+      .from("membres")
+      .select("id")
+      .ilike("email", email);
+
+    if (checkError) {
+      alert(checkError.message);
+      return;
+    }
+
+    if (exist && exist.length > 0) {
+      alert("Cet email existe déjà dans les membres.");
+      return;
+    }
+
+    const { error } = await supabase.from("membres").insert({
+      nom: nomInvite.trim(),
+      email,
+      role: roleInvite,
+      annuaire_visible: false,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Membre ajouté ✅");
+
+    setNomInvite("");
+    setEmailInvite("");
+    setRoleInvite("membre");
+
     await loadBaseData();
   }
 
@@ -420,38 +384,40 @@ async function inviteMembre() {
       )}
 
       <hr className="hr" />
-<hr className="hr" />
 
-<h2>Inviter un membre</h2>
+      <h2>Inviter un membre</h2>
 
-<div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
-  <input
-    className="input"
-    placeholder="Nom complet"
-    value={nomInvite}
-    onChange={(e) => setNomInvite(e.target.value)}
-  />
+      <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
+        <input
+          className="input"
+          placeholder="Nom complet"
+          value={nomInvite}
+          onChange={(e) => setNomInvite(e.target.value)}
+        />
 
-  <input
-    className="input"
-    placeholder="Adresse email"
-    value={emailInvite}
-    onChange={(e) => setEmailInvite(e.target.value)}
-  />
+        <input
+          className="input"
+          placeholder="Adresse email"
+          value={emailInvite}
+          onChange={(e) => setEmailInvite(e.target.value)}
+        />
 
-  <select
-    className="input"
-    value={roleInvite}
-    onChange={(e) => setRoleInvite(e.target.value)}
-  >
-    <option value="membre">Membre</option>
-    <option value="admin">Admin</option>
-  </select>
+        <select
+          className="input"
+          value={roleInvite}
+          onChange={(e) => setRoleInvite(e.target.value)}
+        >
+          <option value="membre">Membre</option>
+          <option value="admin">Admin</option>
+        </select>
 
-  <button className="button" onClick={inviteMembre}>
-    Ajouter le membre
-  </button>
-</div>
+        <button className="button" onClick={inviteMembre}>
+          Ajouter le membre
+        </button>
+      </div>
+
+      <hr className="hr" />
+
       <h2>Créer une formation interne</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
