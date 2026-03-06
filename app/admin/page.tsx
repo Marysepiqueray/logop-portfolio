@@ -168,7 +168,47 @@ const [roleInvite, setRoleInvite] = useState("membre");
     if (!titreFormation.trim()) return alert("Titre obligatoire");
     if (!domaineId) return alert("Choisir un domaine");
     if (!dureeFormation || dureeFormation < 1) return alert("Durée invalide");
+async function inviteMembre() {
+  if (!nomInvite.trim()) return alert("Nom obligatoire");
+  if (!emailInvite.trim()) return alert("Email obligatoire");
 
+  const email = emailInvite.trim().toLowerCase();
+
+  const { data: exist, error: checkError } = await supabase
+    .from("membres")
+    .select("id")
+    .ilike("email", email);
+
+  if (checkError) {
+    alert(checkError.message);
+    return;
+  }
+
+  if (exist && exist.length > 0) {
+    alert("Cet email existe déjà dans les membres.");
+    return;
+  }
+
+  const { error } = await supabase.from("membres").insert({
+    nom: nomInvite.trim(),
+    email,
+    role: roleInvite,
+    annuaire_visible: false,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Membre ajouté ✅");
+
+  setNomInvite("");
+  setEmailInvite("");
+  setRoleInvite("membre");
+
+  await loadBaseData();
+}
     const { error } = await supabase.from("formations").insert({
       titre: titreFormation.trim(),
       duree_heures: Number(dureeFormation),
