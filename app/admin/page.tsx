@@ -304,22 +304,25 @@ export default function AdminPage() {
               h
             </div>
 
-            <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>
-              Domaines les moins formés
-            </div>
+         <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>
+  Domaines les moins formés
+</div>
 
-            {reseau?.parDomaine
-              ?.slice()
-              .sort((a: any, b: any) => a.nbOr - b.nbOr)
-              .slice(0, 3)
-              .map((x: any) => (
-                <div key={x.domaine.id} className="small" style={{ marginBottom: 4 }}>
-                  {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
-                </div>
-              ))}
-          </div>
-        </>
-      )}
+{reseau?.parDomaine
+  ?.slice()
+  .sort((a: any, b: any) => a.nbOr - b.nbOr)
+  .slice(0, 3)
+  .map((x: any) => (
+    <div key={x.domaine.id} style={{ marginBottom: 10 }}>
+      <div className="small" style={{ marginBottom: 2 }}>
+        {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+      </div>
+
+      <div className="small" style={{ fontStyle: "italic" }}>
+        Formation recommandée à organiser : renforcer ce domaine en priorité
+      </div>
+    </div>
+  ))}
 
       <hr className="hr" />
 
