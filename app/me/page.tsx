@@ -70,7 +70,7 @@ export default function MePage() {
         .select("date_validation, formation:formations(titre, domaine_id, duree_heures, niveau)")
         .eq("membre_id", m.id)
         .order("date_validation", { ascending: false });
-
+const [activites, setActivites] = useState<any[]>([]);
       const { data: a } = await supabase
         .from("activites")
         .select("*")
