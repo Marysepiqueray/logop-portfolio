@@ -18,12 +18,18 @@ export default function RootLayout({
           <header className="header">
             <div className="header-row">
               <div className="brand">
-                <img src="/logo.png" alt="Logo" />
-                <div>
+                <div className="brand-logo-wrap">
+                  <img src="/logo.png" alt="Logo Logop'Aide et vous" />
+                </div>
+
+                <div className="brand-text">
                   <div className="brand-title">
                     Logop'Aide <span className="red">et vous</span>
                   </div>
-                  <div className="brand-sub">Passeport de compétences</div>
+
+                  <div className="brand-sub">
+                    Passeport de compétences • formations • réseau
+                  </div>
                 </div>
               </div>
             </div>
