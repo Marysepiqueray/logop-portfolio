@@ -11,14 +11,15 @@ type Domaine = {
 };
 
 function medal(hours: number) {
-  if (hours >= 90) return { label: "OR", icon: "🥇" };
-  if (hours >= 45) return { label: "ARGENT", icon: "🥈" };
-  if (hours >= 15) return { label: "BRONZE", icon: "🥉" };
-  return { label: "AUCUN", icon: "⬜" };
+  if (hours >= 90) return { label: "OR", icon: "🥇", score: 3 };
+  if (hours >= 45) return { label: "ARGENT", icon: "🥈", score: 2 };
+  if (hours >= 15) return { label: "BRONZE", icon: "🥉", score: 1 };
+  return { label: "AUCUN", icon: "⬜", score: 0 };
 }
 
 export default function AnnuairePage() {
   const [loading, setLoading] = useState(true);
+
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
@@ -79,7 +80,9 @@ export default function AnnuairePage() {
   const annuaire = useMemo(() => {
     const heuresParMembre: Record<string, Record<string, number>> = {};
 
-    for (const m of membres) heuresParMembre[m.id] = {};
+    for (const m of membres) {
+      heuresParMembre[m.id] = {};
+    }
 
     for (const row of validations as any[]) {
       const mid = row.membre_id as string;
@@ -105,6 +108,7 @@ export default function AnnuairePage() {
         .map((d) => {
           const h = Number(heuresParMembre[m.id]?.[d.id] ?? 0);
           const med = medal(h);
+
           return {
             id: d.id,
             nom: d.nom,
@@ -113,42 +117,55 @@ export default function AnnuairePage() {
           };
         })
         .filter((d) => d.medal.label !== "AUCUN")
-        .sort((a, b) => b.heures - a.heures);
+        .sort((a, b) => {
+          if (b.medal.score !== a.medal.score) return b.medal.score - a.medal.score;
+          return b.heures - a.heures;
+        });
+
+      const expertiseScore = domainesMembre.reduce((sum, d) => sum + d.medal.score, 0);
 
       return {
         ...m,
         domaines: domainesMembre,
+        expertiseScore,
       };
     });
   }, [membres, validations, activites, domaines]);
 
   const filtered = useMemo(() => {
-    return annuaire.filter((m) => {
-      const text = (
-        (m.nom ?? "") +
-        " " +
-        (m.ville ?? "") +
-        " " +
-        (m.presentation ?? "") +
-        " " +
-        m.domaines.map((d: any) => d.nom).join(" ")
-      ).toLowerCase();
+    return annuaire
+      .filter((m) => {
+        const text = (
+          (m.nom ?? "") +
+          " " +
+          (m.ville ?? "") +
+          " " +
+          (m.presentation ?? "") +
+          " " +
+          m.domaines.map((d: any) => d.nom).join(" ")
+        ).toLowerCase();
 
-      const okSearch = text.includes(search.toLowerCase());
-      const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
+        const okSearch = text.includes(search.toLowerCase());
+        const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
 
-      return okSearch && okVille;
-    });
+        return okSearch && okVille;
+      })
+      .sort((a, b) => {
+        if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
+        return a.nom.localeCompare(b.nom);
+      });
   }, [annuaire, search, villeSearch]);
 
-  if (loading) return <main className="card">Chargement…</main>;
+  if (loading) {
+    return <main className="card">Chargement…</main>;
+  }
 
   return (
     <main className="card">
       <h1 className="h1">Annuaire des logopèdes</h1>
 
       <p className="p">
-        Retrouvez les membres visibles dans l’annuaire en fonction de leur localisation et de leurs domaines de compétence.
+        Retrouvez les membres visibles dans l’annuaire selon leur localisation et leurs domaines de compétence.
       </p>
 
       <div className="row" style={{ marginTop: 10 }}>
