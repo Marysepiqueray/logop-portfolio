@@ -43,7 +43,10 @@ export default function AdminPage() {
   const [competencesFormation, setCompetencesFormation] = useState("");
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState("");
-
+const [nomInvite, setNomInvite] = useState("");
+const [emailInvite, setEmailInvite] = useState("");
+const [roleInvite, setRoleInvite] = useState("membre");
+  
   async function loadBaseData() {
     const { data: m, error: me } = await supabase.from("membres").select("*");
     if (me) throw me;
@@ -175,7 +178,48 @@ export default function AdminPage() {
       domaine_id: domaineId,
       type: typeFormation,
     });
+async function inviteMembre() {
+  if (!nomInvite.trim()) return alert("Nom obligatoire");
+  if (!emailInvite.trim()) return alert("Email obligatoire");
 
+  const email = emailInvite.trim().toLowerCase();
+
+  const { data: exist, error: checkError } = await supabase
+    .from("membres")
+    .select("id")
+    .ilike("email", email);
+
+  if (checkError) {
+    alert(checkError.message);
+    return;
+  }
+
+  if (exist && exist.length > 0) {
+    alert("Cet email existe déjà dans les membres.");
+    return;
+  }
+
+  const { error } = await supabase.from("membres").insert({
+    nom: nomInvite.trim(),
+    email,
+    role: roleInvite,
+    annuaire_visible: false,
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Membre ajouté ✅");
+
+  setNomInvite("");
+  setEmailInvite("");
+  setRoleInvite("membre");
+
+  await loadBaseData();
+}
+    
     if (error) return alert(error.message);
 
     alert("Formation ajoutée ✅");
@@ -336,7 +380,38 @@ export default function AdminPage() {
       )}
 
       <hr className="hr" />
+<hr className="hr" />
 
+<h2>Inviter un membre</h2>
+
+<div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
+  <input
+    className="input"
+    placeholder="Nom complet"
+    value={nomInvite}
+    onChange={(e) => setNomInvite(e.target.value)}
+  />
+
+  <input
+    className="input"
+    placeholder="Adresse email"
+    value={emailInvite}
+    onChange={(e) => setEmailInvite(e.target.value)}
+  />
+
+  <select
+    className="input"
+    value={roleInvite}
+    onChange={(e) => setRoleInvite(e.target.value)}
+  >
+    <option value="membre">Membre</option>
+    <option value="admin">Admin</option>
+  </select>
+
+  <button className="button" onClick={inviteMembre}>
+    Ajouter le membre
+  </button>
+</div>
       <h2>Créer une formation interne</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
