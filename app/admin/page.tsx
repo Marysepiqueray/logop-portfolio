@@ -30,13 +30,11 @@ export default function AdminPage() {
   const [validationsRecentes, setValidationsRecentes] = useState<any[]>([]);
   const [reseau, setReseau] = useState<any>(null);
 
-  // Recherche / sélection validation
   const [searchMembre, setSearchMembre] = useState("");
   const [searchFormation, setSearchFormation] = useState("");
   const [selectedMembre, setSelectedMembre] = useState("");
   const [selectedFormation, setSelectedFormation] = useState("");
 
-  // Création formation
   const [titreFormation, setTitreFormation] = useState("");
   const [dureeFormation, setDureeFormation] = useState<number>(14);
   const [niveauFormation, setNiveauFormation] = useState("");
@@ -51,19 +49,19 @@ export default function AdminPage() {
 
     const { data: d, error: de } = await supabase
       .from("domaines")
-      .select("id,ordre,nom,description")
+      .select("id, ordre, nom, description")
       .order("ordre", { ascending: true });
     if (de) throw de;
 
     const { data: f, error: fe } = await supabase
       .from("formations")
-      .select("id,titre,duree_heures,niveau,domaine_id,type,created_at")
+      .select("id, titre, duree_heures, niveau, domaine_id, type, created_at")
       .order("created_at", { ascending: false });
     if (fe) throw fe;
 
     const { data: v, error: ve } = await supabase
       .from("validations")
-      .select("id,date_validation,membres!membre_id(nom,email),formations(titre)")
+      .select("id, date_validation, membres!membre_id(nom,email), formations(titre)")
       .order("date_validation", { ascending: false })
       .limit(20);
     if (ve) throw ve;
@@ -79,14 +77,12 @@ export default function AdminPage() {
       .filter((m) => m.role === "membre")
       .map((m) => m.id);
 
-    // Validations internes
     const { data: v, error: ve } = await supabase
       .from("validations")
       .select("membre_id, formation:formations(domaine_id, duree_heures)")
       .in("membre_id", membresIds);
     if (ve) throw ve;
 
-    // Activités déclarées
     const { data: a, error: ae } = await supabase
       .from("activites")
       .select("membre_id, domaine_id, duree_heures, type")
@@ -96,19 +92,16 @@ export default function AdminPage() {
     const heures: Record<string, Record<string, number>> = {};
     for (const mid of membresIds) heures[mid] = {};
 
-    // Sommes internes (on force le typing en any)
     for (const row of (v ?? []) as any[]) {
       const mid = row.membre_id as string;
       const formation = row.formation as any;
       const dom = formation?.domaine_id as string | undefined;
-
       if (!mid || !dom) continue;
 
       const h = Number(formation?.duree_heures ?? 0);
       heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
     }
 
-    // Sommes externes
     let totalExternes = 0;
     let totalConferences = 0;
     let totalWebinaires = 0;
@@ -163,7 +156,7 @@ export default function AdminPage() {
   async function createFormation() {
     if (!titreFormation.trim()) return alert("Titre obligatoire");
     if (!domaineId) return alert("Choisir un domaine");
-    if (!dureeFormation || dureeFormation < 0) return alert("Durée invalide");
+    if (!dureeFormation || dureeFormation < 1) return alert("Durée invalide");
 
     const { error } = await supabase.from("formations").insert({
       titre: titreFormation.trim(),
@@ -187,7 +180,6 @@ export default function AdminPage() {
     setTypeFormation("formation_interne");
     setDomaineId("");
 
-    // Recharge les listes
     await loadBaseData();
   }
 
@@ -214,7 +206,6 @@ export default function AdminPage() {
     await loadBaseData();
   }
 
-  // Protection admin + chargement
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -239,11 +230,10 @@ export default function AdminPage() {
       try {
         await loadBaseData();
 
-        // recalcul stats réseau
         const { data: m } = await supabase.from("membres").select("*");
         const { data: d } = await supabase
           .from("domaines")
-          .select("id,ordre,nom,description")
+          .select("id, ordre, nom, description")
           .order("ordre", { ascending: true });
 
         const stats = await buildReseauStats(m ?? [], (d ?? []) as any);
@@ -266,140 +256,193 @@ export default function AdminPage() {
     return (formations ?? []).filter((f) => (f.titre ?? "").toLowerCase().includes(searchFormation.toLowerCase()));
   }, [formations, searchFormation]);
 
-if (loading) return <main className="card">Chargement…</main>;
+  if (loading) return <main className="card">Chargement…</main>;
 
-return (
-  <main className="card">
+  return (
+    <main className="card">
+      <h1 className="h1">Administration</h1>
 
-    <h1 className="h1">Administration</h1>
+      <hr className="hr" />
 
-    <hr className="hr" />
+      <h2>Tableau de bord du réseau</h2>
 
-    <h2>Tableau de bord du réseau</h2>
+      {!reseau ? (
+        <p className="p">Statistiques indisponibles.</p>
+      ) : (
+        <>
+          <div className="row" style={{ marginTop: 10 }}>
+            <span className="badge">
+              Membres : <b>{reseau.nbMembres}</b> / 300
+            </span>
 
-    <div className="row" style={{ marginTop: 10 }}>
+            <span className="badge">
+              Internes : <b>{Math.round(reseau.totalInternes)}h</b>
+            </span>
 
-      <span className="badge">
-        Membres : {reseau?.nbMembres ?? 0}
-      </span>
+            <span className="badge">
+              Externes : <b>{Math.round(reseau.totalExternes)}h</b>
+            </span>
 
-      <span className="badge">
-        Internes : {reseau?.totalInternes ?? 0}h
-      </span>
+            <span className="badge">
+              Conférences : <b>{Math.round(reseau.totalConferences)}h</b>
+            </span>
 
-      <span className="badge">
-        Externes : {reseau?.totalExternes ?? 0}h
-      </span>
-
-      <span className="badge">
-        Conférences : {reseau?.totalConferences ?? 0}h
-      </span>
-
-      <span className="badge">
-        Webinaires : {reseau?.totalWebinaires ?? 0}h
-      </span>
-
-    </div>
-
-    <div style={{ marginTop: 16 }}>
-
-      <div
-        className="small"
-        style={{ fontWeight: 700, marginBottom: 8 }}
-      >
-        Total heures réseau :{" "}
-        {Math.round(
-          (reseau?.totalInternes ?? 0) +
-          (reseau?.totalExternes ?? 0) +
-          (reseau?.totalConferences ?? 0) +
-          (reseau?.totalWebinaires ?? 0)
-        )}h
-      </div>
-
-      <div
-        className="small"
-        style={{ fontWeight: 700, marginBottom: 6 }}
-      >
-        Domaines les moins formés
-      </div>
-
-      {reseau?.parDomaine
-        ?.slice()
-        .sort((a: any, b: any) => a.nbOr - b.nbOr)
-        .slice(0, 3)
-        .map((x: any) => (
-          <div
-            key={x.domaine.id}
-            className="small"
-            style={{ marginBottom: 4 }}
-          >
-            {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+            <span className="badge">
+              Webinaires : <b>{Math.round(reseau.totalWebinaires)}h</b>
+            </span>
           </div>
-        ))}
 
-    </div>
+          <div style={{ marginTop: 16 }}>
+            <div className="small" style={{ fontWeight: 700, marginBottom: 8 }}>
+              Total heures réseau :{" "}
+              {Math.round(
+                (reseau?.totalInternes ?? 0) +
+                  (reseau?.totalExternes ?? 0) +
+                  (reseau?.totalConferences ?? 0) +
+                  (reseau?.totalWebinaires ?? 0)
+              )}
+              h
+            </div>
 
-    <hr className="hr" />
+            <div className="small" style={{ fontWeight: 700, marginBottom: 6 }}>
+              Domaines les moins formés
+            </div>
 
-    <h2>Gestion des formations</h2>
+            {reseau?.parDomaine
+              ?.slice()
+              .sort((a: any, b: any) => a.nbOr - b.nbOr)
+              .slice(0, 3)
+              .map((x: any) => (
+                <div key={x.domaine.id} className="small" style={{ marginBottom: 4 }}>
+                  {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+                </div>
+              ))}
+          </div>
+        </>
+      )}
 
-    <p className="p">
-      Utilisez cette section pour créer une nouvelle formation interne
-      ou enregistrer une formation dans le système.
-    </p>
+      <hr className="hr" />
 
-    <div className="card" style={{ marginTop: 10 }}>
+      <h2>Créer une formation interne</h2>
 
-      <div style={{ display: "grid", gap: 10, maxWidth: 500 }}>
-
-        <label className="small">Titre de la formation</label>
-
+      <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
         <input
           className="input"
+          placeholder="Titre"
           value={titreFormation}
           onChange={(e) => setTitreFormation(e.target.value)}
-          placeholder="Ex : Dysphasie avancée"
         />
 
-        <label className="small">Durée (heures)</label>
+        <div className="row">
+          <select className="input" value={typeFormation} onChange={(e) => setTypeFormation(e.target.value as any)}>
+            <option value="formation_interne">Formation interne</option>
+            <option value="conference_interne">Conférence interne</option>
+          </select>
 
-        <input
-          className="input"
-          type="number"
-          min="1"
-          max="200"
-          step="1"
-          value={dureeFormation}
-          onChange={(e) => setDureeFormation(Number(e.target.value))}
-        />
+          <input
+            className="input"
+            type="number"
+            min="1"
+            max="200"
+            step="1"
+            placeholder="Durée (heures)"
+            value={dureeFormation}
+            onChange={(e) => setDureeFormation(Number(e.target.value))}
+          />
+        </div>
 
-        <label className="small">Domaine</label>
-
-        <select
-          className="input"
-          value={domaineFormation}
-          onChange={(e) => setDomaineFormation(e.target.value)}
-        >
+        <select className="input" value={domaineId} onChange={(e) => setDomaineId(e.target.value)}>
           <option value="">Choisir un domaine</option>
-
-          {domaines.map((d: any) => (
+          {domaines.map((d) => (
             <option key={d.id} value={d.id}>
               {d.nom}
             </option>
           ))}
-
         </select>
 
-        <button
-          className="button"
-          onClick={createFormation}
-        >
+        <input
+          className="input"
+          placeholder="Niveau (optionnel)"
+          value={niveauFormation}
+          onChange={(e) => setNiveauFormation(e.target.value)}
+        />
+
+        <textarea
+          className="input"
+          placeholder="Description (optionnel)"
+          value={descriptionFormation}
+          onChange={(e) => setDescriptionFormation(e.target.value)}
+        />
+
+        <textarea
+          className="input"
+          placeholder="Compétences (optionnel)"
+          value={competencesFormation}
+          onChange={(e) => setCompetencesFormation(e.target.value)}
+        />
+
+        <button className="button" onClick={createFormation}>
           Ajouter la formation
         </button>
-
       </div>
 
-    </div>
+      <hr className="hr" />
 
-  </main>
-);
+      <h2>Valider une formation pour un membre</h2>
+
+      <div className="row">
+        <input
+          className="input"
+          placeholder="Rechercher membre"
+          value={searchMembre}
+          onChange={(e) => setSearchMembre(e.target.value)}
+        />
+
+        <input
+          className="input"
+          placeholder="Rechercher formation"
+          value={searchFormation}
+          onChange={(e) => setSearchFormation(e.target.value)}
+        />
+      </div>
+
+      <div className="row" style={{ marginTop: 8 }}>
+        <select className="input" value={selectedMembre} onChange={(e) => setSelectedMembre(e.target.value)}>
+          <option value="">Choisir un membre</option>
+          {membresFiltres.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.nom} — {m.email}
+            </option>
+          ))}
+        </select>
+
+        <select className="input" value={selectedFormation} onChange={(e) => setSelectedFormation(e.target.value)}>
+          <option value="">Choisir une formation</option>
+          {formationsFiltrees.map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.titre}
+            </option>
+          ))}
+        </select>
+
+        <button className="button" onClick={validateFormation}>
+          Valider
+        </button>
+      </div>
+
+      <hr className="hr" />
+
+      <h2>Validations récentes</h2>
+
+      {validationsRecentes.length === 0 ? (
+        <p className="p">Aucune validation récente.</p>
+      ) : (
+        validationsRecentes.map((v) => (
+          <div key={v.id} className="small" style={{ marginBottom: 6 }}>
+            {v.membres?.nom} — {v.formations?.titre}
+          </div>
+        ))
+      )}
+    </main>
+  );
+}
