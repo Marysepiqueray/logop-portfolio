@@ -243,9 +243,14 @@ export default function AnnuairePage() {
                   </div>
                 )}
 
-                <div className="badge-tile-meta" style={{ marginTop: 10 }}>
-                  ✉️ {m.email}
-                </div>
+              <div style={{ marginTop: 12 }}>
+  <a
+    className="button secondary"
+    href={`mailto:${m.email}`}
+  >
+    Contacter
+  </a>
+</div>
               </div>
             </div>
           ))}
