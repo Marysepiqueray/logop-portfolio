@@ -17,6 +17,22 @@ function medal(hours: number) {
   return { label: "AUCUN", icon: "⬜" };
 }
 
+function getDomaineIcon(nom: string) {
+  const text = (nom || "").toLowerCase();
+
+  if (text.includes("langage oral")) return "🗣️";
+  if (text.includes("langage écrit")) return "📖";
+  if (text.includes("neurolog")) return "🧠";
+  if (text.includes("moteurs")) return "👄";
+  if (text.includes("fluence")) return "💬";
+  if (text.includes("voix")) return "🎤";
+  if (text.includes("oro")) return "🦷";
+  if (text.includes("déglutition")) return "🥄";
+  if (text.includes("autres")) return "✨";
+
+  return "🏅";
+}
+
 export default function MePage() {
   const [loading, setLoading] = useState(true);
 
@@ -41,21 +57,59 @@ export default function MePage() {
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user?.id;
+      const user = userData.user;
+      const userId = user?.id;
+      const email = user?.email?.toLowerCase().trim();
 
-      if (!userId) {
+      if (!userId || !email) {
         window.location.href = "/";
         return;
       }
 
-      const { data: m } = await supabase
+      // 1) On vérifie d'abord si l'email existe déjà chez les membres autorisés
+      let { data: m, error: mError } = await supabase
         .from("membres")
         .select("*")
-        .eq("auth_id", userId)
+        .ilike("email", email)
         .maybeSingle();
 
+      if (mError) {
+        alert(mError.message);
+        window.location.href = "/";
+        return;
+      }
+
+      // 2) Si l'email n'existe pas dans la liste membres, accès refusé
       if (!m) {
-        alert("Compte non lié");
+        alert("Votre adresse email n'est pas reconnue comme membre de Logop'Aide et vous.");
+        await supabase.auth.signOut();
+        window.location.href = "/";
+        return;
+      }
+
+      // 3) Si le membre existe mais n'est pas encore lié, on lie auth_id automatiquement
+      if (!m.auth_id) {
+        const { data: updated, error: updateError } = await supabase
+          .from("membres")
+          .update({ auth_id: userId })
+          .eq("id", m.id)
+          .select("*")
+          .single();
+
+        if (updateError) {
+          alert(updateError.message);
+          await supabase.auth.signOut();
+          window.location.href = "/";
+          return;
+        }
+
+        m = updated;
+      }
+
+      // 4) Si l'email existe mais est lié à un autre auth_id, on bloque
+      if (m.auth_id && m.auth_id !== userId) {
+        alert("Ce membre est déjà lié à un autre compte.");
+        await supabase.auth.signOut();
         window.location.href = "/";
         return;
       }
@@ -70,7 +124,7 @@ export default function MePage() {
         .select("date_validation, formation:formations(titre, domaine_id, duree_heures, niveau)")
         .eq("membre_id", m.id)
         .order("date_validation", { ascending: false });
-const [activites, setActivites] = useState<any[]>([]);
+
       const { data: a } = await supabase
         .from("activites")
         .select("*")
@@ -152,9 +206,11 @@ const [activites, setActivites] = useState<any[]>([]);
     if (!membre?.id) return alert("Membre introuvable");
     if (!titreActivite.trim()) return alert("Titre obligatoire");
     if (!domaineActivite) return alert("Choisir un domaine");
-if (dateActivite < "2016-01-01") {
-  return alert("La date doit être au minimum le 01/01/2016");
-}
+
+    if (dateActivite < "2016-01-01") {
+      return alert("La date doit être au minimum le 01/01/2016");
+    }
+
     const { error } = await supabase.from("activites").insert({
       membre_id: membre.id,
       titre: titreActivite.trim(),
@@ -231,73 +287,32 @@ if (dateActivite < "2016-01-01") {
       <hr className="hr" />
 
       <h2>Mes domaines</h2>
-<h2>Mes domaines</h2>
 
-<div className="badge-grid">
+      <div className="badge-grid">
+        {passeport.map((p: any) => {
+          const pct = Math.min(100, (p.heures / 90) * 100);
 
-{passeport.map((p: any) => {
+          return (
+            <div key={p.domaine.id} className="badge-tile">
+              <div className="badge-medal">{getDomaineIcon(p.domaine.nom)}</div>
 
-const pct = Math.min(100, (p.heures / 90) * 100);
+              <div>
+                <div className="badge-tile-title">{p.domaine.nom}</div>
 
-function getDomaineIcon(nom: string) {
+                <div className="badge-tile-meta">{p.domaine.description}</div>
 
-const text = (nom || "").toLowerCase();
+                <div className="badge-tile-meta">
+                  {p.medal.label} — {p.heures}h
+                </div>
 
-if (text.includes("langage oral")) return "🗣️";
-if (text.includes("langage écrit")) return "📖";
-if (text.includes("neurolog")) return "🧠";
-if (text.includes("moteurs")) return "👄";
-if (text.includes("fluence")) return "💬";
-if (text.includes("voix")) return "🎤";
-if (text.includes("oro")) return "🦷";
-if (text.includes("déglutition")) return "🥄";
-if (text.includes("autres")) return "✨";
-
-return "🏅";
-
-}
-
-return (
-
-<div key={p.domaine.id} className="badge-tile">
-
-<div className="badge-medal">
-
-{getDomaineIcon(p.domaine.nom)}
-
-</div>
-
-<div>
-
-<div className="badge-tile-title">
-{p.domaine.nom}
-</div>
-
-<div className="badge-tile-meta">
-{p.domaine.description}
-</div>
-
-<div className="badge-tile-meta">
-
-{p.medal.label} — {p.heures}h
-
-</div>
-
-<div className="progress">
-
-<div style={{ width: `${pct}%` }} />
-
-</div>
-
-</div>
-
-</div>
-
-);
-
-})}
-
-</div>
+                <div className="progress">
+                  <div style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       <hr className="hr" />
 
@@ -345,13 +360,13 @@ return (
             placeholder="Durée (heures)"
           />
 
-   <input
-  className="input"
-  type="date"
-  min="2016-01-01"
-  value={dateActivite}
-  onChange={(e) => setDateActivite(e.target.value)}
-/>
+          <input
+            className="input"
+            type="date"
+            min="2016-01-01"
+            value={dateActivite}
+            onChange={(e) => setDateActivite(e.target.value)}
+          />
         </div>
 
         <select
