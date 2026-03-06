@@ -231,32 +231,73 @@ if (dateActivite < "2016-01-01") {
       <hr className="hr" />
 
       <h2>Mes domaines</h2>
+<h2>Mes domaines</h2>
 
-      <div className="badge-grid">
-        {passeport.map((p: any) => {
-          const pct = Math.min(100, (p.heures / 90) * 100);
+<div className="badge-grid">
 
-          return (
-            <div key={p.domaine.id} className="badge-tile">
-              <div className="badge-medal">{p.medal.icon}</div>
+{passeport.map((p: any) => {
 
-              <div>
-                <div className="badge-tile-title">{p.domaine.nom}</div>
+const pct = Math.min(100, (p.heures / 90) * 100);
 
-                <div className="badge-tile-meta">{p.domaine.description}</div>
+function getDomaineIcon(nom: string) {
 
-                <div className="badge-tile-meta">
-                  {p.medal.label} — {p.heures}h
-                </div>
+const text = (nom || "").toLowerCase();
 
-                <div className="progress">
-                  <div style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+if (text.includes("langage oral")) return "🗣️";
+if (text.includes("langage écrit")) return "📖";
+if (text.includes("neurolog")) return "🧠";
+if (text.includes("moteurs")) return "👄";
+if (text.includes("fluence")) return "💬";
+if (text.includes("voix")) return "🎤";
+if (text.includes("oro")) return "🦷";
+if (text.includes("déglutition")) return "🥄";
+if (text.includes("autres")) return "✨";
+
+return "🏅";
+
+}
+
+return (
+
+<div key={p.domaine.id} className="badge-tile">
+
+<div className="badge-medal">
+
+{getDomaineIcon(p.domaine.nom)}
+
+</div>
+
+<div>
+
+<div className="badge-tile-title">
+{p.domaine.nom}
+</div>
+
+<div className="badge-tile-meta">
+{p.domaine.description}
+</div>
+
+<div className="badge-tile-meta">
+
+{p.medal.label} — {p.heures}h
+
+</div>
+
+<div className="progress">
+
+<div style={{ width: `${pct}%` }} />
+
+</div>
+
+</div>
+
+</div>
+
+);
+
+})}
+
+</div>
 
       <hr className="hr" />
 
