@@ -266,172 +266,140 @@ export default function AdminPage() {
     return (formations ?? []).filter((f) => (f.titre ?? "").toLowerCase().includes(searchFormation.toLowerCase()));
   }, [formations, searchFormation]);
 
-  if (loading) return <main className="card">Chargement…</main>;
+if (loading) return <main className="card">Chargement…</main>;
 
-  return (
-    <main className="card">
-      <h1 className="h1">Administration</h1>
+return (
+  <main className="card">
 
-      <hr className="hr" />
+    <h1 className="h1">Administration</h1>
 
-      <h2>Tableau de bord du réseau (anonymisé)</h2>
+    <hr className="hr" />
 
-      {!reseau ? (
-        <p className="p">Statistiques indisponibles.</p>
-      ) : (
-        <>
-          <div className="row" style={{ marginTop: 10 }}>
-            <span className="badge">
-              Membres : <b>{reseau.nbMembres}</b> / 300
-            </span>
-            <span className="badge">
-              Internes : <b>{Math.round(reseau.totalInternes)}h</b>
-            </span>
-            <span className="badge">
-              Externes : <b>{Math.round(reseau.totalExternes)}h</b>
-            </span>
-            <span className="badge">
-              Conférences : <b>{Math.round(reseau.totalConferences)}h</b>
-            </span>
-            <span className="badge">
-              Webinaires : <b>{Math.round(reseau.totalWebinaires)}h</b>
-            </span>
-          </div>
-<div style={{ marginTop: 16 }}>
+    <h2>Tableau de bord du réseau</h2>
 
-  <div
-    className="small"
-    style={{ fontWeight: 700, marginBottom: 8 }}
-  >
-    Total heures réseau :{" "}
-    {Math.round(
-      (reseau?.totalInternes ?? 0) +
-      (reseau?.totalExternes ?? 0) +
-      (reseau?.totalConferences ?? 0) +
-      (reseau?.totalWebinaires ?? 0)
-    )}h
-  </div>
+    <div className="row" style={{ marginTop: 10 }}>
 
-  <div
-    className="small"
-    style={{ fontWeight: 700, marginBottom: 6 }}
-  >
-    Domaines les moins formés
-  </div>
+      <span className="badge">
+        Membres : {reseau?.nbMembres ?? 0}
+      </span>
 
-  {reseau?.parDomaine
-    ?.slice()
-    .sort((a: any, b: any) => a.nbOr - b.nbOr)
-    .slice(0, 3)
-    .map((x: any) => (
+      <span className="badge">
+        Internes : {reseau?.totalInternes ?? 0}h
+      </span>
+
+      <span className="badge">
+        Externes : {reseau?.totalExternes ?? 0}h
+      </span>
+
+      <span className="badge">
+        Conférences : {reseau?.totalConferences ?? 0}h
+      </span>
+
+      <span className="badge">
+        Webinaires : {reseau?.totalWebinaires ?? 0}h
+      </span>
+
+    </div>
+
+    <div style={{ marginTop: 16 }}>
+
       <div
-        key={x.domaine.id}
         className="small"
-        style={{ marginBottom: 4 }}
+        style={{ fontWeight: 700, marginBottom: 8 }}
       >
-        {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+        Total heures réseau :{" "}
+        {Math.round(
+          (reseau?.totalInternes ?? 0) +
+          (reseau?.totalExternes ?? 0) +
+          (reseau?.totalConferences ?? 0) +
+          (reseau?.totalWebinaires ?? 0)
+        )}h
       </div>
-    ))}
 
-</div>
-          <div style={{ marginTop: 14 }}>
-            {reseau.parDomaine.map((x: any) => (
-              <div key={x.domaine.id} className="small" style={{ marginBottom: 8 }}>
-                <b>{x.domaine.nom}</b> — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze} • ⬜ {x.nbAucun}
-              </div>
-            ))}
+      <div
+        className="small"
+        style={{ fontWeight: 700, marginBottom: 6 }}
+      >
+        Domaines les moins formés
+      </div>
+
+      {reseau?.parDomaine
+        ?.slice()
+        .sort((a: any, b: any) => a.nbOr - b.nbOr)
+        .slice(0, 3)
+        .map((x: any) => (
+          <div
+            key={x.domaine.id}
+            className="small"
+            style={{ marginBottom: 4 }}
+          >
+            {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
           </div>
-        </>
-      )}
+        ))}
 
-      <hr className="hr" />
+    </div>
 
-      <h2>Créer une formation interne</h2>
+    <hr className="hr" />
 
-      <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
-        <input className="input" placeholder="Titre" value={titreFormation} onChange={(e) => setTitreFormation(e.target.value)} />
+    <h2>Gestion des formations</h2>
 
-        <div className="row">
-          <select className="input" value={typeFormation} onChange={(e) => setTypeFormation(e.target.value as any)}>
-            <option value="formation_interne">Formation interne</option>
-            <option value="conference_interne">Conférence interne</option>
-          </select>
+    <p className="p">
+      Utilisez cette section pour créer une nouvelle formation interne
+      ou enregistrer une formation dans le système.
+    </p>
 
-          <input
-className="input"
-type="number"
-min="1"
-max="200"
-step="1"
-placeholder="Durée de la formation (heures)"
-value={dureeFormation}
-onChange={(e)=>setDureeFormation(Number(e.target.value))}
-/>
+    <div className="card" style={{ marginTop: 10 }}>
 
-        <select className="input" value={domaineId} onChange={(e) => setDomaineId(e.target.value)}>
+      <div style={{ display: "grid", gap: 10, maxWidth: 500 }}>
+
+        <label className="small">Titre de la formation</label>
+
+        <input
+          className="input"
+          value={titreFormation}
+          onChange={(e) => setTitreFormation(e.target.value)}
+          placeholder="Ex : Dysphasie avancée"
+        />
+
+        <label className="small">Durée (heures)</label>
+
+        <input
+          className="input"
+          type="number"
+          min="1"
+          max="200"
+          step="1"
+          value={dureeFormation}
+          onChange={(e) => setDureeFormation(Number(e.target.value))}
+        />
+
+        <label className="small">Domaine</label>
+
+        <select
+          className="input"
+          value={domaineFormation}
+          onChange={(e) => setDomaineFormation(e.target.value)}
+        >
           <option value="">Choisir un domaine</option>
-          {domaines.map((d) => (
+
+          {domaines.map((d: any) => (
             <option key={d.id} value={d.id}>
               {d.nom}
             </option>
           ))}
+
         </select>
 
-        <input className="input" placeholder="Niveau (optionnel)" value={niveauFormation} onChange={(e) => setNiveauFormation(e.target.value)} />
-        <textarea className="input" placeholder="Description (optionnel)" value={descriptionFormation} onChange={(e) => setDescriptionFormation(e.target.value)} />
-        <textarea className="input" placeholder="Compétences (optionnel)" value={competencesFormation} onChange={(e) => setCompetencesFormation(e.target.value)} />
-
-        <button className="button" onClick={createFormation}>
+        <button
+          className="button"
+          onClick={createFormation}
+        >
           Ajouter la formation
         </button>
+
       </div>
 
-      <hr className="hr" />
+    </div>
 
-      <h2>Valider une formation pour un membre</h2>
-
-      <div className="row">
-        <input className="input" placeholder="Rechercher membre" value={searchMembre} onChange={(e) => setSearchMembre(e.target.value)} />
-        <input className="input" placeholder="Rechercher formation" value={searchFormation} onChange={(e) => setSearchFormation(e.target.value)} />
-      </div>
-
-      <div className="row" style={{ marginTop: 8 }}>
-        <select className="input" value={selectedMembre} onChange={(e) => setSelectedMembre(e.target.value)}>
-          <option value="">Choisir un membre</option>
-          {membresFiltres.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.nom} — {m.email}
-            </option>
-          ))}
-        </select>
-
-        <select className="input" value={selectedFormation} onChange={(e) => setSelectedFormation(e.target.value)}>
-          <option value="">Choisir une formation</option>
-          {formationsFiltrees.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.titre}
-            </option>
-          ))}
-        </select>
-
-        <button className="button" onClick={validateFormation}>
-          Valider
-        </button>
-      </div>
-
-      <hr className="hr" />
-
-      <h2>Validations récentes</h2>
-
-      {validationsRecentes.length === 0 ? (
-        <p className="p">Aucune validation récente.</p>
-      ) : (
-        validationsRecentes.map((v) => (
-          <div key={v.id} className="small" style={{ marginBottom: 6 }}>
-            {v.membres?.nom} — {v.formations?.titre}
-          </div>
-        ))
-      )}
-    </main>
-  );
-}
+  </main>
+);
