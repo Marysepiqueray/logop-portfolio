@@ -322,13 +322,15 @@ export default function AdminPage() {
           </select>
 
           <input
-            className="input"
-            type="number"
-            placeholder="Durée (heures)"
-            value={dureeFormation}
-            onChange={(e) => setDureeFormation(Number(e.target.value))}
-          />
-        </div>
+className="input"
+type="number"
+min="1"
+max="200"
+step="1"
+placeholder="Durée de la formation (heures)"
+value={dureeFormation}
+onChange={(e)=>setDureeFormation(Number(e.target.value))}
+/>
 
         <select className="input" value={domaineId} onChange={(e) => setDomaineId(e.target.value)}>
           <option value="">Choisir un domaine</option>
