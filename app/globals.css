@@ -108,6 +108,8 @@ body{
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   padding:20px;
+  position:relative;
+  z-index:1;
 }
 
 .h1{ font-size:28px; margin:0 0 12px; }
