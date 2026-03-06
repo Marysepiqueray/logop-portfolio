@@ -302,12 +302,13 @@ export default function MePage() {
             placeholder="Durée (heures)"
           />
 
-          <input
-            className="input"
-            type="date"
-            value={dateActivite}
-            onChange={(e) => setDateActivite(e.target.value)}
-          />
+   <input
+  className="input"
+  type="date"
+  min="2016-01-01"
+  value={dateActivite}
+  onChange={(e) => setDateActivite(e.target.value)}
+/>
         </div>
 
         <select
