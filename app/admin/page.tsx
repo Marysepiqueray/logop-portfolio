@@ -297,7 +297,43 @@ export default function AdminPage() {
               Webinaires : <b>{Math.round(reseau.totalWebinaires)}h</b>
             </span>
           </div>
+<div style={{ marginTop: 16 }}>
 
+  <div
+    className="small"
+    style={{ fontWeight: 700, marginBottom: 8 }}
+  >
+    Total heures réseau :{" "}
+    {Math.round(
+      (reseau?.totalInternes ?? 0) +
+      (reseau?.totalExternes ?? 0) +
+      (reseau?.totalConferences ?? 0) +
+      (reseau?.totalWebinaires ?? 0)
+    )}h
+  </div>
+
+  <div
+    className="small"
+    style={{ fontWeight: 700, marginBottom: 6 }}
+  >
+    Domaines les moins formés
+  </div>
+
+  {reseau?.parDomaine
+    ?.slice()
+    .sort((a: any, b: any) => a.nbOr - b.nbOr)
+    .slice(0, 3)
+    .map((x: any) => (
+      <div
+        key={x.domaine.id}
+        className="small"
+        style={{ marginBottom: 4 }}
+      >
+        {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+      </div>
+    ))}
+
+</div>
           <div style={{ marginTop: 14 }}>
             {reseau.parDomaine.map((x: any) => (
               <div key={x.domaine.id} className="small" style={{ marginBottom: 8 }}>
