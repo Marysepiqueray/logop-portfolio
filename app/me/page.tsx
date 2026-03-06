@@ -392,7 +392,55 @@ export default function MePage() {
       </div>
 
       <hr className="hr" />
+<hr className="hr"/>
 
+<h2>Profil dans l’annuaire</h2>
+
+<p className="p">
+Vous pouvez choisir d’apparaître dans l’annuaire des logopèdes.
+</p>
+
+<div style={{display:"grid",gap:10,maxWidth:600}}>
+
+<label className="small">Ville</label>
+
+<input
+className="input"
+value={ville}
+onChange={(e)=>setVille(e.target.value)}
+placeholder="Ex : Bruxelles"
+/>
+
+<label className="small">Présentation</label>
+
+<textarea
+className="input"
+value={presentation}
+onChange={(e)=>setPresentation(e.target.value)}
+placeholder="Décrivez brièvement votre pratique."
+/>
+
+<label className="small">
+
+<input
+type="checkbox"
+checked={annuaireVisible}
+onChange={(e)=>setAnnuaireVisible(e.target.checked)}
+/>
+
+{" "}Apparaître dans l’annuaire
+
+</label>
+
+<button
+className="button"
+onClick={saveAnnuaire}
+>
+Enregistrer
+</button>
+
+</div>
+      
       <h2>Mes activités déclarées</h2>
       {activites.length === 0 ? (
         <p className="p">Aucune activité déclarée.</p>
