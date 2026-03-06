@@ -133,9 +133,14 @@ export default function ProfilAnnuairePage({
         <p className="p">{membre.presentation}</p>
       ) : null}
 
-      <div className="small" style={{ marginBottom: 16 }}>
-        ✉️ {membre.email}
-      </div>
+   <div style={{ marginBottom: 16 }}>
+  <a
+    className="button secondary"
+    href={`mailto:${membre.email}`}
+  >
+    Contacter
+  </a>
+</div>
 
       <hr className="hr" />
 
