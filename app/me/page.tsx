@@ -152,7 +152,9 @@ export default function MePage() {
     if (!membre?.id) return alert("Membre introuvable");
     if (!titreActivite.trim()) return alert("Titre obligatoire");
     if (!domaineActivite) return alert("Choisir un domaine");
-
+if (dateActivite < "2016-01-01") {
+  return alert("La date doit être au minimum le 01/01/2016");
+}
     const { error } = await supabase.from("activites").insert({
       membre_id: membre.id,
       titre: titreActivite.trim(),
