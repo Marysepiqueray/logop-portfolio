@@ -27,6 +27,7 @@ export default function AnnuairePage() {
 
   const [search, setSearch] = useState("");
   const [villeSearch, setVilleSearch] = useState("");
+  const [domaineSearch, setDomaineSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -148,13 +149,17 @@ export default function AnnuairePage() {
         const okSearch = text.includes(search.toLowerCase());
         const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
 
-        return okSearch && okVille;
+        const okDomaine =
+          !domaineSearch ||
+          m.domaines.some((d: any) => d.id === domaineSearch);
+
+        return okSearch && okVille && okDomaine;
       })
       .sort((a, b) => {
         if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
         return a.nom.localeCompare(b.nom);
       });
-  }, [annuaire, search, villeSearch]);
+  }, [annuaire, search, villeSearch, domaineSearch]);
 
   if (loading) {
     return <main className="card">Chargement…</main>;
@@ -168,20 +173,35 @@ export default function AnnuairePage() {
         Retrouvez les membres visibles dans l’annuaire selon leur localisation et leurs domaines de compétence.
       </p>
 
-      <div className="row" style={{ marginTop: 10 }}>
-        <input
-          className="input"
-          placeholder="Rechercher un nom, un domaine…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div style={{ display: "grid", gap: 10, maxWidth: 900, marginTop: 10 }}>
+        <div className="row">
+          <input
+            className="input"
+            placeholder="Rechercher un nom, un domaine…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <input
+          <input
+            className="input"
+            placeholder="Ville"
+            value={villeSearch}
+            onChange={(e) => setVilleSearch(e.target.value)}
+          />
+        </div>
+
+        <select
           className="input"
-          placeholder="Ville"
-          value={villeSearch}
-          onChange={(e) => setVilleSearch(e.target.value)}
-        />
+          value={domaineSearch}
+          onChange={(e) => setDomaineSearch(e.target.value)}
+        >
+          <option value="">Tous les domaines</option>
+          {domaines.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
       </div>
 
       <hr className="hr" />
