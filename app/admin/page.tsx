@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [formations, setFormations] = useState<any[]>([]);
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validationsRecentes, setValidationsRecentes] = useState<any[]>([]);
+  const [activites, setActivites] = useState<any[]>([]);
   const [reseau, setReseau] = useState<any>(null);
 
   const [searchMembre, setSearchMembre] = useState("");
@@ -66,10 +67,17 @@ export default function AdminPage() {
       .limit(20);
     if (ve) throw ve;
 
+    const { data: act, error: ae } = await supabase
+      .from("activites")
+      .select("id, titre, type, date, duree_heures, membres(nom), domaines(nom)")
+      .order("date", { ascending: false });
+    if (ae) throw ae;
+
     setMembres(m ?? []);
     setDomaines((d ?? []) as any);
     setFormations(f ?? []);
     setValidationsRecentes(v ?? []);
+    setActivites(act ?? []);
   }
 
   async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
@@ -90,9 +98,7 @@ export default function AdminPage() {
     if (ae) throw ae;
 
     const heures: Record<string, Record<string, number>> = {};
-    for (const mid of membresIds) {
-      heures[mid] = {};
-    }
+    for (const mid of membresIds) heures[mid] = {};
 
     for (const row of (v ?? []) as any[]) {
       const mid = row.membre_id as string;
@@ -450,6 +456,27 @@ export default function AdminPage() {
             {v.membres?.nom} — {v.formations?.titre}
           </div>
         ))
+      )}
+
+      <hr className="hr" />
+
+      <h2>Activités externes déclarées</h2>
+
+      {activites.length === 0 ? (
+        <p className="p">Aucune activité déclarée.</p>
+      ) : (
+        activites
+          .filter(
+            (a: any) =>
+              a.type === "formation_externe" ||
+              a.type === "conference" ||
+              a.type === "webinaire"
+          )
+          .map((a: any) => (
+            <div key={a.id} className="small" style={{ marginBottom: 6 }}>
+              <b>{a.membres?.nom}</b> — {a.titre} — {a.duree_heures}h — {a.domaines?.nom}
+            </div>
+          ))
       )}
     </main>
   );
