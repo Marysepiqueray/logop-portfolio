@@ -211,3 +211,34 @@ body{
   box-shadow:0 14px 28px rgba(0,0,0,0.14);
   transition:all .15s ease;
 }
+/* --- Correctif clics --- */
+
+html, body {
+  pointer-events: auto;
+}
+
+header, nav, main, .container, .header, .card, .navbar, .row, .badge-grid, .badge-tile {
+  position: relative;
+}
+
+a, button, input, select, textarea {
+  position: relative;
+  z-index: 50;
+  pointer-events: auto;
+}
+
+.header {
+  z-index: 10;
+}
+
+.card {
+  z-index: 1;
+}
+
+.navbar a,
+.button,
+.input,
+select,
+textarea {
+  pointer-events: auto;
+}
