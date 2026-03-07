@@ -11,9 +11,23 @@ type Domaine = {
 };
 
 function medal(hours: number) {
-  if (hours >= 90) return { label: "OR", icon: "🥇" };
-  if (hours >= 45) return { label: "ARGENT", icon: "🥈" };
-  if (hours >= 15) return { label: "BRONZE", icon: "🥉" };
+
+  if (hours >= 120) {
+    return { label: "Expert Logop'Aide et vous", icon: "🏆" };
+  }
+
+  if (hours >= 90) {
+    return { label: "OR", icon: "🥇" };
+  }
+
+  if (hours >= 45) {
+    return { label: "ARGENT", icon: "🥈" };
+  }
+
+  if (hours >= 15) {
+    return { label: "BRONZE", icon: "🥉" };
+  }
+
   return { label: "AUCUN", icon: "⬜" };
 }
 
@@ -351,7 +365,7 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
                 <div className="badge-tile-meta">{p.domaine.description}</div>
 
                 <div className="badge-tile-meta">
-                  {p.medal.label} — {p.heures}h
+                  {p.medal.icon} {p.medal.label} — {p.heures}h
                 </div>
 
                 <div className="progress">
