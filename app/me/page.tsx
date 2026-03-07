@@ -40,7 +40,8 @@ export default function MePage() {
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
-
+const [souhaitDomaine, setSouhaitDomaine] = useState("");
+  
   // annuaire
   const [ville, setVille] = useState("");
   const [presentation, setPresentation] = useState("");
