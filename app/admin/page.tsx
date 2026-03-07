@@ -43,7 +43,7 @@ export default function AdminPage() {
   const [competencesFormation, setCompetencesFormation] = useState("");
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState("");
-
+const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
   const [nomInvite, setNomInvite] = useState("");
   const [emailInvite, setEmailInvite] = useState("");
   const [roleInvite, setRoleInvite] = useState("membre");
@@ -77,11 +77,34 @@ export default function AdminPage() {
       .order("date", { ascending: false });
     if (ae) throw ae;
 
+    const { data: souhaits, error: se } = await supabase
+  .from("souhaits_formation")
+  .select("domaine_id, domaines(nom)");
+
+if (se) throw se;
+
+const compteur: Record<string, { nom: string; count: number }> = {};
+
+for (const s of (souhaits ?? []) as any[]) {
+  const id = s.domaine_id;
+  const nom = s.domaines?.nom ?? "Domaine";
+
+  if (!id) continue;
+
+  if (!compteur[id]) {
+    compteur[id] = { nom, count: 0 };
+  }
+
+  compteur[id].count += 1;
+}
+
+const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
     setMembres(m ?? []);
     setDomaines((d ?? []) as any);
     setFormations(f ?? []);
     setValidationsRecentes(v ?? []);
     setActivites(act ?? []);
+    setSouhaitsStats(statsSouhaits);
   }
 
   async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
@@ -320,6 +343,22 @@ export default function AdminPage() {
 
       <hr className="hr" />
 
+<hr className="hr" />
+
+<h2>Demandes de formation du réseau</h2>
+
+{souhaitsStats.length === 0 ? (
+  <p className="p">Aucune demande enregistrée pour le moment.</p>
+) : (
+  <div style={{ display: "grid", gap: 8 }}>
+    {souhaitsStats.map((s: any, idx: number) => (
+      <div key={idx} className="small">
+        <b>{s.nom}</b> — {s.count} membre{s.count > 1 ? "s" : ""}
+      </div>
+    ))}
+  </div>
+)}
+      
       <h2>Tableau de bord du réseau</h2>
 
       {!reseau ? (
