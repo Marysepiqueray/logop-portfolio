@@ -203,6 +203,31 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
     alert("Profil annuaire enregistré");
   }
 
+  async function addSouhait() {
+
+  if (!membre?.id) return;
+
+  if (!souhaitDomaine) {
+    alert("Choisir un domaine");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("souhaits_formation")
+    .insert({
+      membre_id: membre.id,
+      domaine_id: souhaitDomaine
+    });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Souhait enregistré");
+
+  setSouhaitDomaine("");
+}
   async function addActivite() {
     if (!membre?.id) return alert("Membre introuvable");
     if (!titreActivite.trim()) return alert("Titre obligatoire");
