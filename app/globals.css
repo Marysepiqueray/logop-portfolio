@@ -342,3 +342,15 @@ a, button, input, select, textarea{
     height:110px;
   }
 }
+/* Badge expert */
+
+.badge-expert{
+  border:2px solid #fbbf24;
+  background: linear-gradient(135deg,#fff7cc,#fff);
+  box-shadow: 0 8px 24px rgba(251,191,36,0.35);
+}
+
+.badge-expert .badge-medal{
+  background: radial-gradient(circle at 30% 30%, #fff7cc, #fbbf24, #d97706);
+  font-size:28px;
+}
