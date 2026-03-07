@@ -84,10 +84,10 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
 
       // 1) On vérifie d'abord si l'email existe déjà chez les membres autorisés
       let { data: m, error: mError } = await supabase
-        .from("membres")
-        .select("*")
-        .ilike("email", email)
-        .maybeSingle();
+     .from("membres")
+.select("*")
+.ilike("email", email)
+.maybeSingle();
 
       if (mError) {
         alert(mError.message);
