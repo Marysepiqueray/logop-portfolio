@@ -41,6 +41,7 @@ export default function MePage() {
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
 const [souhaitDomaine, setSouhaitDomaine] = useState("");
+  const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
   
   // annuaire
   const [ville, setVille] = useState("");
@@ -136,6 +137,28 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
       setActivites(a ?? []);
+setSouhaitsStats(statsSouhaits);
+      
+      const { data: souhaits } = await supabase
+  .from("souhaits_formation")
+  .select("domaine_id, domaines(nom)");
+
+const compteur: Record<string, { nom: string; count: number }> = {};
+
+for (const s of (souhaits ?? []) as any[]) {
+
+  const id = s.domaine_id;
+  const nom = s.domaines?.nom ?? "Domaine";
+
+  if (!compteur[id]) {
+    compteur[id] = { nom, count: 0 };
+  }
+
+  compteur[id].count += 1;
+
+}
+
+const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
 
       setVille(m.ville ?? "");
       setPresentation(m.presentation ?? "");
