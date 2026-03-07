@@ -89,7 +89,12 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
   .ilike("email", email)
   .eq("membre_asbl", true)
   .maybeSingle();
-
+if (!m) {
+  alert("Votre adresse email n'est pas reconnue comme membre actif de Logop'Aide et vous.");
+  await supabase.auth.signOut();
+  window.location.href = "/";
+  return;
+}
       if (mError) {
         alert(mError.message);
         window.location.href = "/";
