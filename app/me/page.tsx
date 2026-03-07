@@ -414,7 +414,43 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
       </div>
 
       <hr className="hr" />
+      
+<hr className="hr"/>
 
+<h2>Domaines dans lesquels je souhaite me former</h2>
+
+<p className="p">
+Indiquez les domaines dans lesquels vous souhaiteriez suivre une formation.
+Ces informations permettent à Logop'Aide et vous d'organiser les prochaines formations.
+</p>
+
+<div className="row">
+
+<select
+className="input"
+value={souhaitDomaine}
+onChange={(e)=>setSouhaitDomaine(e.target.value)}
+>
+
+<option value="">Choisir un domaine</option>
+
+{domaines.map((d)=>(
+<option key={d.id} value={d.id}>
+{d.nom}
+</option>
+))}
+
+</select>
+
+<button
+className="button"
+onClick={addSouhait}
+>
+Ajouter
+</button>
+
+</div>
+      
       <h2>Mes activités ajoutées</h2>
 
       {activites.length === 0 ? (
