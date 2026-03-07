@@ -133,11 +133,16 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
         .eq("membre_id", m.id)
         .order("created_at", { ascending: false });
 
-      setMembre(m);
-      setDomaines((d ?? []) as any);
-      setValidations(v ?? []);
-      setActivites(a ?? []);
-setSouhaitsStats(statsSouhaits);
+     setMembre(m);
+setDomaines((d ?? []) as any);
+setValidations(v ?? []);
+setActivites(a ?? []);
+
+setVille(m.ville ?? "");
+setPresentation(m.presentation ?? "");
+setAnnuaireVisible(m.annuaire_visible ?? false);
+
+setLoading(false);
       
       const { data: souhaits } = await supabase
   .from("souhaits_formation")
@@ -160,11 +165,6 @@ for (const s of (souhaits ?? []) as any[]) {
 
 const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
 
-      setVille(m.ville ?? "");
-      setPresentation(m.presentation ?? "");
-      setAnnuaireVisible(m.annuaire_visible ?? false);
-
-      setLoading(false);
     })();
   }, []);
 
