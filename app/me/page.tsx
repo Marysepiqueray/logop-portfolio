@@ -356,7 +356,10 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
           const pct = Math.min(100, (p.heures / 90) * 100);
 
           return (
-            <div key={p.domaine.id} className="badge-tile">
+        <div
+key={p.domaine.id}
+className={`badge-tile ${p.medal.label.includes("Expert") ? "badge-expert" : ""}`}
+>
               <div className="badge-medal">{getDomaineIcon(p.domaine.nom)}</div>
 
               <div>
