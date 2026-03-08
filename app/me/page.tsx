@@ -86,7 +86,7 @@ const [souhaitDomaine, setSouhaitDomaine] = useState("");
      let { data: m, error: mError } = await supabase
   .from("membres")
   .select("*")
-  .ilike("email", email)
+  .ilike("email", email.trim())
   .eq("membre_asbl", true)
   .maybeSingle();
 if (!m) {
