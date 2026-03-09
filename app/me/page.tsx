@@ -56,6 +56,7 @@ export default function MePage() {
   const [activites, setActivites] = useState<any[]>([]);
 const [souhaitDomaine, setSouhaitDomaine] = useState("");
   const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
+const [permisConduire, setPermisConduire] = useState(false);
   
   // annuaire
   const [ville, setVille] = useState("");
@@ -161,6 +162,7 @@ setActivites(a ?? []);
 setVille(m.ville ?? "");
 setPresentation(m.presentation ?? "");
 setAnnuaireVisible(m.annuaire_visible ?? false);
+      setPermisConduire(m.permis_conduire ?? false);
 
 setLoading(false);
       
@@ -235,6 +237,7 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
         ville,
         presentation,
         annuaire_visible: annuaireVisible,
+        permis_conduire: permisConduire,
       })
       .eq("auth_id", userId);
 
@@ -519,7 +522,14 @@ Ajouter
       <hr className="hr" />
 
       <h2>Profil dans l’annuaire</h2>
-
+<label className="small">
+<input
+type="checkbox"
+checked={permisConduire}
+onChange={(e)=>setPermisConduire(e.target.checked)}
+/>
+Agréé.e permis de conduire
+</label>
       <p className="p">
         Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.
       </p>
