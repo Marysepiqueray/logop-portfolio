@@ -46,7 +46,7 @@ export default function AnnuairePage() {
 
       const { data: m } = await supabase
         .from("membres")
-        .select("id, nom, email, ville, presentation, annuaire_visible, role")
+      .select("id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible")
         .eq("annuaire_visible", true)
         .eq("role", "membre");
 
@@ -221,6 +221,20 @@ export default function AnnuairePage() {
                   </div>
                 ) : null}
 
+                {m.permis_conduire && (
+  <div className="badge-tile-meta">
+    🚗 Agréé.e permis de conduire
+  </div>
+)}
+
+{m.convention_visible && m.statut_convention && (
+  <div className="badge-tile-meta">
+    {m.statut_convention === "conventionne"
+      ? "✅ Conventionné.e"
+      : "⚪ Déconventionné.e"}
+  </div>
+)}
+                
                 {m.presentation ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 10 }}>
                     {m.presentation}
