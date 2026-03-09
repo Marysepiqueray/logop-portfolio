@@ -29,6 +29,7 @@ export default function AdminPage() {
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validationsRecentes, setValidationsRecentes] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
+  const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
   const [reseau, setReseau] = useState<any>(null);
 
   const [searchMembre, setSearchMembre] = useState("");
@@ -38,12 +39,12 @@ export default function AdminPage() {
 
   const [titreFormation, setTitreFormation] = useState("");
   const [dureeFormation, setDureeFormation] = useState<number>(14);
-  const [niveauFormation, setNiveauFormation] = useState("");
+  const [dateFormation, setDateFormation] = useState("");
   const [descriptionFormation, setDescriptionFormation] = useState("");
   const [competencesFormation, setCompetencesFormation] = useState("");
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState("");
-const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
+
   const [nomInvite, setNomInvite] = useState("");
   const [emailInvite, setEmailInvite] = useState("");
   const [roleInvite, setRoleInvite] = useState("membre");
@@ -60,7 +61,7 @@ const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
 
     const { data: f, error: fe } = await supabase
       .from("formations")
-      .select("id, titre, duree_heures, niveau, domaine_id, type, created_at")
+      .select("id, titre, duree_heures, date_formation, domaine_id, type, created_at")
       .order("created_at", { ascending: false });
     if (fe) throw fe;
 
@@ -78,27 +79,27 @@ const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
     if (ae) throw ae;
 
     const { data: souhaits, error: se } = await supabase
-  .from("souhaits_formation")
-  .select("domaine_id, domaines(nom)");
+      .from("souhaits_formation")
+      .select("domaine_id, domaines(nom)");
+    if (se) throw se;
 
-if (se) throw se;
+    const compteur: Record<string, { nom: string; count: number }> = {};
 
-const compteur: Record<string, { nom: string; count: number }> = {};
+    for (const s of (souhaits ?? []) as any[]) {
+      const id = s.domaine_id;
+      const nom = s.domaines?.nom ?? "Domaine";
 
-for (const s of (souhaits ?? []) as any[]) {
-  const id = s.domaine_id;
-  const nom = s.domaines?.nom ?? "Domaine";
+      if (!id) continue;
 
-  if (!id) continue;
+      if (!compteur[id]) {
+        compteur[id] = { nom, count: 0 };
+      }
 
-  if (!compteur[id]) {
-    compteur[id] = { nom, count: 0 };
-  }
+      compteur[id].count += 1;
+    }
 
-  compteur[id].count += 1;
-}
+    const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
 
-const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
     setMembres(m ?? []);
     setDomaines((d ?? []) as any);
     setFormations(f ?? []);
@@ -193,12 +194,15 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
   async function createFormation() {
     if (!titreFormation.trim()) return alert("Titre obligatoire");
     if (!domaineId) return alert("Choisir un domaine");
-    if (!dureeFormation || dureeFormation < 1) return alert("Durée invalide");
+    if (!dureeFormation || dureeFormation < 0.5) return alert("Durée invalide");
+    if (dateFormation && dateFormation < "2016-01-01") {
+      return alert("La date doit être au minimum le 01/01/2016");
+    }
 
     const { error } = await supabase.from("formations").insert({
       titre: titreFormation.trim(),
       duree_heures: Number(dureeFormation),
-      niveau: niveauFormation || null,
+      date_formation: dateFormation || null,
       description: descriptionFormation || null,
       competences: competencesFormation || null,
       domaine_id: domaineId,
@@ -211,7 +215,7 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
 
     setTitreFormation("");
     setDureeFormation(14);
-    setNiveauFormation("");
+    setDateFormation("");
     setDescriptionFormation("");
     setCompetencesFormation("");
     setTypeFormation("formation_interne");
@@ -269,6 +273,7 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
       email,
       role: roleInvite,
       annuaire_visible: false,
+      membre_asbl: true,
     });
 
     if (error) {
@@ -343,22 +348,6 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
 
       <hr className="hr" />
 
-<hr className="hr" />
-
-<h2>Demandes de formation du réseau</h2>
-
-{souhaitsStats.length === 0 ? (
-  <p className="p">Aucune demande enregistrée pour le moment.</p>
-) : (
-  <div style={{ display: "grid", gap: 8 }}>
-    {souhaitsStats.map((s: any, idx: number) => (
-      <div key={idx} className="small">
-        <b>{s.nom}</b> — {s.count} membre{s.count > 1 ? "s" : ""}
-      </div>
-    ))}
-  </div>
-)}
-      
       <h2>Tableau de bord du réseau</h2>
 
       {!reseau ? (
@@ -424,6 +413,22 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
 
       <hr className="hr" />
 
+      <h2>Demandes de formation du réseau</h2>
+
+      {souhaitsStats.length === 0 ? (
+        <p className="p">Aucune demande enregistrée pour le moment.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 8 }}>
+          {souhaitsStats.map((s: any, idx: number) => (
+            <div key={idx} className="small">
+              <b>{s.nom}</b> — {s.count} membre{s.count > 1 ? "s" : ""}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <hr className="hr" />
+
       <h2>Inviter un membre</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 760 }}>
@@ -476,9 +481,9 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
           <input
             className="input"
             type="number"
-            min="1"
+            min="0.5"
             max="200"
-            step="1"
+            step="0.5"
             placeholder="Durée (heures)"
             value={dureeFormation}
             onChange={(e) => setDureeFormation(Number(e.target.value))}
@@ -496,9 +501,10 @@ const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
 
         <input
           className="input"
-          placeholder="Niveau (optionnel)"
-          value={niveauFormation}
-          onChange={(e) => setNiveauFormation(e.target.value)}
+          type="date"
+          min="2016-01-01"
+          value={dateFormation}
+          onChange={(e) => setDateFormation(e.target.value)}
         />
 
         <textarea
