@@ -57,6 +57,8 @@ export default function MePage() {
 const [souhaitDomaine, setSouhaitDomaine] = useState("");
   const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
 const [permisConduire, setPermisConduire] = useState(false);
+  const [statutConvention, setStatutConvention] = useState("");
+const [conventionVisible, setConventionVisible] = useState(false);
   
   // annuaire
   const [ville, setVille] = useState("");
@@ -163,6 +165,8 @@ setVille(m.ville ?? "");
 setPresentation(m.presentation ?? "");
 setAnnuaireVisible(m.annuaire_visible ?? false);
       setPermisConduire(m.permis_conduire ?? false);
+      setStatutConvention(m.statut_convention ?? "");
+setConventionVisible(m.convention_visible ?? false);
 
 setLoading(false);
       
@@ -238,6 +242,8 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
         presentation,
         annuaire_visible: annuaireVisible,
         permis_conduire: permisConduire,
+        statut_convention: statutConvention,
+convention_visible: conventionVisible,
       })
       .eq("auth_id", userId);
 
@@ -562,6 +568,27 @@ Agréé.e permis de conduire
           Apparaître dans l’annuaire
         </label>
 
+        <label className="small">Statut de conventionnement</label>
+
+<select
+  className="input"
+  value={statutConvention}
+  onChange={(e) => setStatutConvention(e.target.value)}
+>
+  <option value="">Ne pas préciser</option>
+  <option value="conventionne">Conventionné.e</option>
+  <option value="deconventionne">Déconventionné.e</option>
+</select>
+
+<label className="small">
+  <input
+    type="checkbox"
+    checked={conventionVisible}
+    onChange={(e) => setConventionVisible(e.target.checked)}
+  />{" "}
+  Autoriser l’affichage public de ce statut dans l’annuaire
+</label>
+        
         <button className="button" onClick={saveAnnuaire}>
           Enregistrer
         </button>
