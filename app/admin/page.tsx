@@ -40,6 +40,7 @@ export default function AdminPage() {
   const [titreFormation, setTitreFormation] = useState("");
   const [dureeFormation, setDureeFormation] = useState<number>(14);
   const [dateFormation, setDateFormation] = useState("");
+  const [dateFinFormation, setDateFinFormation] = useState("");
   const [descriptionFormation, setDescriptionFormation] = useState("");
   const [competencesFormation, setCompetencesFormation] = useState("");
   const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
@@ -61,7 +62,7 @@ export default function AdminPage() {
 
     const { data: f, error: fe } = await supabase
       .from("formations")
-      .select("id, titre, duree_heures, date_formation, domaine_id, type, created_at")
+      .select("id, titre, duree_heures, date_formation, date_fin_formation, domaine_id, type, created_at")
       .order("created_at", { ascending: false });
     if (fe) throw fe;
 
@@ -126,9 +127,7 @@ export default function AdminPage() {
     if (ae) throw ae;
 
     const heures: Record<string, Record<string, number>> = {};
-    for (const mid of membresIds) {
-      heures[mid] = {};
-    }
+    for (const mid of membresIds) heures[mid] = {};
 
     for (const row of (v ?? []) as any[]) {
       const mid = row.membre_id as string;
@@ -195,14 +194,24 @@ export default function AdminPage() {
     if (!titreFormation.trim()) return alert("Titre obligatoire");
     if (!domaineId) return alert("Choisir un domaine");
     if (!dureeFormation || dureeFormation < 0.5) return alert("Durée invalide");
+
     if (dateFormation && dateFormation < "2016-01-01") {
       return alert("La date doit être au minimum le 01/01/2016");
+    }
+
+    if (dateFinFormation && dateFinFormation < "2016-01-01") {
+      return alert("La date de fin doit être au minimum le 01/01/2016");
+    }
+
+    if (dateFormation && dateFinFormation && dateFinFormation < dateFormation) {
+      return alert("La date de fin ne peut pas être antérieure à la date de début");
     }
 
     const { error } = await supabase.from("formations").insert({
       titre: titreFormation.trim(),
       duree_heures: Number(dureeFormation),
       date_formation: dateFormation || null,
+      date_fin_formation: dateFinFormation || null,
       description: descriptionFormation || null,
       competences: competencesFormation || null,
       domaine_id: domaineId,
@@ -216,6 +225,7 @@ export default function AdminPage() {
     setTitreFormation("");
     setDureeFormation(14);
     setDateFormation("");
+    setDateFinFormation("");
     setDescriptionFormation("");
     setCompetencesFormation("");
     setTypeFormation("formation_interne");
@@ -236,9 +246,23 @@ export default function AdminPage() {
     if (exErr) return alert(exErr.message);
     if (exist && exist.length > 0) return alert("Déjà validée ✅");
 
+    const { data: formationRow, error: fErr } = await supabase
+      .from("formations")
+      .select("date_formation, date_fin_formation")
+      .eq("id", selectedFormation)
+      .maybeSingle();
+
+    if (fErr) return alert(fErr.message);
+
+    const dateValidation =
+      formationRow?.date_fin_formation ||
+      formationRow?.date_formation ||
+      new Date().toISOString().slice(0, 10);
+
     const { error } = await supabase.from("validations").insert({
       membre_id: selectedMembre,
       formation_id: selectedFormation,
+      date_validation: dateValidation,
     });
 
     if (error) return alert(error.message);
@@ -499,13 +523,23 @@ export default function AdminPage() {
           ))}
         </select>
 
-        <input
-          className="input"
-          type="date"
-          min="2016-01-01"
-          value={dateFormation}
-          onChange={(e) => setDateFormation(e.target.value)}
-        />
+        <div className="row">
+          <input
+            className="input"
+            type="date"
+            min="2016-01-01"
+            value={dateFormation}
+            onChange={(e) => setDateFormation(e.target.value)}
+          />
+
+          <input
+            className="input"
+            type="date"
+            min="2016-01-01"
+            value={dateFinFormation}
+            onChange={(e) => setDateFinFormation(e.target.value)}
+          />
+        </div>
 
         <textarea
           className="input"
