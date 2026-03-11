@@ -31,6 +31,7 @@ export default function AdminPage() {
   const [activites, setActivites] = useState<any[]>([]);
   const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
   const [reseau, setReseau] = useState<any>(null);
+  const [competencesReseau, setCompetencesReseau] = useState<any[]>([]);
 
   const [searchMembre, setSearchMembre] = useState("");
   const [searchFormation, setSearchFormation] = useState("");
@@ -161,11 +162,32 @@ export default function AdminPage() {
       return sum + Number(formation?.duree_heures ?? 0);
     }, 0);
 
-    const parDomaine = allDomaines.map((d) => {
-      let nbOr = 0;
-      let nbArgent = 0;
-      let nbBronze = 0;
-      let nbAucun = 0;
+const parDomaine = allDomaines.map((d) => {
+  let nbExpert = 0;
+  let nbOr = 0;
+  let nbArgent = 0;
+  let nbBronze = 0;
+  let nbAucun = 0;
+
+  for (const mid of membresIds) {
+    const h = Number(heures[mid]?.[d.id] ?? 0);
+
+    if (h >= 120) nbExpert++;
+    else if (h >= 90) nbOr++;
+    else if (h >= 45) nbArgent++;
+    else if (h >= 15) nbBronze++;
+    else nbAucun++;
+  }
+
+  return {
+    domaine: d,
+    nbExpert,
+    nbOr,
+    nbArgent,
+    nbBronze,
+    nbAucun,
+  };
+});
 
       for (const mid of membresIds) {
         const h = Number(heures[mid]?.[d.id] ?? 0);
@@ -346,6 +368,7 @@ export default function AdminPage() {
 
         const stats = await buildReseauStats(m ?? [], (d ?? []) as any);
         setReseau(stats);
+      setCompetencesReseau(stats.parDomaine ?? []);
       } catch (e: any) {
         alert(e.message ?? "Erreur chargement");
       } finally {
@@ -452,6 +475,22 @@ export default function AdminPage() {
       )}
 
       <hr className="hr" />
+
+      <hr className="hr" />
+
+<h2>Carte des compétences du réseau</h2>
+
+{competencesReseau.length === 0 ? (
+  <p className="p">Aucune donnée disponible.</p>
+) : (
+  <div style={{ display: "grid", gap: 8 }}>
+    {competencesReseau.map((c: any) => (
+      <div key={c.domaine.id} className="small">
+        <b>{c.domaine.nom}</b> — 🏆 {c.nbExpert} • 🥇 {c.nbOr} • 🥈 {c.nbArgent} • 🥉 {c.nbBronze}
+      </div>
+    ))}
+  </div>
+)}
 
       <h2>Inviter un membre</h2>
 
