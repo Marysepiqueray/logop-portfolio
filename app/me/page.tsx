@@ -205,6 +205,10 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
   }, []);
 
   const passeport = useMemo(() => {
+    const topSpecialites = [...passeport]
+  .filter((p: any) => p.heures >= 15)
+  .sort((a: any, b: any) => b.heures - a.heures)
+  .slice(0, 3);
     const heures: Record<string, number> = {};
 
     for (const row of validations as any[]) {
@@ -373,7 +377,25 @@ convention_visible: conventionVisible,
       </div>
 
       <hr className="hr" />
+<h2>Mes spécialités principales</h2>
 
+{topSpecialites.length === 0 ? (
+  <p className="p">Aucune spécialité encore atteinte.</p>
+) : (
+  <div className="row" style={{ marginBottom: 16 }}>
+    {topSpecialites.map((p: any) => (
+      <span key={p.domaine.id} className="badge">
+        {p.heures >= 120 && "🏆"}
+        {p.heures >= 90 && p.heures < 120 && "🥇"}
+        {p.heures >= 45 && p.heures < 90 && "🥈"}
+        {p.heures >= 15 && p.heures < 45 && "🥉"}{" "}
+        {p.domaine.nom}
+      </span>
+    ))}
+  </div>
+)}
+
+<hr className="hr" />
       <h2>Mes domaines</h2>
 
       <div className="badge-grid">
