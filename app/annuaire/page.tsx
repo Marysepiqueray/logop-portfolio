@@ -94,8 +94,11 @@ export default function AnnuairePage() {
       .slice(0, 3);
   }
 
-  const membresFiltres = membres.filter((m) => {
-    if (recherche && !(m.nom ?? "").toLowerCase().includes(recherche.toLowerCase())) {
+const membresFiltres = membres
+  .filter((m) => {
+
+    if (recherche &&
+        !(m.nom ?? "").toLowerCase().includes(recherche.toLowerCase())) {
       return false;
     }
 
@@ -105,6 +108,18 @@ export default function AnnuairePage() {
     }
 
     return true;
+  })
+  .sort((a, b) => {
+
+    if (!domaineFiltre) {
+      return (a.nom ?? "").localeCompare(b.nom ?? "");
+    }
+
+    const ha = heures[a.id]?.[domaineFiltre] ?? 0;
+    const hb = heures[b.id]?.[domaineFiltre] ?? 0;
+
+    return hb - ha;
+
   });
 
   return (
