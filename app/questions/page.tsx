@@ -9,9 +9,12 @@ export default function QuestionsPage() {
 
   const [questions, setQuestions] = useState<any[]>([]);
   const [reponses, setReponses] = useState<any[]>([]);
+  const [domaines, setDomaines] = useState<any[]>([]);
 
   const [titre, setTitre] = useState("");
   const [contenu, setContenu] = useState("");
+  const [domaineQuestion, setDomaineQuestion] = useState("");
+  const [domaineFiltre, setDomaineFiltre] = useState("");
   const [reponsesInput, setReponsesInput] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -42,9 +45,19 @@ export default function QuestionsPage() {
       return;
     }
 
+    const { data: d, error: dErr } = await supabase
+      .from("domaines")
+      .select("id, ordre, nom")
+      .order("ordre", { ascending: true });
+
+    if (dErr) {
+      alert(dErr.message);
+      return;
+    }
+
     const { data: q, error: qErr } = await supabase
       .from("questions_cliniques")
-      .select("id, titre, contenu, created_at, membre:membres(nom)")
+      .select("id, titre, contenu, created_at, domaine_id, domaine:domaines(nom), membre:membres(nom)")
       .order("created_at", { ascending: false });
 
     if (qErr) {
@@ -63,6 +76,7 @@ export default function QuestionsPage() {
     }
 
     setMembre(m);
+    setDomaines(d ?? []);
     setQuestions(q ?? []);
     setReponses(r ?? []);
     setLoading(false);
@@ -72,11 +86,13 @@ export default function QuestionsPage() {
     if (!membre?.id) return alert("Membre introuvable");
     if (!titre.trim()) return alert("Titre obligatoire");
     if (!contenu.trim()) return alert("Contenu obligatoire");
+    if (!domaineQuestion) return alert("Choisir un domaine");
 
     const { error } = await supabase.from("questions_cliniques").insert({
       membre_id: membre.id,
       titre: titre.trim(),
       contenu: contenu.trim(),
+      domaine_id: domaineQuestion,
     });
 
     if (error) {
@@ -86,6 +102,7 @@ export default function QuestionsPage() {
 
     setTitre("");
     setContenu("");
+    setDomaineQuestion("");
     await loadData();
   }
 
@@ -116,6 +133,11 @@ export default function QuestionsPage() {
     return acc;
   }, {});
 
+  const questionsFiltrees = questions.filter((q: any) => {
+    if (!domaineFiltre) return true;
+    return q.domaine_id === domaineFiltre;
+  });
+
   if (loading) {
     return <main className="card">Chargement…</main>;
   }
@@ -133,6 +155,19 @@ export default function QuestionsPage() {
       <h2>Poser une question</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 800 }}>
+        <select
+          className="input"
+          value={domaineQuestion}
+          onChange={(e) => setDomaineQuestion(e.target.value)}
+        >
+          <option value="">Choisir un domaine</option>
+          {domaines.map((d: any) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
+
         <input
           className="input"
           placeholder="Titre de la question"
@@ -156,16 +191,32 @@ export default function QuestionsPage() {
 
       <h2>Questions du réseau</h2>
 
-      {questions.length === 0 ? (
+      <div className="row" style={{ marginBottom: 12 }}>
+        <select
+          className="input"
+          value={domaineFiltre}
+          onChange={(e) => setDomaineFiltre(e.target.value)}
+        >
+          <option value="">Tous les domaines</option>
+          {domaines.map((d: any) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {questionsFiltrees.length === 0 ? (
         <p className="p">Aucune question pour le moment.</p>
       ) : (
         <div style={{ display: "grid", gap: 16 }}>
-          {questions.map((q: any) => (
+          {questionsFiltrees.map((q: any) => (
             <div key={q.id} className="badge-tile" style={{ gridTemplateColumns: "1fr" }}>
               <div>
                 <div className="badge-tile-title">{q.titre}</div>
 
                 <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
+                  {q.domaine?.nom ? <>🏷️ {q.domaine.nom} — </> : null}
                   Par {q.membre?.nom ?? "Membre"} — {new Date(q.created_at).toLocaleDateString("fr-BE")}
                 </div>
 
