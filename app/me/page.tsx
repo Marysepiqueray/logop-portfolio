@@ -98,6 +98,16 @@ if (!m) {
   window.location.href = "/";
   return;
 }
+      if (m.date_fin_adhesion) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  if (m.date_fin_adhesion < today) {
+    alert("Votre adhésion à Logop'Aide et vous est expirée. Merci de contacter l'ASBL.");
+    await supabase.auth.signOut();
+    window.location.href = "/";
+    return;
+  }
+}
       if (mError) {
         alert(mError.message);
         window.location.href = "/";
