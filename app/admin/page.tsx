@@ -10,17 +10,6 @@ type Domaine = {
   description: string;
 };
 
-const SEUIL_BRONZE = 15;
-const SEUIL_ARGENT = 45;
-const SEUIL_OR = 90;
-
-function tier(hours: number) {
-  if (hours >= SEUIL_OR) return "OR";
-  if (hours >= SEUIL_ARGENT) return "ARGENT";
-  if (hours >= SEUIL_BRONZE) return "BRONZE";
-  return "AUCUN";
-}
-
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
@@ -44,7 +33,8 @@ export default function AdminPage() {
   const [dateFinFormation, setDateFinFormation] = useState("");
   const [descriptionFormation, setDescriptionFormation] = useState("");
   const [competencesFormation, setCompetencesFormation] = useState("");
-  const [typeFormation, setTypeFormation] = useState<"formation_interne" | "conference_interne">("formation_interne");
+  const [typeFormation, setTypeFormation] =
+    useState<"formation_interne" | "conference_interne">("formation_interne");
   const [domaineId, setDomaineId] = useState("");
 
   const [nomInvite, setNomInvite] = useState("");
@@ -63,7 +53,9 @@ export default function AdminPage() {
 
     const { data: f, error: fe } = await supabase
       .from("formations")
-      .select("id, titre, duree_heures, date_formation, date_fin_formation, domaine_id, type, created_at")
+      .select(
+        "id, titre, duree_heures, date_formation, date_fin_formation, domaine_id, type, created_at"
+      )
       .order("created_at", { ascending: false });
     if (fe) throw fe;
 
@@ -90,13 +82,11 @@ export default function AdminPage() {
     for (const s of (souhaits ?? []) as any[]) {
       const id = s.domaine_id;
       const nom = s.domaines?.nom ?? "Domaine";
-
       if (!id) continue;
 
       if (!compteur[id]) {
         compteur[id] = { nom, count: 0 };
       }
-
       compteur[id].count += 1;
     }
 
@@ -110,132 +100,85 @@ export default function AdminPage() {
     setSouhaitsStats(statsSouhaits);
   }
 
- async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
-  const membresIds = (allMembres ?? [])
-    .filter((m) => m.role === "membre")
-    .map((m) => m.id);
+  async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
+    const membresIds = (allMembres ?? [])
+      .filter((m) => m.role === "membre")
+      .map((m) => m.id);
 
-  const { data: v, error: ve } = await supabase
-    .from("validations")
-    .select("membre_id, formation:formations(domaine_id, duree_heures)")
-    .in("membre_id", membresIds);
+    const { data: v, error: ve } = await supabase
+      .from("validations")
+      .select("membre_id, formation:formations(domaine_id, duree_heures)")
+      .in("membre_id", membresIds);
+    if (ve) throw ve;
 
-  if (ve) throw ve;
+    const { data: a, error: ae } = await supabase
+      .from("activites")
+      .select("membre_id, domaine_id, duree_heures, type")
+      .in("membre_id", membresIds);
+    if (ae) throw ae;
 
-  const { data: a, error: ae } = await supabase
-    .from("activites")
-    .select("membre_id, domaine_id, duree_heures, type")
-    .in("membre_id", membresIds);
-
-  if (ae) throw ae;
-
-  const heures: Record<string, Record<string, number>> = {};
-  for (const mid of membresIds) {
-    heures[mid] = {};
-  }
-
-  for (const row of (v ?? []) as any[]) {
-    const mid = row.membre_id as string;
-    const formation = row.formation as any;
-    const dom = formation?.domaine_id as string | undefined;
-
-    if (!mid || !dom) continue;
-
-    const h = Number(formation?.duree_heures ?? 0);
-    heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
-  }
-
-  let totalExternes = 0;
-  let totalConferences = 0;
-  let totalWebinaires = 0;
-
-  for (const row of (a ?? []) as any[]) {
-    const mid = row.membre_id as string;
-    const dom = row.domaine_id as string | undefined;
-
-    if (!mid || !dom) continue;
-
-    const h = Number(row.duree_heures ?? 0);
-    heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
-
-    if (row.type === "formation_externe") totalExternes += h;
-    if (row.type === "conference") totalConferences += h;
-    if (row.type === "webinaire") totalWebinaires += h;
-  }
-
-  const totalInternes = (v ?? []).reduce((sum: number, row: any) => {
-    const formation = row.formation as any;
-    return sum + Number(formation?.duree_heures ?? 0);
-  }, 0);
-
-  const parDomaine = allDomaines.map((d) => {
-    let nbExpert = 0;
-    let nbOr = 0;
-    let nbArgent = 0;
-    let nbBronze = 0;
-    let nbAucun = 0;
-
+    const heures: Record<string, Record<string, number>> = {};
     for (const mid of membresIds) {
-      const h = Number(heures[mid]?.[d.id] ?? 0);
-
-      if (h >= 120) nbExpert++;
-      else if (h >= 90) nbOr++;
-      else if (h >= 45) nbArgent++;
-      else if (h >= 15) nbBronze++;
-      else nbAucun++;
+      heures[mid] = {};
     }
 
-    return {
-      domaine: d,
-      nbExpert,
-      nbOr,
-      nbArgent,
-      nbBronze,
-      nbAucun,
-    };
-  });
+    for (const row of (v ?? []) as any[]) {
+      const mid = row.membre_id as string;
+      const formation = row.formation as any;
+      const dom = formation?.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
 
-  return {
-    nbMembres: membresIds.length,
-    totalInternes,
-    totalExternes,
-    totalConferences,
-    totalWebinaires,
-    parDomaine,
-  };
-}
+      const h = Number(formation?.duree_heures ?? 0);
+      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
+    }
 
-  for (const mid of membresIds) {
-    const h = Number(heures[mid]?.[d.id] ?? 0);
+    let totalExternes = 0;
+    let totalConferences = 0;
+    let totalWebinaires = 0;
 
-    if (h >= 120) nbExpert++;
-    else if (h >= 90) nbOr++;
-    else if (h >= 45) nbArgent++;
-    else if (h >= 15) nbBronze++;
-    else nbAucun++;
-  }
+    for (const row of (a ?? []) as any[]) {
+      const mid = row.membre_id as string;
+      const dom = row.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
 
-  return {
-    domaine: d,
-    nbExpert,
-    nbOr,
-    nbArgent,
-    nbBronze,
-    nbAucun,
-  };
-});
+      const h = Number(row.duree_heures ?? 0);
+      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
+
+      if (row.type === "formation_externe") totalExternes += h;
+      if (row.type === "conference") totalConferences += h;
+      if (row.type === "webinaire") totalWebinaires += h;
+    }
+
+    const totalInternes = (v ?? []).reduce((sum: number, row: any) => {
+      const formation = row.formation as any;
+      return sum + Number(formation?.duree_heures ?? 0);
+    }, 0);
+
+    const parDomaine = allDomaines.map((d) => {
+      let nbExpert = 0;
+      let nbOr = 0;
+      let nbArgent = 0;
+      let nbBronze = 0;
+      let nbAucun = 0;
 
       for (const mid of membresIds) {
         const h = Number(heures[mid]?.[d.id] ?? 0);
-        const t = tier(h);
 
-        if (t === "OR") nbOr++;
-        else if (t === "ARGENT") nbArgent++;
-        else if (t === "BRONZE") nbBronze++;
+        if (h >= 120) nbExpert++;
+        else if (h >= 90) nbOr++;
+        else if (h >= 45) nbArgent++;
+        else if (h >= 15) nbBronze++;
         else nbAucun++;
       }
 
-      return { domaine: d, nbOr, nbArgent, nbBronze, nbAucun };
+      return {
+        domaine: d,
+        nbExpert,
+        nbOr,
+        nbArgent,
+        nbBronze,
+        nbAucun,
+      };
     });
 
     return {
@@ -293,7 +236,9 @@ export default function AdminPage() {
   }
 
   async function validateFormation() {
-    if (!selectedMembre || !selectedFormation) return alert("Choisir membre et formation");
+    if (!selectedMembre || !selectedFormation) {
+      return alert("Choisir membre et formation");
+    }
 
     const { data: exist, error: exErr } = await supabase
       .from("validations")
@@ -404,7 +349,7 @@ export default function AdminPage() {
 
         const stats = await buildReseauStats(m ?? [], (d ?? []) as any);
         setReseau(stats);
-      setCompetencesReseau(stats.parDomaine ?? []);
+        setCompetencesReseau(stats.parDomaine ?? []);
       } catch (e: any) {
         alert(e.message ?? "Erreur chargement");
       } finally {
@@ -416,11 +361,15 @@ export default function AdminPage() {
   const membresFiltres = useMemo(() => {
     return (membres ?? [])
       .filter((m) => m.role === "membre")
-      .filter((m) => (m.nom + " " + m.email).toLowerCase().includes(searchMembre.toLowerCase()));
+      .filter((m) =>
+        (m.nom + " " + m.email).toLowerCase().includes(searchMembre.toLowerCase())
+      );
   }, [membres, searchMembre]);
 
   const formationsFiltrees = useMemo(() => {
-    return (formations ?? []).filter((f) => (f.titre ?? "").toLowerCase().includes(searchFormation.toLowerCase()));
+    return (formations ?? []).filter((f) =>
+      (f.titre ?? "").toLowerCase().includes(searchFormation.toLowerCase())
+    );
   }, [formations, searchFormation]);
 
   if (loading) return <main className="card">Chargement…</main>;
@@ -496,6 +445,22 @@ export default function AdminPage() {
 
       <hr className="hr" />
 
+      <h2>Carte des compétences du réseau</h2>
+
+      {competencesReseau.length === 0 ? (
+        <p className="p">Aucune donnée disponible.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 8 }}>
+          {competencesReseau.map((c: any) => (
+            <div key={c.domaine.id} className="small">
+              <b>{c.domaine.nom}</b> — 🏆 {c.nbExpert} • 🥇 {c.nbOr} • 🥈 {c.nbArgent} • 🥉 {c.nbBronze}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <hr className="hr" />
+
       <h2>Demandes de formation du réseau</h2>
 
       {souhaitsStats.length === 0 ? (
@@ -511,22 +476,6 @@ export default function AdminPage() {
       )}
 
       <hr className="hr" />
-
-      <hr className="hr" />
-
-<h2>Carte des compétences du réseau</h2>
-
-{competencesReseau.length === 0 ? (
-  <p className="p">Aucune donnée disponible.</p>
-) : (
-  <div style={{ display: "grid", gap: 8 }}>
-    {competencesReseau.map((c: any) => (
-      <div key={c.domaine.id} className="small">
-        <b>{c.domaine.nom}</b> — 🏆 {c.nbExpert} • 🥇 {c.nbOr} • 🥈 {c.nbArgent} • 🥉 {c.nbBronze}
-      </div>
-    ))}
-  </div>
-)}
 
       <h2>Inviter un membre</h2>
 
@@ -572,7 +521,11 @@ export default function AdminPage() {
         />
 
         <div className="row">
-          <select className="input" value={typeFormation} onChange={(e) => setTypeFormation(e.target.value as any)}>
+          <select
+            className="input"
+            value={typeFormation}
+            onChange={(e) => setTypeFormation(e.target.value as any)}
+          >
             <option value="formation_interne">Formation interne</option>
             <option value="conference_interne">Conférence interne</option>
           </select>
@@ -589,7 +542,11 @@ export default function AdminPage() {
           />
         </div>
 
-        <select className="input" value={domaineId} onChange={(e) => setDomaineId(e.target.value)}>
+        <select
+          className="input"
+          value={domaineId}
+          onChange={(e) => setDomaineId(e.target.value)}
+        >
           <option value="">Choisir un domaine</option>
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
@@ -656,7 +613,11 @@ export default function AdminPage() {
       </div>
 
       <div className="row" style={{ marginTop: 8 }}>
-        <select className="input" value={selectedMembre} onChange={(e) => setSelectedMembre(e.target.value)}>
+        <select
+          className="input"
+          value={selectedMembre}
+          onChange={(e) => setSelectedMembre(e.target.value)}
+        >
           <option value="">Choisir un membre</option>
           {membresFiltres.map((m) => (
             <option key={m.id} value={m.id}>
@@ -665,7 +626,11 @@ export default function AdminPage() {
           ))}
         </select>
 
-        <select className="input" value={selectedFormation} onChange={(e) => setSelectedFormation(e.target.value)}>
+        <select
+          className="input"
+          value={selectedFormation}
+          onChange={(e) => setSelectedFormation(e.target.value)}
+        >
           <option value="">Choisir une formation</option>
           {formationsFiltrees.map((f) => (
             <option key={f.id} value={f.id}>
