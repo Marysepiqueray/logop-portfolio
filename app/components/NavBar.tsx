@@ -40,6 +40,8 @@ export default function NavBar() {
 
       <a href="/annuaire">Annuaire</a>
 
+      <a href="/questions">Questions</a>
+
       {isAdmin && (
         <a href="/admin">Admin</a>
       )}
