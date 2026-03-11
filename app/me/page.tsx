@@ -11,7 +11,6 @@ type Domaine = {
 };
 
 function medal(hours: number) {
-
   if (hours >= 120) {
     return { label: "Expert Logop'Aide et vous", icon: "🏆" };
   }
@@ -54,24 +53,27 @@ export default function MePage() {
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
-const [souhaitDomaine, setSouhaitDomaine] = useState("");
-  const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
-const [permisConduire, setPermisConduire] = useState(false);
-  const [statutConvention, setStatutConvention] = useState("");
-const [conventionVisible, setConventionVisible] = useState(false);
-  
-  // annuaire
+
+  // Annuaire
   const [ville, setVille] = useState("");
   const [presentation, setPresentation] = useState("");
   const [annuaireVisible, setAnnuaireVisible] = useState(false);
+  const [permisConduire, setPermisConduire] = useState(false);
+  const [statutConvention, setStatutConvention] = useState("");
+  const [conventionVisible, setConventionVisible] = useState(false);
 
-  // ajout activité
+  // Activités
   const [typeActivite, setTypeActivite] = useState("formation_externe");
   const [titreActivite, setTitreActivite] = useState("");
   const [organismeActivite, setOrganismeActivite] = useState("");
   const [dureeActivite, setDureeActivite] = useState<number>(2);
   const [domaineActivite, setDomaineActivite] = useState("");
-  const [dateActivite, setDateActivite] = useState(new Date().toISOString().slice(0, 10));
+  const [dateActivite, setDateActivite] = useState(
+    new Date().toISOString().slice(0, 10)
+  );
+
+  // Souhaits de formation
+  const [souhaitDomaine, setSouhaitDomaine] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -85,44 +87,41 @@ const [conventionVisible, setConventionVisible] = useState(false);
         return;
       }
 
-      // 1) On vérifie d'abord si l'email existe déjà chez les membres autorisés
-     let { data: m, error: mError } = await supabase
-  .from("membres")
-  .select("*")
-  .ilike("email", email.trim())
-  .eq("membre_asbl", true)
-  .maybeSingle();
-if (!m) {
-  alert("Votre adresse email n'est pas reconnue comme membre actif de Logop'Aide et vous.");
-  await supabase.auth.signOut();
-  window.location.href = "/";
-  return;
-}
-      if (m.date_fin_adhesion) {
-  const today = new Date().toISOString().slice(0, 10);
+      let { data: m, error: mError } = await supabase
+        .from("membres")
+        .select("*")
+        .ilike("email", email.trim())
+        .eq("membre_asbl", true)
+        .maybeSingle();
 
-  if (m.date_fin_adhesion < today) {
-    alert("Votre adhésion à Logop'Aide et vous est expirée. Merci de contacter l'ASBL.");
-    await supabase.auth.signOut();
-    window.location.href = "/";
-    return;
-  }
-}
       if (mError) {
         alert(mError.message);
         window.location.href = "/";
         return;
       }
 
-      // 2) Si l'email n'existe pas dans la liste membres, accès refusé
       if (!m) {
-        alert("Votre adresse email n'est pas reconnue comme membre de Logop'Aide et vous.");
+        alert(
+          "Votre adresse email n'est pas reconnue comme membre actif de Logop'Aide et vous."
+        );
         await supabase.auth.signOut();
         window.location.href = "/";
         return;
       }
 
-      // 3) Si le membre existe mais n'est pas encore lié, on lie auth_id automatiquement
+      if (m.date_fin_adhesion) {
+        const today = new Date().toISOString().slice(0, 10);
+
+        if (m.date_fin_adhesion < today) {
+          alert(
+            "Votre adhésion à Logop'Aide et vous est expirée. Merci de contacter l'ASBL."
+          );
+          await supabase.auth.signOut();
+          window.location.href = "/";
+          return;
+        }
+      }
+
       if (!m.auth_id) {
         const { data: updated, error: updateError } = await supabase
           .from("membres")
@@ -141,7 +140,6 @@ if (!m) {
         m = updated;
       }
 
-      // 4) Si l'email existe mais est lié à un autre auth_id, on bloque
       if (m.auth_id && m.auth_id !== userId) {
         alert("Ce membre est déjà lié à un autre compte.");
         await supabase.auth.signOut();
@@ -156,7 +154,9 @@ if (!m) {
 
       const { data: v } = await supabase
         .from("validations")
-        .select("date_validation, formation:formations(titre, domaine_id, duree_heures, niveau)")
+        .select(
+          "date_validation, formation:formations(titre, domaine_id, duree_heures, date_formation, date_fin_formation)"
+        )
         .eq("membre_id", m.id)
         .order("date_validation", { ascending: false });
 
@@ -166,49 +166,23 @@ if (!m) {
         .eq("membre_id", m.id)
         .order("created_at", { ascending: false });
 
-     setMembre(m);
-setDomaines((d ?? []) as any);
-setValidations(v ?? []);
-setActivites(a ?? []);
+      setMembre(m);
+      setDomaines((d ?? []) as any);
+      setValidations(v ?? []);
+      setActivites(a ?? []);
 
-setVille(m.ville ?? "");
-setPresentation(m.presentation ?? "");
-setAnnuaireVisible(m.annuaire_visible ?? false);
+      setVille(m.ville ?? "");
+      setPresentation(m.presentation ?? "");
+      setAnnuaireVisible(m.annuaire_visible ?? false);
       setPermisConduire(m.permis_conduire ?? false);
       setStatutConvention(m.statut_convention ?? "");
-setConventionVisible(m.convention_visible ?? false);
+      setConventionVisible(m.convention_visible ?? false);
 
-setLoading(false);
-      
-      const { data: souhaits } = await supabase
-  .from("souhaits_formation")
-  .select("domaine_id, domaines(nom)");
-
-const compteur: Record<string, { nom: string; count: number }> = {};
-
-for (const s of (souhaits ?? []) as any[]) {
-
-  const id = s.domaine_id;
-  const nom = s.domaines?.nom ?? "Domaine";
-
-  if (!compteur[id]) {
-    compteur[id] = { nom, count: 0 };
-  }
-
-  compteur[id].count += 1;
-
-}
-
-const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
-
+      setLoading(false);
     })();
   }, []);
 
   const passeport = useMemo(() => {
-    const topSpecialites = [...passeport]
-  .filter((p: any) => p.heures >= 15)
-  .sort((a: any, b: any) => b.heures - a.heures)
-  .slice(0, 3);
     const heures: Record<string, number> = {};
 
     for (const row of validations as any[]) {
@@ -240,6 +214,11 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
     });
   }, [domaines, validations, activites]);
 
+  const topSpecialites = [...passeport]
+    .filter((p: any) => p.heures >= 15)
+    .sort((a: any, b: any) => b.heures - a.heures)
+    .slice(0, 3);
+
   async function saveAnnuaire() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -256,8 +235,8 @@ const statsSouhaits = Object.values(compteur).sort((a,b)=>b.count-a.count);
         presentation,
         annuaire_visible: annuaireVisible,
         permis_conduire: permisConduire,
-        statut_convention: statutConvention,
-convention_visible: conventionVisible,
+        statut_convention: statutConvention || null,
+        convention_visible: conventionVisible,
       })
       .eq("auth_id", userId);
 
@@ -269,31 +248,6 @@ convention_visible: conventionVisible,
     alert("Profil annuaire enregistré");
   }
 
-  async function addSouhait() {
-
-  if (!membre?.id) return;
-
-  if (!souhaitDomaine) {
-    alert("Choisir un domaine");
-    return;
-  }
-
-  const { error } = await supabase
-    .from("souhaits_formation")
-    .insert({
-      membre_id: membre.id,
-      domaine_id: souhaitDomaine
-    });
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Souhait enregistré");
-
-  setSouhaitDomaine("");
-}
   async function addActivite() {
     if (!membre?.id) return alert("Membre introuvable");
     if (!titreActivite.trim()) return alert("Titre obligatoire");
@@ -337,6 +291,28 @@ convention_visible: conventionVisible,
     alert("Activité ajoutée");
   }
 
+  async function addSouhait() {
+    if (!membre?.id) return;
+
+    if (!souhaitDomaine) {
+      alert("Choisir un domaine");
+      return;
+    }
+
+    const { error } = await supabase.from("souhaits_formation").insert({
+      membre_id: membre.id,
+      domaine_id: souhaitDomaine,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Souhait enregistré");
+    setSouhaitDomaine("");
+  }
+
   async function generatePDF() {
     const { data: session } = await supabase.auth.getSession();
     const token = session.session?.access_token;
@@ -377,36 +353,39 @@ convention_visible: conventionVisible,
       </div>
 
       <hr className="hr" />
-<h2>Mes spécialités principales</h2>
 
-{topSpecialites.length === 0 ? (
-  <p className="p">Aucune spécialité encore atteinte.</p>
-) : (
-  <div className="row" style={{ marginBottom: 16 }}>
-    {topSpecialites.map((p: any) => (
-      <span key={p.domaine.id} className="badge">
-        {p.heures >= 120 && "🏆"}
-        {p.heures >= 90 && p.heures < 120 && "🥇"}
-        {p.heures >= 45 && p.heures < 90 && "🥈"}
-        {p.heures >= 15 && p.heures < 45 && "🥉"}{" "}
-        {p.domaine.nom}
-      </span>
-    ))}
-  </div>
-)}
+      <h2>Mes spécialités principales</h2>
 
-<hr className="hr" />
+      {topSpecialites.length === 0 ? (
+        <p className="p">Aucune spécialité encore atteinte.</p>
+      ) : (
+        <div className="row" style={{ marginBottom: 16 }}>
+          {topSpecialites.map((p: any) => (
+            <span key={p.domaine.id} className="badge">
+              {p.heures >= 120 && "🏆"}
+              {p.heures >= 90 && p.heures < 120 && "🥇"}
+              {p.heures >= 45 && p.heures < 90 && "🥈"}
+              {p.heures >= 15 && p.heures < 45 && "🥉"} {p.domaine.nom}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <hr className="hr" />
+
       <h2>Mes domaines</h2>
 
       <div className="badge-grid">
         {passeport.map((p: any) => {
-          const pct = Math.min(100, (p.heures / 90) * 100);
+          const pct = Math.min(100, (p.heures / 120) * 100);
 
           return (
-        <div
-key={p.domaine.id}
-className={`badge-tile ${p.medal.label.includes("Expert") ? "badge-expert" : ""}`}
->
+            <div
+              key={p.domaine.id}
+              className={`badge-tile ${
+                p.medal.label.includes("Expert") ? "badge-expert" : ""
+              }`}
+            >
               <div className="badge-medal">{getDomaineIcon(p.domaine.nom)}</div>
 
               <div>
@@ -432,8 +411,9 @@ className={`badge-tile ${p.medal.label.includes("Expert") ? "badge-expert" : ""}
       <h2>Ajouter une activité</h2>
 
       <p className="p">
-        Vous pouvez ajouter vous-même une formation externe, une conférence ou un webinaire.
-        Ces activités seront marquées comme <b>non validées par Logop’Aide et vous</b>.
+        Vous pouvez ajouter vous-même une formation externe, une conférence ou un
+        webinaire. Ces activités seront marquées comme{" "}
+        <b>non validées par Logop’Aide et vous</b>.
       </p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
@@ -467,7 +447,7 @@ className={`badge-tile ${p.medal.label.includes("Expert") ? "badge-expert" : ""}
             type="number"
             min="1"
             max="200"
-            step="1"
+            step="0.5"
             value={dureeActivite}
             onChange={(e) => setDureeActivite(Number(e.target.value))}
             placeholder="Durée (heures)"
@@ -501,43 +481,37 @@ className={`badge-tile ${p.medal.label.includes("Expert") ? "badge-expert" : ""}
       </div>
 
       <hr className="hr" />
-      
-<hr className="hr"/>
 
-<h2>Domaines dans lesquels je souhaite me former</h2>
+      <h2>Domaines dans lesquels je souhaite me former</h2>
 
-<p className="p">
-Indiquez les domaines dans lesquels vous souhaiteriez suivre une formation.
-Ces informations permettent à Logop'Aide et vous d'organiser les prochaines formations.
-</p>
+      <p className="p">
+        Indiquez les domaines dans lesquels vous souhaiteriez suivre une
+        formation. Ces informations permettent à Logop'Aide et vous d'organiser
+        les prochaines formations.
+      </p>
 
-<div className="row">
+      <div className="row">
+        <select
+          className="input"
+          value={souhaitDomaine}
+          onChange={(e) => setSouhaitDomaine(e.target.value)}
+        >
+          <option value="">Choisir un domaine</option>
 
-<select
-className="input"
-value={souhaitDomaine}
-onChange={(e)=>setSouhaitDomaine(e.target.value)}
->
+          {domaines.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
 
-<option value="">Choisir un domaine</option>
+        <button className="button" onClick={addSouhait}>
+          Ajouter
+        </button>
+      </div>
 
-{domaines.map((d)=>(
-<option key={d.id} value={d.id}>
-{d.nom}
-</option>
-))}
+      <hr className="hr" />
 
-</select>
-
-<button
-className="button"
-onClick={addSouhait}
->
-Ajouter
-</button>
-
-</div>
-      
       <h2>Mes activités ajoutées</h2>
 
       {activites.length === 0 ? (
@@ -549,7 +523,8 @@ Ajouter
 
             return (
               <div key={a.id} className="small">
-                <b>{a.titre}</b> — {a.duree_heures}h — {d?.nom ?? "Domaine non défini"} —{" "}
+                <b>{a.titre}</b> — {a.duree_heures}h —{" "}
+                {d?.nom ?? "Domaine non défini"} —{" "}
                 <i>non validée par Logop’Aide et vous</i>
               </div>
             );
@@ -560,14 +535,7 @@ Ajouter
       <hr className="hr" />
 
       <h2>Profil dans l’annuaire</h2>
-<label className="small">
-<input
-type="checkbox"
-checked={permisConduire}
-onChange={(e)=>setPermisConduire(e.target.checked)}
-/>
-Agréé.e permis de conduire
-</label>
+
       <p className="p">
         Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.
       </p>
@@ -600,27 +568,36 @@ Agréé.e permis de conduire
           Apparaître dans l’annuaire
         </label>
 
+        <label className="small">
+          <input
+            type="checkbox"
+            checked={permisConduire}
+            onChange={(e) => setPermisConduire(e.target.checked)}
+          />{" "}
+          Agréé.e permis de conduire
+        </label>
+
         <label className="small">Statut de conventionnement</label>
 
-<select
-  className="input"
-  value={statutConvention}
-  onChange={(e) => setStatutConvention(e.target.value)}
->
-  <option value="">Ne pas préciser</option>
-  <option value="conventionne">Conventionné.e</option>
-  <option value="deconventionne">Déconventionné.e</option>
-</select>
+        <select
+          className="input"
+          value={statutConvention}
+          onChange={(e) => setStatutConvention(e.target.value)}
+        >
+          <option value="">Ne pas préciser</option>
+          <option value="conventionne">Conventionné.e</option>
+          <option value="deconventionne">Déconventionné.e</option>
+        </select>
 
-<label className="small">
-  <input
-    type="checkbox"
-    checked={conventionVisible}
-    onChange={(e) => setConventionVisible(e.target.checked)}
-  />{" "}
-  Autoriser l’affichage public de ce statut dans l’annuaire
-</label>
-        
+        <label className="small">
+          <input
+            type="checkbox"
+            checked={conventionVisible}
+            onChange={(e) => setConventionVisible(e.target.checked)}
+          />{" "}
+          Autoriser l’affichage public de ce statut dans l’annuaire
+        </label>
+
         <button className="button" onClick={saveAnnuaire}>
           Enregistrer
         </button>
