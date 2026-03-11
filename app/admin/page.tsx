@@ -110,64 +110,100 @@ export default function AdminPage() {
     setSouhaitsStats(statsSouhaits);
   }
 
-  async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
-    const membresIds = (allMembres ?? [])
-      .filter((m) => m.role === "membre")
-      .map((m) => m.id);
+ async function buildReseauStats(allMembres: any[], allDomaines: Domaine[]) {
+  const membresIds = (allMembres ?? [])
+    .filter((m) => m.role === "membre")
+    .map((m) => m.id);
 
-    const { data: v, error: ve } = await supabase
-      .from("validations")
-      .select("membre_id, formation:formations(domaine_id, duree_heures)")
-      .in("membre_id", membresIds);
-    if (ve) throw ve;
+  const { data: v, error: ve } = await supabase
+    .from("validations")
+    .select("membre_id, formation:formations(domaine_id, duree_heures)")
+    .in("membre_id", membresIds);
 
-    const { data: a, error: ae } = await supabase
-      .from("activites")
-      .select("membre_id, domaine_id, duree_heures, type")
-      .in("membre_id", membresIds);
-    if (ae) throw ae;
+  if (ve) throw ve;
 
-    const heures: Record<string, Record<string, number>> = {};
-    for (const mid of membresIds) heures[mid] = {};
+  const { data: a, error: ae } = await supabase
+    .from("activites")
+    .select("membre_id, domaine_id, duree_heures, type")
+    .in("membre_id", membresIds);
 
-    for (const row of (v ?? []) as any[]) {
-      const mid = row.membre_id as string;
-      const formation = row.formation as any;
-      const dom = formation?.domaine_id as string | undefined;
-      if (!mid || !dom) continue;
+  if (ae) throw ae;
 
-      const h = Number(formation?.duree_heures ?? 0);
-      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
+  const heures: Record<string, Record<string, number>> = {};
+  for (const mid of membresIds) {
+    heures[mid] = {};
+  }
+
+  for (const row of (v ?? []) as any[]) {
+    const mid = row.membre_id as string;
+    const formation = row.formation as any;
+    const dom = formation?.domaine_id as string | undefined;
+
+    if (!mid || !dom) continue;
+
+    const h = Number(formation?.duree_heures ?? 0);
+    heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
+  }
+
+  let totalExternes = 0;
+  let totalConferences = 0;
+  let totalWebinaires = 0;
+
+  for (const row of (a ?? []) as any[]) {
+    const mid = row.membre_id as string;
+    const dom = row.domaine_id as string | undefined;
+
+    if (!mid || !dom) continue;
+
+    const h = Number(row.duree_heures ?? 0);
+    heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
+
+    if (row.type === "formation_externe") totalExternes += h;
+    if (row.type === "conference") totalConferences += h;
+    if (row.type === "webinaire") totalWebinaires += h;
+  }
+
+  const totalInternes = (v ?? []).reduce((sum: number, row: any) => {
+    const formation = row.formation as any;
+    return sum + Number(formation?.duree_heures ?? 0);
+  }, 0);
+
+  const parDomaine = allDomaines.map((d) => {
+    let nbExpert = 0;
+    let nbOr = 0;
+    let nbArgent = 0;
+    let nbBronze = 0;
+    let nbAucun = 0;
+
+    for (const mid of membresIds) {
+      const h = Number(heures[mid]?.[d.id] ?? 0);
+
+      if (h >= 120) nbExpert++;
+      else if (h >= 90) nbOr++;
+      else if (h >= 45) nbArgent++;
+      else if (h >= 15) nbBronze++;
+      else nbAucun++;
     }
 
-    let totalExternes = 0;
-    let totalConferences = 0;
-    let totalWebinaires = 0;
+    return {
+      domaine: d,
+      nbExpert,
+      nbOr,
+      nbArgent,
+      nbBronze,
+      nbAucun,
+    };
+  });
 
-    for (const row of (a ?? []) as any[]) {
-      const mid = row.membre_id as string;
-      const dom = row.domaine_id as string | undefined;
-      if (!mid || !dom) continue;
-
-      const h = Number(row.duree_heures ?? 0);
-      heures[mid][dom] = (heures[mid][dom] ?? 0) + h;
-
-      if (row.type === "formation_externe") totalExternes += h;
-      if (row.type === "conference") totalConferences += h;
-      if (row.type === "webinaire") totalWebinaires += h;
-    }
-
-    const totalInternes = (v ?? []).reduce((sum: number, row: any) => {
-      const formation = row.formation as any;
-      return sum + Number(formation?.duree_heures ?? 0);
-    }, 0);
-
-const parDomaine = allDomaines.map((d) => {
-  let nbExpert = 0;
-  let nbOr = 0;
-  let nbArgent = 0;
-  let nbBronze = 0;
-  let nbAucun = 0;
+  return {
+    nbMembres: membresIds.length,
+    totalInternes,
+    totalExternes,
+    totalConferences,
+    totalWebinaires,
+    parDomaine,
+  };
+}
 
   for (const mid of membresIds) {
     const h = Number(heures[mid]?.[d.id] ?? 0);
