@@ -25,10 +25,12 @@ export default function AnnuairePage() {
   const [membres, setMembres] = useState<any[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
+  const [languesDisponibles, setLanguesDisponibles] = useState<any[]>([]);
 
   const [search, setSearch] = useState("");
   const [villeSearch, setVilleSearch] = useState("");
   const [domaineSearch, setDomaineSearch] = useState("");
+  const [langueSearch, setLangueSearch] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -45,10 +47,15 @@ export default function AnnuairePage() {
         .select("id, ordre, nom, description")
         .order("ordre", { ascending: true });
 
+      const { data: langues } = await supabase
+        .from("langues_reeducation")
+        .select("id, nom")
+        .order("nom", { ascending: true });
+
       const { data: m } = await supabase
         .from("membres")
         .select(
-          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(id, nom))"
         )
         .eq("annuaire_visible", true)
         .eq("role", "membre")
@@ -75,6 +82,7 @@ export default function AnnuairePage() {
       }
 
       setDomaines((d ?? []) as any);
+      setLanguesDisponibles(langues ?? []);
       setMembres(m ?? []);
       setValidations(v);
       setActivites(a);
@@ -140,7 +148,11 @@ export default function AnnuairePage() {
   const filtered = useMemo(() => {
     return annuaire
       .filter((m) => {
-        const text = (
+        const languesTexte = (m.membre_langues_reeducation ?? [])
+          .map((x: any) => x.langues_reeducation?.nom ?? "")
+          .join(" ");
+
+        const okSearch = (
           (m.nom ?? "") +
           " " +
           (m.ville ?? "") +
@@ -149,24 +161,29 @@ export default function AnnuairePage() {
           " " +
           m.domaines.map((d: any) => d.nom).join(" ") +
           " " +
-          (m.membre_langues_reeducation ?? [])
-            .map((x: any) => x.langues_reeducation?.nom ?? "")
-            .join(" ")
-        ).toLowerCase();
+          languesTexte
+        )
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
-        const okSearch = text.includes(search.toLowerCase());
         const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
 
         const okDomaine =
           !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
 
-        return okSearch && okVille && okDomaine;
+        const okLangue =
+          !langueSearch ||
+          (m.membre_langues_reeducation ?? []).some(
+            (x: any) => x.langue_id === langueSearch
+          );
+
+        return okSearch && okVille && okDomaine && okLangue;
       })
       .sort((a, b) => {
         if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
         return a.nom.localeCompare(b.nom);
       });
-  }, [annuaire, search, villeSearch, domaineSearch]);
+  }, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
 
   if (loading) {
     return <main className="card">Chargement…</main>;
@@ -177,7 +194,8 @@ export default function AnnuairePage() {
       <h1 className="h1">Annuaire des logopèdes</h1>
 
       <p className="p">
-        Retrouvez les membres visibles dans l’annuaire selon leur localisation et leurs domaines de compétence.
+        Retrouvez les membres visibles dans l’annuaire selon leur localisation,
+        leurs domaines de compétence et leurs langues cliniques de rééducation.
       </p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 900, marginTop: 10 }}>
@@ -197,18 +215,33 @@ export default function AnnuairePage() {
           />
         </div>
 
-        <select
-          className="input"
-          value={domaineSearch}
-          onChange={(e) => setDomaineSearch(e.target.value)}
-        >
-          <option value="">Tous les domaines</option>
-          {domaines.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nom}
-            </option>
-          ))}
-        </select>
+        <div className="row">
+          <select
+            className="input"
+            value={domaineSearch}
+            onChange={(e) => setDomaineSearch(e.target.value)}
+          >
+            <option value="">Tous les domaines</option>
+            {domaines.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.nom}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="input"
+            value={langueSearch}
+            onChange={(e) => setLangueSearch(e.target.value)}
+          >
+            <option value="">Toutes les langues cliniques de rééducation</option>
+            {languesDisponibles.map((l: any) => (
+              <option key={l.id} value={l.id}>
+                {l.nom}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <hr className="hr" />
