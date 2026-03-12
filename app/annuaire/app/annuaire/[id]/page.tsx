@@ -11,6 +11,7 @@ type Domaine = {
 };
 
 function medal(hours: number) {
+  if (hours >= 120) return { label: "EXPERT", icon: "🏆", score: 4 };
   if (hours >= 90) return { label: "OR", icon: "🥇", score: 3 };
   if (hours >= 45) return { label: "ARGENT", icon: "🥈", score: 2 };
   if (hours >= 15) return { label: "BRONZE", icon: "🥉", score: 1 };
@@ -40,10 +41,13 @@ export default function ProfilAnnuairePage({
 
       const { data: m } = await supabase
         .from("membres")
-        .select("id, nom, email, ville, presentation, annuaire_visible, role")
+        .select(
+          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+        )
         .eq("id", params.id)
         .eq("annuaire_visible", true)
         .eq("role", "membre")
+        .eq("membre_asbl", true)
         .maybeSingle();
 
       if (!m) {
@@ -131,6 +135,29 @@ export default function ProfilAnnuairePage({
       </div>
 
       {membre.ville ? <p className="p">📍 {membre.ville}</p> : null}
+
+      {membre.permis_conduire ? (
+        <p className="p">🚗 Agréé.e permis de conduire</p>
+      ) : null}
+
+      {membre.convention_visible && membre.statut_convention ? (
+        <p className="p">
+          {membre.statut_convention === "conventionne"
+            ? "✅ Conventionné.e"
+            : "⚪ Déconventionné.e"}
+        </p>
+      ) : null}
+
+      {membre.membre_langues_reeducation &&
+      membre.membre_langues_reeducation.length > 0 ? (
+        <p className="p">
+          🌍 Langues cliniques de rééducation :{" "}
+          {membre.membre_langues_reeducation
+            .map((x: any) => x.langues_reeducation?.nom)
+            .filter(Boolean)
+            .join(", ")}
+        </p>
+      ) : null}
 
       {membre.presentation ? <p className="p">{membre.presentation}</p> : null}
 
