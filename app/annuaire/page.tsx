@@ -1,214 +1,296 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+type Domaine = {
+  id: string;
+  ordre: number;
+  nom: string;
+  description: string;
+};
+
+function medal(hours: number) {
+  if (hours >= 120) return { label: "EXPERT", icon: "🏆", score: 4 };
+  if (hours >= 90) return { label: "OR", icon: "🥇", score: 3 };
+  if (hours >= 45) return { label: "ARGENT", icon: "🥈", score: 2 };
+  if (hours >= 15) return { label: "BRONZE", icon: "🥉", score: 1 };
+  return { label: "AUCUN", icon: "⬜", score: 0 };
+}
+
 export default function AnnuairePage() {
+  const [loading, setLoading] = useState(true);
+
+  const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
-  const [domaines, setDomaines] = useState<any[]>([]);
-  const [heures, setHeures] = useState<Record<string, Record<string, number>>>({});
-  const [recherche, setRecherche] = useState("");
-  const [domaineFiltre, setDomaineFiltre] = useState("");
+  const [validations, setValidations] = useState<any[]>([]);
+  const [activites, setActivites] = useState<any[]>([]);
+
+  const [search, setSearch] = useState("");
+  const [villeSearch, setVilleSearch] = useState("");
+  const [domaineSearch, setDomaineSearch] = useState("");
 
   useEffect(() => {
-    loadData();
+    (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
+      if (!userId) {
+        window.location.href = "/";
+        return;
+      }
+
+      const { data: d } = await supabase
+        .from("domaines")
+        .select("id, ordre, nom, description")
+        .order("ordre", { ascending: true });
+
+      const { data: m } = await supabase
+        .from("membres")
+        .select(
+          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+        )
+        .eq("annuaire_visible", true)
+        .eq("role", "membre")
+        .eq("membre_asbl", true);
+
+      const membreIds = (m ?? []).map((x: any) => x.id);
+
+      let v: any[] = [];
+      let a: any[] = [];
+
+      if (membreIds.length > 0) {
+        const validationsRes = await supabase
+          .from("validations")
+          .select("membre_id, formation:formations(domaine_id, duree_heures)")
+          .in("membre_id", membreIds);
+
+        const activitesRes = await supabase
+          .from("activites")
+          .select("membre_id, domaine_id, duree_heures, type")
+          .in("membre_id", membreIds);
+
+        v = validationsRes.data ?? [];
+        a = activitesRes.data ?? [];
+      }
+
+      setDomaines((d ?? []) as any);
+      setMembres(m ?? []);
+      setValidations(v);
+      setActivites(a);
+      setLoading(false);
+    })();
   }, []);
 
-  async function loadData() {
-    const { data: membresData } = await supabase
-      .from("membres")
-      .select("*")
-      .eq("annuaire_visible", true)
-      .eq("membre_asbl", true)
-      .order("nom");
+  const annuaire = useMemo(() => {
+    const heuresParMembre: Record<string, Record<string, number>> = {};
 
-    const { data: domainesData } = await supabase
-      .from("domaines")
-      .select("*")
-      .order("ordre");
-
-    const { data: validations } = await supabase
-      .from("validations")
-      .select("membre_id, formation:formations(domaine_id, duree_heures)");
-
-    const { data: activites } = await supabase
-      .from("activites")
-      .select("membre_id, domaine_id, duree_heures");
-
-    const h: Record<string, Record<string, number>> = {};
-
-    for (const v of (validations ?? []) as any[]) {
-      const membre = v.membre_id as string;
-      const formation = v.formation as any;
-      const domaine = formation?.domaine_id as string | undefined;
-      const duree = Number(formation?.duree_heures ?? 0);
-
-      if (!membre || !domaine) continue;
-
-      if (!h[membre]) h[membre] = {};
-      if (!h[membre][domaine]) h[membre][domaine] = 0;
-
-      h[membre][domaine] += duree;
+    for (const m of membres) {
+      heuresParMembre[m.id] = {};
     }
 
-    for (const a of (activites ?? []) as any[]) {
-      const membre = a.membre_id as string;
-      const domaine = a.domaine_id as string | undefined;
-      const duree = Number(a.duree_heures ?? 0);
+    for (const row of validations as any[]) {
+      const mid = row.membre_id as string;
+      const formation = row.formation as any;
+      const dom = formation?.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
 
-      if (!membre || !domaine) continue;
-
-      if (!h[membre]) h[membre] = {};
-      if (!h[membre][domaine]) h[membre][domaine] = 0;
-
-      h[membre][domaine] += duree;
+      const h = Number(formation?.duree_heures ?? 0);
+      heuresParMembre[mid][dom] = (heuresParMembre[mid][dom] ?? 0) + h;
     }
 
-    setMembres(membresData ?? []);
-    setDomaines(domainesData ?? []);
-    setHeures(h);
-  }
+    for (const row of activites as any[]) {
+      const mid = row.membre_id as string;
+      const dom = row.domaine_id as string | undefined;
+      if (!mid || !dom) continue;
 
-  function niveau(h: number) {
-    if (h >= 120) return "🏆 Expert";
-    if (h >= 90) return "🥇 Expert";
-    if (h >= 45) return "🥈 Confirmé";
-    if (h >= 15) return "🥉 Formé";
-    return null;
-  }
+      const h = Number(row.duree_heures ?? 0);
+      heuresParMembre[mid][dom] = (heuresParMembre[mid][dom] ?? 0) + h;
+    }
 
-  function topSpecialites(membreId: string) {
-    const h = heures[membreId] || {};
+    return membres.map((m) => {
+      const domainesMembre = domaines
+        .map((d) => {
+          const h = Number(heuresParMembre[m.id]?.[d.id] ?? 0);
+          const med = medal(h);
 
-    return Object.entries(h)
-      .map(([domaineId, nbHeures]) => {
-        const domaine = domaines.find((d) => d.id === domaineId);
+          return {
+            id: d.id,
+            nom: d.nom,
+            heures: h,
+            medal: med,
+          };
+        })
+        .filter((d) => d.medal.label !== "AUCUN")
+        .sort((a, b) => {
+          if (b.medal.score !== a.medal.score) return b.medal.score - a.medal.score;
+          return b.heures - a.heures;
+        });
 
-        return {
-          domaine: domaine?.nom ?? "Domaine",
-          heures: Number(nbHeures),
-        };
+      const expertiseScore = domainesMembre.reduce((sum, d) => sum + d.medal.score, 0);
+
+      return {
+        ...m,
+        domaines: domainesMembre,
+        expertiseScore,
+      };
+    });
+  }, [membres, validations, activites, domaines]);
+
+  const filtered = useMemo(() => {
+    return annuaire
+      .filter((m) => {
+        const text = (
+          (m.nom ?? "") +
+          " " +
+          (m.ville ?? "") +
+          " " +
+          (m.presentation ?? "") +
+          " " +
+          m.domaines.map((d: any) => d.nom).join(" ") +
+          " " +
+          (m.membre_langues_reeducation ?? [])
+            .map((x: any) => x.langues_reeducation?.nom ?? "")
+            .join(" ")
+        ).toLowerCase();
+
+        const okSearch = text.includes(search.toLowerCase());
+        const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
+
+        const okDomaine =
+          !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
+
+        return okSearch && okVille && okDomaine;
       })
-      .filter((x) => x.heures >= 15)
-      .sort((a, b) => b.heures - a.heures)
-      .slice(0, 3);
+      .sort((a, b) => {
+        if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
+        return a.nom.localeCompare(b.nom);
+      });
+  }, [annuaire, search, villeSearch, domaineSearch]);
+
+  if (loading) {
+    return <main className="card">Chargement…</main>;
   }
-
-const membresFiltres = membres
-  .filter((m) => {
-
-    if (recherche &&
-        !(m.nom ?? "").toLowerCase().includes(recherche.toLowerCase())) {
-      return false;
-    }
-
-    if (domaineFiltre) {
-      const h = heures[m.id]?.[domaineFiltre] ?? 0;
-      if (h === 0) return false;
-    }
-
-    return true;
-  })
-  .sort((a, b) => {
-
-    if (!domaineFiltre) {
-      return (a.nom ?? "").localeCompare(b.nom ?? "");
-    }
-
-    const ha = heures[a.id]?.[domaineFiltre] ?? 0;
-    const hb = heures[b.id]?.[domaineFiltre] ?? 0;
-
-    return hb - ha;
-
-  });
 
   return (
-    <main className="container">
-      <div className="card">
-        <h1 className="h1">Annuaire des membres</h1>
+    <main className="card">
+      <h1 className="h1">Annuaire des logopèdes</h1>
 
+      <p className="p">
+        Retrouvez les membres visibles dans l’annuaire selon leur localisation et leurs domaines de compétence.
+      </p>
+
+      <div style={{ display: "grid", gap: 10, maxWidth: 900, marginTop: 10 }}>
         <div className="row">
           <input
             className="input"
-            placeholder="Rechercher un membre"
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
+            placeholder="Rechercher un nom, un domaine…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
 
-          <select
+          <input
             className="input"
-            value={domaineFiltre}
-            onChange={(e) => setDomaineFiltre(e.target.value)}
-          >
-            <option value="">Tous les domaines</option>
-
-            {domaines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nom}
-              </option>
-            ))}
-          </select>
+            placeholder="Ville"
+            value={villeSearch}
+            onChange={(e) => setVilleSearch(e.target.value)}
+          />
         </div>
+
+        <select
+          className="input"
+          value={domaineSearch}
+          onChange={(e) => setDomaineSearch(e.target.value)}
+        >
+          <option value="">Tous les domaines</option>
+          {domaines.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="badge-grid">
-        {membresFiltres.map((m) => {
-          const heuresDomaine = domaineFiltre ? heures[m.id]?.[domaineFiltre] ?? 0 : null;
-          const specialites = topSpecialites(m.id);
+      <hr className="hr" />
 
-          return (
+      {filtered.length === 0 ? (
+        <p className="p">Aucun membre ne correspond à votre recherche.</p>
+      ) : (
+        <div className="badge-grid">
+          {filtered.map((m) => (
             <div key={m.id} className="badge-tile" style={{ gridTemplateColumns: "1fr" }}>
               <div>
-                <div className="badge-tile-title">{m.nom}</div>
+                <a
+                  href={`/annuaire/${m.id}`}
+                  className="badge-tile-title"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {m.nom}
+                </a>
 
-                {specialites.length > 0 && (
-                  <div style={{ display: "grid", gap: 4, marginBottom: 8 }}>
-                    {specialites.map((s: any, i: number) => (
-                      <div key={i} className="badge-tile-meta">
-                        {s.heures >= 120 && "🏆"}
-                        {s.heures >= 90 && s.heures < 120 && "🥇"}
-                        {s.heures >= 45 && s.heures < 90 && "🥈"}
-                        {s.heures >= 15 && s.heures < 45 && "🥉"}{" "}
-                        {s.domaine}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {m.ville && (
+                {m.ville ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
                     📍 {m.ville}
                   </div>
-                )}
+                ) : null}
 
-                {m.permis_conduire && (
+                {m.permis_conduire ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
                     🚗 Agréé.e permis de conduire
                   </div>
-                )}
+                ) : null}
 
-                {m.convention_visible && m.statut_convention && (
+                {m.convention_visible && m.statut_convention ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
                     {m.statut_convention === "conventionne"
                       ? "✅ Conventionné.e"
                       : "⚪ Déconventionné.e"}
                   </div>
-                )}
+                ) : null}
 
-                {domaineFiltre && heuresDomaine > 0 && (
-                  <div className="badge" style={{ marginBottom: 8 }}>
-                    {niveau(heuresDomaine)} — {heuresDomaine}h
+                {m.membre_langues_reeducation &&
+                m.membre_langues_reeducation.length > 0 ? (
+                  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
+                    🌍 Langues cliniques de rééducation :{" "}
+                    {m.membre_langues_reeducation
+                      .map((x: any) => x.langues_reeducation?.nom)
+                      .filter(Boolean)
+                      .join(", ")}
+                  </div>
+                ) : null}
+
+                {m.presentation ? (
+                  <div className="badge-tile-meta" style={{ marginBottom: 10 }}>
+                    {m.presentation}
+                  </div>
+                ) : null}
+
+                <div className="badge-tile-meta" style={{ marginBottom: 6, fontWeight: 700 }}>
+                  Domaines de compétence
+                </div>
+
+                {m.domaines.length === 0 ? (
+                  <div className="badge-tile-meta">Aucun domaine encore atteint.</div>
+                ) : (
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {m.domaines.slice(0, 4).map((d: any) => (
+                      <div key={d.id} className="small">
+                        {d.medal.icon} {d.nom} — {d.heures}h
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                {m.presentation && (
-                  <div className="badge-tile-meta">{m.presentation}</div>
-                )}
+                <div style={{ marginTop: 12 }}>
+                  <a className="button secondary" href={`mailto:${m.email}`}>
+                    Contacter
+                  </a>
+                </div>
               </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </main>
   );
 }
