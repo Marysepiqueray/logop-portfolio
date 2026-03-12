@@ -11,22 +11,10 @@ type Domaine = {
 };
 
 function medal(hours: number) {
-  if (hours >= 120) {
-    return { label: "Expert Logop'Aide et vous", icon: "🏆" };
-  }
-
-  if (hours >= 90) {
-    return { label: "OR", icon: "🥇" };
-  }
-
-  if (hours >= 45) {
-    return { label: "ARGENT", icon: "🥈" };
-  }
-
-  if (hours >= 15) {
-    return { label: "BRONZE", icon: "🥉" };
-  }
-
+  if (hours >= 120) return { label: "Expert Logop'Aide et vous", icon: "🏆" };
+  if (hours >= 90) return { label: "OR", icon: "🥇" };
+  if (hours >= 45) return { label: "ARGENT", icon: "🥈" };
+  if (hours >= 15) return { label: "BRONZE", icon: "🥉" };
   return { label: "AUCUN", icon: "⬜" };
 }
 
@@ -54,17 +42,15 @@ export default function MePage() {
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
 
-  // Annuaire
+  // annuaire
   const [ville, setVille] = useState("");
   const [presentation, setPresentation] = useState("");
   const [annuaireVisible, setAnnuaireVisible] = useState(false);
   const [permisConduire, setPermisConduire] = useState(false);
   const [statutConvention, setStatutConvention] = useState("");
   const [conventionVisible, setConventionVisible] = useState(false);
-  const [languesReeducation, setLanguesReeducation] = useState<any[]>([]);
-const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
 
-  // Activités
+  // activités
   const [typeActivite, setTypeActivite] = useState("formation_externe");
   const [titreActivite, setTitreActivite] = useState("");
   const [organismeActivite, setOrganismeActivite] = useState("");
@@ -74,8 +60,14 @@ const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
     new Date().toISOString().slice(0, 10)
   );
 
-  // Souhaits de formation
+  // souhaits
   const [souhaitDomaine, setSouhaitDomaine] = useState("");
+
+  // langues cliniques de rééducation
+  const [languesReeducation, setLanguesReeducation] = useState<any[]>([]);
+  const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>(
+    []
+  );
 
   useEffect(() => {
     (async () => {
@@ -169,22 +161,19 @@ const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
         .order("created_at", { ascending: false });
 
       const { data: lr } = await supabase
-  .from("langues_reeducation")
-  .select("id, nom")
-  .order("nom", { ascending: true });
+        .from("langues_reeducation")
+        .select("id, nom")
+        .order("nom", { ascending: true });
 
-const { data: mlr } = await supabase
-  .from("membre_langues_reeducation")
-  .select("langue_id")
-  .eq("membre_id", m.id);
+      const { data: mlr } = await supabase
+        .from("membre_langues_reeducation")
+        .select("langue_id")
+        .eq("membre_id", m.id);
 
       setMembre(m);
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
       setActivites(a ?? []);
-
-      setLanguesReeducation(lr ?? []);
-setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
       setVille(m.ville ?? "");
       setPresentation(m.presentation ?? "");
@@ -192,6 +181,9 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
       setPermisConduire(m.permis_conduire ?? false);
       setStatutConvention(m.statut_convention ?? "");
       setConventionVisible(m.convention_visible ?? false);
+
+      setLanguesReeducation(lr ?? []);
+      setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
       setLoading(false);
     })();
@@ -229,11 +221,6 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
     });
   }, [domaines, validations, activites]);
 
-  const topSpecialites = [...passeport]
-    .filter((p: any) => p.heures >= 15)
-    .sort((a: any, b: any) => b.heures - a.heures)
-    .slice(0, 3);
-
   async function saveAnnuaire() {
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -250,7 +237,7 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
         presentation,
         annuaire_visible: annuaireVisible,
         permis_conduire: permisConduire,
-        statut_convention: statutConvention || null,
+        statut_convention: statutConvention,
         convention_visible: conventionVisible,
       })
       .eq("auth_id", userId);
@@ -308,7 +295,6 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
   async function addSouhait() {
     if (!membre?.id) return;
-
     if (!souhaitDomaine) {
       alert("Choisir un domaine");
       return;
@@ -326,6 +312,38 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
     alert("Souhait enregistré");
     setSouhaitDomaine("");
+  }
+
+  async function saveLanguesReeducation() {
+    if (!membre?.id) return alert("Membre introuvable");
+
+    const { error: deleteError } = await supabase
+      .from("membre_langues_reeducation")
+      .delete()
+      .eq("membre_id", membre.id);
+
+    if (deleteError) {
+      alert(deleteError.message);
+      return;
+    }
+
+    if (languesSelectionnees.length > 0) {
+      const payload = languesSelectionnees.map((langueId) => ({
+        membre_id: membre.id,
+        langue_id: langueId,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("membre_langues_reeducation")
+        .insert(payload);
+
+      if (insertError) {
+        alert(insertError.message);
+        return;
+      }
+    }
+
+    alert("Langues cliniques de rééducation enregistrées");
   }
 
   async function generatePDF() {
@@ -369,30 +387,11 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
       <hr className="hr" />
 
-      <h2>Mes spécialités principales</h2>
-
-      {topSpecialites.length === 0 ? (
-        <p className="p">Aucune spécialité encore atteinte.</p>
-      ) : (
-        <div className="row" style={{ marginBottom: 16 }}>
-          {topSpecialites.map((p: any) => (
-            <span key={p.domaine.id} className="badge">
-              {p.heures >= 120 && "🏆"}
-              {p.heures >= 90 && p.heures < 120 && "🥇"}
-              {p.heures >= 45 && p.heures < 90 && "🥈"}
-              {p.heures >= 15 && p.heures < 45 && "🥉"} {p.domaine.nom}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <hr className="hr" />
-
       <h2>Mes domaines</h2>
 
       <div className="badge-grid">
         {passeport.map((p: any) => {
-          const pct = Math.min(100, (p.heures / 120) * 100);
+          const pct = Math.min(100, (p.heures / 90) * 100);
 
           return (
             <div
@@ -401,7 +400,9 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
                 p.medal.label.includes("Expert") ? "badge-expert" : ""
               }`}
             >
-              <div className="badge-medal">{getDomaineIcon(p.domaine.nom)}</div>
+              <div className="badge-medal">
+                {getDomaineIcon(p.domaine.nom)}
+              </div>
 
               <div>
                 <div className="badge-tile-title">{p.domaine.nom}</div>
@@ -426,8 +427,8 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
       <h2>Ajouter une activité</h2>
 
       <p className="p">
-        Vous pouvez ajouter vous-même une formation externe, une conférence ou un
-        webinaire. Ces activités seront marquées comme{" "}
+        Vous pouvez ajouter vous-même une formation externe, une conférence ou
+        un webinaire. Ces activités seront marquées comme{" "}
         <b>non validées par Logop’Aide et vous</b>.
       </p>
 
@@ -462,7 +463,7 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
             type="number"
             min="1"
             max="200"
-            step="0.5"
+            step="1"
             value={dureeActivite}
             onChange={(e) => setDureeActivite(Number(e.target.value))}
             placeholder="Durée (heures)"
@@ -512,7 +513,6 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
           onChange={(e) => setSouhaitDomaine(e.target.value)}
         >
           <option value="">Choisir un domaine</option>
-
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
               {d.nom}
@@ -613,67 +613,40 @@ setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
           Autoriser l’affichage public de ce statut dans l’annuaire
         </label>
 
+        <label className="small">Langues cliniques de rééducation</label>
+
+        <div style={{ display: "grid", gap: 6 }}>
+          {languesReeducation.map((langue: any) => (
+            <label key={langue.id} className="small">
+              <input
+                type="checkbox"
+                checked={languesSelectionnees.includes(langue.id)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setLanguesSelectionnees([
+                      ...languesSelectionnees,
+                      langue.id,
+                    ]);
+                  } else {
+                    setLanguesSelectionnees(
+                      languesSelectionnees.filter((id) => id !== langue.id)
+                    );
+                  }
+                }}
+              />{" "}
+              {langue.nom}
+            </label>
+          ))}
+        </div>
+
+        <button className="button secondary" onClick={saveLanguesReeducation}>
+          Enregistrer les langues
+        </button>
+
         <button className="button" onClick={saveAnnuaire}>
-          <label className="small">Langues cliniques de rééducation</label>
-
-<div style={{ display: "grid", gap: 6 }}>
-  {languesReeducation.map((langue: any) => (
-    <label key={langue.id} className="small">
-      <input
-        type="checkbox"
-        checked={languesSelectionnees.includes(langue.id)}
-        onChange={(e) => {
-          if (e.target.checked) {
-            setLanguesSelectionnees([...languesSelectionnees, langue.id]);
-          } else {
-            setLanguesSelectionnees(
-              languesSelectionnees.filter((id) => id !== langue.id)
-            );
-          }
-        }}
-      />{" "}
-      {langue.nom}
-    </label>
-  ))}
-</div>
-
-<button className="button secondary" onClick={saveLanguesReeducation}>
-  Enregistrer les langues
-</button>
           Enregistrer
         </button>
       </div>
     </main>
   );
-}
-async function saveLanguesReeducation() {
-  if (!membre?.id) return alert("Membre introuvable");
-
-  const { error: deleteError } = await supabase
-    .from("membre_langues_reeducation")
-    .delete()
-    .eq("membre_id", membre.id);
-
-  if (deleteError) {
-    alert(deleteError.message);
-    return;
-  }
-
-  if (languesSelectionnees.length > 0) {
-    const payload = languesSelectionnees.map((langueId) => ({
-      membre_id: membre.id,
-      langue_id: langueId,
-    }));
-
-    const { error: insertError } = await supabase
-      .from("membre_langues_reeducation")
-      .insert(payload);
-
-    if (insertError) {
-      alert(insertError.message);
-      return;
-    }
-  }
-
-  alert("Langues cliniques de rééducation enregistrées");
 }
