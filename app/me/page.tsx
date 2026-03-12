@@ -61,6 +61,8 @@ export default function MePage() {
   const [permisConduire, setPermisConduire] = useState(false);
   const [statutConvention, setStatutConvention] = useState("");
   const [conventionVisible, setConventionVisible] = useState(false);
+  const [languesReeducation, setLanguesReeducation] = useState<any[]>([]);
+const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
 
   // Activités
   const [typeActivite, setTypeActivite] = useState("formation_externe");
@@ -166,10 +168,23 @@ export default function MePage() {
         .eq("membre_id", m.id)
         .order("created_at", { ascending: false });
 
+      const { data: lr } = await supabase
+  .from("langues_reeducation")
+  .select("id, nom")
+  .order("nom", { ascending: true });
+
+const { data: mlr } = await supabase
+  .from("membre_langues_reeducation")
+  .select("langue_id")
+  .eq("membre_id", m.id);
+
       setMembre(m);
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
       setActivites(a ?? []);
+
+      setLanguesReeducation(lr ?? []);
+setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
 
       setVille(m.ville ?? "");
       setPresentation(m.presentation ?? "");
@@ -599,9 +614,66 @@ export default function MePage() {
         </label>
 
         <button className="button" onClick={saveAnnuaire}>
+          <label className="small">Langues cliniques de rééducation</label>
+
+<div style={{ display: "grid", gap: 6 }}>
+  {languesReeducation.map((langue: any) => (
+    <label key={langue.id} className="small">
+      <input
+        type="checkbox"
+        checked={languesSelectionnees.includes(langue.id)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setLanguesSelectionnees([...languesSelectionnees, langue.id]);
+          } else {
+            setLanguesSelectionnees(
+              languesSelectionnees.filter((id) => id !== langue.id)
+            );
+          }
+        }}
+      />{" "}
+      {langue.nom}
+    </label>
+  ))}
+</div>
+
+<button className="button secondary" onClick={saveLanguesReeducation}>
+  Enregistrer les langues
+</button>
           Enregistrer
         </button>
       </div>
     </main>
   );
+}
+async function saveLanguesReeducation() {
+  if (!membre?.id) return alert("Membre introuvable");
+
+  const { error: deleteError } = await supabase
+    .from("membre_langues_reeducation")
+    .delete()
+    .eq("membre_id", membre.id);
+
+  if (deleteError) {
+    alert(deleteError.message);
+    return;
+  }
+
+  if (languesSelectionnees.length > 0) {
+    const payload = languesSelectionnees.map((langueId) => ({
+      membre_id: membre.id,
+      langue_id: langueId,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("membre_langues_reeducation")
+      .insert(payload);
+
+    if (insertError) {
+      alert(insertError.message);
+      return;
+    }
+  }
+
+  alert("Langues cliniques de rééducation enregistrées");
 }
