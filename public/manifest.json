@@ -1,12 +1,10 @@
 {
   "name": "Logop'Aide et vous",
   "short_name": "Logop'Aide",
-  "description": "Passeport de compétences et annuaire des logopèdes",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#6f717c",
-  "orientation": "portrait",
   "icons": [
     {
       "src": "/logo.png",
