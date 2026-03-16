@@ -5,7 +5,10 @@ export const metadata = {
   title: "Logop'Aide et vous",
   description: "Passeport de compétences",
 };
-
+<head>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#6f717c" />
+</head>
 export default function RootLayout({
   children,
 }: {
