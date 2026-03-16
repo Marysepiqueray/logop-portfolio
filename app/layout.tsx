@@ -3,7 +3,12 @@ import NavBar from "./components/NavBar";
 
 export const metadata = {
   title: "Logop'Aide et vous",
-  description: "Passeport de compétences",
+  description: "Passeport de compétences des logopèdes",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png"
+  }
 };
 <head>
 <link rel="manifest" href="/manifest.json" />
