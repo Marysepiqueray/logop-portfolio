@@ -54,9 +54,9 @@ export default function AnnuairePage() {
 
       const { data: m } = await supabase
         .from("membres")
-        .select(
-          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(id, nom))"
-        )
+       .select(
+  "id, nom, email, ville, code_postal, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+)
         .eq("annuaire_visible", true)
         .eq("role", "membre")
         .eq("membre_asbl", true);
@@ -261,11 +261,11 @@ export default function AnnuairePage() {
                   {m.nom}
                 </a>
 
-                {m.ville ? (
-                  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
-                    📍 {m.ville}
-                  </div>
-                ) : null}
+  {m.ville || m.code_postal ? (
+  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
+    📍 {[m.code_postal, m.ville].filter(Boolean).join(" ")}
+  </div>
+) : null}
 
                 {m.permis_conduire ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
