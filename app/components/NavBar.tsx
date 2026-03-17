@@ -33,20 +33,12 @@ export default function NavBar() {
   return (
 
     <nav className="navbar">
-
-      <a href="/">Accueil</a>
-
-      <a href="/me">Mon portfolio</a>
-
-      <a href="/annuaire">Annuaire</a>
-
-      <a href="/questions">Questions</a>
-
-      {isAdmin && (
-        <a href="/admin">Admin</a>
-      )}
-
-    </nav>
+  <a href="/">Accueil</a>
+  <a href="/me">Mon portfolio</a>
+  <a href="/annuaire">Annuaire</a>
+  <a href="/carte">Carte</a>
+  {isAdmin && <a href="/admin">Admin</a>}
+</nav>
 
   );
 }
