@@ -42,8 +42,8 @@ export default function ProfilAnnuairePage({
       const { data: m } = await supabase
         .from("membres")
         .select(
-          "id, nom, email, ville, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
-        )
+  "id, nom, email, ville, code_postal, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+)
         .eq("id", params.id)
         .eq("annuaire_visible", true)
         .eq("role", "membre")
@@ -134,7 +134,9 @@ export default function ProfilAnnuairePage({
         </a>
       </div>
 
-      {membre.ville ? <p className="p">📍 {membre.ville}</p> : null}
+     {membre.ville || membre.code_postal ? (
+  <p className="p">📍 {[membre.code_postal, membre.ville].filter(Boolean).join(" ")}</p>
+) : null}
 
       {membre.permis_conduire ? (
         <p className="p">🚗 Agréé.e permis de conduire</p>
