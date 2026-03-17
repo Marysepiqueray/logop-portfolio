@@ -49,6 +49,7 @@ export default function MePage() {
   const [permisConduire, setPermisConduire] = useState(false);
   const [statutConvention, setStatutConvention] = useState("");
   const [conventionVisible, setConventionVisible] = useState(false);
+  const [codePostal, setCodePostal] = useState("");
 
   // activités
   const [typeActivite, setTypeActivite] = useState("formation_externe");
@@ -176,6 +177,7 @@ export default function MePage() {
       setActivites(a ?? []);
 
       setVille(m.ville ?? "");
+      setCodePostal(m.code_postal ?? "");
       setPresentation(m.presentation ?? "");
       setAnnuaireVisible(m.annuaire_visible ?? false);
       setPermisConduire(m.permis_conduire ?? false);
@@ -234,6 +236,7 @@ export default function MePage() {
       .from("membres")
       .update({
         ville,
+        code_postal: codePostal,
         presentation,
         annuaire_visible: annuaireVisible,
         permis_conduire: permisConduire,
@@ -566,6 +569,14 @@ export default function MePage() {
         />
 
         <label className="small">Présentation</label>
+      <label className="small">Code postal</label>
+
+<input
+  className="input"
+  value={codePostal}
+  onChange={(e) => setCodePostal(e.target.value)}
+  placeholder="Ex : 4000"
+/>
 
         <textarea
           className="input"
