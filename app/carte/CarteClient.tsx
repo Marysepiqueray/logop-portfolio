@@ -98,18 +98,3 @@ export default function CarteClient() {
     </main>
   );
 }
-3) Commit puis attends Ready
-
-Après ça, /carte devrait builder correctement.
-
-Pourquoi ça marche
-
-Avec cette méthode :
-
-page.tsx charge juste un composant
-
-CarteClient est importé avec ssr: false
-
-donc Leaflet n’est jamais exécuté pendant le build
-
-Si tu veux, après ça on pourra corriger aussi le marqueur Leaflet pour qu’il ait votre icône à vous.
