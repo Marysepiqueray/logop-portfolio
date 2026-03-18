@@ -81,7 +81,23 @@ export default function CarteClient() {
 
             const coords = villesCoords[m.ville];
             if (!coords) return null;
+          
+async function getCoords(codePostal: string) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?postalcode=${codePostal}&country=Belgium&format=json`
+    );
+    const data = await res.json();
 
+    if (data && data.length > 0) {
+      return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    }
+  } catch (e) {
+    console.error("Erreur géolocalisation", e);
+  }
+
+  return null;
+}
             return (
               <Marker key={m.id} position={coords} icon={icon}>
                 <Popup>
