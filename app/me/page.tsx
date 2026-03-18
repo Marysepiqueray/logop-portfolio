@@ -66,13 +66,18 @@ export default function MePage() {
 
   // langues cliniques de rééducation
   const [languesReeducation, setLanguesReeducation] = useState<any[]>([]);
-  const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
+  const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>(
+    []
+  );
 
   // avis formations
   const [formationsValidees, setFormationsValidees] = useState<any[]>([]);
   const [formationAvis, setFormationAvis] = useState("");
   const [noteAvis, setNoteAvis] = useState(5);
   const [commentaireAvis, setCommentaireAvis] = useState("");
+  const [avisParFormation, setAvisParFormation] = useState<Record<string, any>>(
+    {}
+  );
 
   useEffect(() => {
     (async () => {
@@ -175,14 +180,49 @@ export default function MePage() {
         .select("langue_id")
         .eq("membre_id", m.id);
 
+      const { data: avis } = await supabase
+        .from("avis_formations")
+        .select("formation_id, note, commentaire, membre:membres(nom)")
+        .order("created_at", { ascending: false });
+
+      const avisMap: Record<string, any> = {};
+
+      for (const a of (avis ?? []) as any[]) {
+        const fid = a.formation_id;
+        if (!fid) continue;
+
+        if (!avisMap[fid]) {
+          avisMap[fid] = {
+            total: 0,
+            count: 0,
+            moyenne: 0,
+            commentaires: [],
+          };
+        }
+
+        avisMap[fid].total += Number(a.note ?? 0);
+        avisMap[fid].count += 1;
+
+        if (a.commentaire) {
+          avisMap[fid].commentaires.push({
+            nom: a.membre?.nom ?? "Membre",
+            note: a.note,
+            commentaire: a.commentaire,
+          });
+        }
+      }
+
+      for (const fid of Object.keys(avisMap)) {
+        avisMap[fid].moyenne =
+          avisMap[fid].count > 0 ? avisMap[fid].total / avisMap[fid].count : 0;
+      }
+
       setMembre(m);
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
       setActivites(a ?? []);
       setFormationsValidees(
-        (v ?? [])
-          .map((row: any) => row.formation)
-          .filter(Boolean)
+        (v ?? []).map((row: any) => row.formation).filter(Boolean)
       );
 
       setVille(m.ville ?? "");
@@ -195,6 +235,7 @@ export default function MePage() {
 
       setLanguesReeducation(lr ?? []);
       setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
+      setAvisParFormation(avisMap);
 
       setLoading(false);
     })();
@@ -386,6 +427,45 @@ export default function MePage() {
     setFormationAvis("");
     setNoteAvis(5);
     setCommentaireAvis("");
+
+    const { data: avis } = await supabase
+      .from("avis_formations")
+      .select("formation_id, note, commentaire, membre:membres(nom)")
+      .order("created_at", { ascending: false });
+
+    const avisMap: Record<string, any> = {};
+
+    for (const a of (avis ?? []) as any[]) {
+      const fid = a.formation_id;
+      if (!fid) continue;
+
+      if (!avisMap[fid]) {
+        avisMap[fid] = {
+          total: 0,
+          count: 0,
+          moyenne: 0,
+          commentaires: [],
+        };
+      }
+
+      avisMap[fid].total += Number(a.note ?? 0);
+      avisMap[fid].count += 1;
+
+      if (a.commentaire) {
+        avisMap[fid].commentaires.push({
+          nom: a.membre?.nom ?? "Membre",
+          note: a.note,
+          commentaire: a.commentaire,
+        });
+      }
+    }
+
+    for (const fid of Object.keys(avisMap)) {
+      avisMap[fid].moyenne =
+        avisMap[fid].count > 0 ? avisMap[fid].total / avisMap[fid].count : 0;
+    }
+
+    setAvisParFormation(avisMap);
   }
 
   async function generatePDF() {
@@ -635,6 +715,51 @@ export default function MePage() {
           Enregistrer mon avis
         </button>
       </div>
+
+      <hr className="hr" />
+
+      <h2>Avis des membres sur les formations suivies</h2>
+
+      {formationsValidees.length === 0 ? (
+        <p className="p">Aucune formation suivie pour le moment.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 14 }}>
+          {formationsValidees.map((f: any) => {
+            const avis = avisParFormation[f.id];
+            const moyenne = avis?.moyenne ?? 0;
+            const count = avis?.count ?? 0;
+            const commentaires = avis?.commentaires ?? [];
+
+            return (
+              <div key={f.id} className="card" style={{ marginTop: 0 }}>
+                <div className="badge-tile-title">{f.titre}</div>
+
+                <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
+                  {count > 0 ? (
+                    <>⭐ {moyenne.toFixed(1)} / 5 — {count} avis</>
+                  ) : (
+                    <>Pas encore d’avis</>
+                  )}
+                </div>
+
+                {commentaires.length > 0 ? (
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {commentaires.slice(0, 3).map((c: any, idx: number) => (
+                      <div key={idx} className="small">
+                        <b>{c.nom}</b> — {"⭐".repeat(Number(c.note))}
+                        <br />
+                        {c.commentaire}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="small">Aucun commentaire pour le moment.</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <hr className="hr" />
 
