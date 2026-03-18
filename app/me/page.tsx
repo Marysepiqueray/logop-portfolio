@@ -44,14 +44,14 @@ export default function MePage() {
 
   // annuaire
   const [ville, setVille] = useState("");
+  const [codePostal, setCodePostal] = useState("");
   const [presentation, setPresentation] = useState("");
   const [annuaireVisible, setAnnuaireVisible] = useState(false);
   const [permisConduire, setPermisConduire] = useState(false);
   const [statutConvention, setStatutConvention] = useState("");
   const [conventionVisible, setConventionVisible] = useState(false);
-  const [codePostal, setCodePostal] = useState("");
 
-  // activités
+  // activités externes
   const [typeActivite, setTypeActivite] = useState("formation_externe");
   const [titreActivite, setTitreActivite] = useState("");
   const [organismeActivite, setOrganismeActivite] = useState("");
@@ -66,9 +66,13 @@ export default function MePage() {
 
   // langues cliniques de rééducation
   const [languesReeducation, setLanguesReeducation] = useState<any[]>([]);
-  const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>(
-    []
-  );
+  const [languesSelectionnees, setLanguesSelectionnees] = useState<string[]>([]);
+
+  // avis formations
+  const [formationsValidees, setFormationsValidees] = useState<any[]>([]);
+  const [formationAvis, setFormationAvis] = useState("");
+  const [noteAvis, setNoteAvis] = useState(5);
+  const [commentaireAvis, setCommentaireAvis] = useState("");
 
   useEffect(() => {
     (async () => {
@@ -150,7 +154,7 @@ export default function MePage() {
       const { data: v } = await supabase
         .from("validations")
         .select(
-          "date_validation, formation:formations(titre, domaine_id, duree_heures, date_formation, date_fin_formation)"
+          "date_validation, formation:formations(id, titre, domaine_id, duree_heures, date_formation, date_fin_formation)"
         )
         .eq("membre_id", m.id)
         .order("date_validation", { ascending: false });
@@ -175,6 +179,11 @@ export default function MePage() {
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
       setActivites(a ?? []);
+      setFormationsValidees(
+        (v ?? [])
+          .map((row: any) => row.formation)
+          .filter(Boolean)
+      );
 
       setVille(m.ville ?? "");
       setCodePostal(m.code_postal ?? "");
@@ -298,6 +307,7 @@ export default function MePage() {
 
   async function addSouhait() {
     if (!membre?.id) return;
+
     if (!souhaitDomaine) {
       alert("Choisir un domaine");
       return;
@@ -347,6 +357,35 @@ export default function MePage() {
     }
 
     alert("Langues cliniques de rééducation enregistrées");
+  }
+
+  async function saveAvisFormation() {
+    if (!membre?.id) return alert("Membre introuvable");
+    if (!formationAvis) return alert("Choisir une formation");
+
+    const { error } = await supabase
+      .from("avis_formations")
+      .upsert(
+        {
+          formation_id: formationAvis,
+          membre_id: membre.id,
+          note: Number(noteAvis),
+          commentaire: commentaireAvis.trim() || null,
+        },
+        {
+          onConflict: "formation_id,membre_id",
+        }
+      );
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Avis enregistré ✅");
+    setFormationAvis("");
+    setNoteAvis(5);
+    setCommentaireAvis("");
   }
 
   async function generatePDF() {
@@ -552,6 +591,53 @@ export default function MePage() {
 
       <hr className="hr" />
 
+      <h2>Donner mon avis sur une formation suivie</h2>
+
+      <p className="p">
+        Vous pouvez attribuer une note de 1 à 5 étoiles et laisser un court
+        commentaire pour aider les autres membres à choisir une formation.
+      </p>
+
+      <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
+        <select
+          className="input"
+          value={formationAvis}
+          onChange={(e) => setFormationAvis(e.target.value)}
+        >
+          <option value="">Choisir une formation suivie</option>
+          {formationsValidees.map((f: any) => (
+            <option key={f.id} value={f.id}>
+              {f.titre}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="input"
+          value={noteAvis}
+          onChange={(e) => setNoteAvis(Number(e.target.value))}
+        >
+          <option value={5}>⭐⭐⭐⭐⭐ — 5</option>
+          <option value={4}>⭐⭐⭐⭐ — 4</option>
+          <option value={3}>⭐⭐⭐ — 3</option>
+          <option value={2}>⭐⭐ — 2</option>
+          <option value={1}>⭐ — 1</option>
+        </select>
+
+        <textarea
+          className="input"
+          placeholder="Votre commentaire (optionnel)"
+          value={commentaireAvis}
+          onChange={(e) => setCommentaireAvis(e.target.value)}
+        />
+
+        <button className="button" onClick={saveAvisFormation}>
+          Enregistrer mon avis
+        </button>
+      </div>
+
+      <hr className="hr" />
+
       <h2>Profil dans l’annuaire</h2>
 
       <p className="p">
@@ -568,15 +654,16 @@ export default function MePage() {
           placeholder="Ex : Bruxelles"
         />
 
-        <label className="small">Présentation</label>
-      <label className="small">Code postal</label>
+        <label className="small">Code postal</label>
 
-<input
-  className="input"
-  value={codePostal}
-  onChange={(e) => setCodePostal(e.target.value)}
-  placeholder="Ex : 4000"
-/>
+        <input
+          className="input"
+          value={codePostal}
+          onChange={(e) => setCodePostal(e.target.value)}
+          placeholder="Ex : 4000"
+        />
+
+        <label className="small">Présentation</label>
 
         <textarea
           className="input"
