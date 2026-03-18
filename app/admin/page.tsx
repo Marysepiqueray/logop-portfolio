@@ -10,6 +10,17 @@ type Domaine = {
   description: string;
 };
 
+const SEUIL_BRONZE = 15;
+const SEUIL_ARGENT = 45;
+const SEUIL_OR = 90;
+
+function tier(hours: number) {
+  if (hours >= SEUIL_OR) return "OR";
+  if (hours >= SEUIL_ARGENT) return "ARGENT";
+  if (hours >= SEUIL_BRONZE) return "BRONZE";
+  return "AUCUN";
+}
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
 
@@ -19,8 +30,10 @@ export default function AdminPage() {
   const [validationsRecentes, setValidationsRecentes] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
   const [souhaitsStats, setSouhaitsStats] = useState<any[]>([]);
+  const [avisParFormation, setAvisParFormation] = useState<Record<string, any>>(
+    {}
+  );
   const [reseau, setReseau] = useState<any>(null);
-  const [competencesReseau, setCompetencesReseau] = useState<any[]>([]);
 
   const [searchMembre, setSearchMembre] = useState("");
   const [searchFormation, setSearchFormation] = useState("");
@@ -33,8 +46,9 @@ export default function AdminPage() {
   const [dateFinFormation, setDateFinFormation] = useState("");
   const [descriptionFormation, setDescriptionFormation] = useState("");
   const [competencesFormation, setCompetencesFormation] = useState("");
-  const [typeFormation, setTypeFormation] =
-    useState<"formation_interne" | "conference_interne">("formation_interne");
+  const [typeFormation, setTypeFormation] = useState<
+    "formation_interne" | "conference_interne"
+  >("formation_interne");
   const [domaineId, setDomaineId] = useState("");
 
   const [nomInvite, setNomInvite] = useState("");
@@ -59,6 +73,44 @@ export default function AdminPage() {
       .order("created_at", { ascending: false });
     if (fe) throw fe;
 
+    const { data: avis, error: avisError } = await supabase
+      .from("avis_formations")
+      .select("formation_id, note, commentaire, membre:membres(nom)")
+      .order("created_at", { ascending: false });
+    if (avisError) throw avisError;
+
+    const avisMap: Record<string, any> = {};
+
+    for (const a of (avis ?? []) as any[]) {
+      const fid = a.formation_id;
+      if (!fid) continue;
+
+      if (!avisMap[fid]) {
+        avisMap[fid] = {
+          total: 0,
+          count: 0,
+          moyenne: 0,
+          commentaires: [],
+        };
+      }
+
+      avisMap[fid].total += Number(a.note ?? 0);
+      avisMap[fid].count += 1;
+
+      if (a.commentaire) {
+        avisMap[fid].commentaires.push({
+          nom: a.membre?.nom ?? "Membre",
+          note: a.note,
+          commentaire: a.commentaire,
+        });
+      }
+    }
+
+    for (const fid of Object.keys(avisMap)) {
+      avisMap[fid].moyenne =
+        avisMap[fid].count > 0 ? avisMap[fid].total / avisMap[fid].count : 0;
+    }
+
     const { data: v, error: ve } = await supabase
       .from("validations")
       .select("id, date_validation, membres!membre_id(nom,email), formations(titre)")
@@ -82,19 +134,24 @@ export default function AdminPage() {
     for (const s of (souhaits ?? []) as any[]) {
       const id = s.domaine_id;
       const nom = s.domaines?.nom ?? "Domaine";
+
       if (!id) continue;
 
       if (!compteur[id]) {
         compteur[id] = { nom, count: 0 };
       }
+
       compteur[id].count += 1;
     }
 
-    const statsSouhaits = Object.values(compteur).sort((a, b) => b.count - a.count);
+    const statsSouhaits = Object.values(compteur).sort(
+      (a, b) => b.count - a.count
+    );
 
     setMembres(m ?? []);
     setDomaines((d ?? []) as any);
     setFormations(f ?? []);
+    setAvisParFormation(avisMap);
     setValidationsRecentes(v ?? []);
     setActivites(act ?? []);
     setSouhaitsStats(statsSouhaits);
@@ -155,7 +212,6 @@ export default function AdminPage() {
     }, 0);
 
     const parDomaine = allDomaines.map((d) => {
-      let nbExpert = 0;
       let nbOr = 0;
       let nbArgent = 0;
       let nbBronze = 0;
@@ -163,22 +219,15 @@ export default function AdminPage() {
 
       for (const mid of membresIds) {
         const h = Number(heures[mid]?.[d.id] ?? 0);
+        const t = tier(h);
 
-        if (h >= 120) nbExpert++;
-        else if (h >= 90) nbOr++;
-        else if (h >= 45) nbArgent++;
-        else if (h >= 15) nbBronze++;
+        if (t === "OR") nbOr++;
+        else if (t === "ARGENT") nbArgent++;
+        else if (t === "BRONZE") nbBronze++;
         else nbAucun++;
       }
 
-      return {
-        domaine: d,
-        nbExpert,
-        nbOr,
-        nbArgent,
-        nbBronze,
-        nbAucun,
-      };
+      return { domaine: d, nbOr, nbArgent, nbBronze, nbAucun };
     });
 
     return {
@@ -205,7 +254,9 @@ export default function AdminPage() {
     }
 
     if (dateFormation && dateFinFormation && dateFinFormation < dateFormation) {
-      return alert("La date de fin ne peut pas être antérieure à la date de début");
+      return alert(
+        "La date de fin ne peut pas être antérieure à la date de début"
+      );
     }
 
     const { error } = await supabase.from("formations").insert({
@@ -236,9 +287,8 @@ export default function AdminPage() {
   }
 
   async function validateFormation() {
-    if (!selectedMembre || !selectedFormation) {
+    if (!selectedMembre || !selectedFormation)
       return alert("Choisir membre et formation");
-    }
 
     const { data: exist, error: exErr } = await supabase
       .from("validations")
@@ -349,7 +399,6 @@ export default function AdminPage() {
 
         const stats = await buildReseauStats(m ?? [], (d ?? []) as any);
         setReseau(stats);
-        setCompetencesReseau(stats.parDomaine ?? []);
       } catch (e: any) {
         alert(e.message ?? "Erreur chargement");
       } finally {
@@ -431,32 +480,18 @@ export default function AdminPage() {
               .map((x: any) => (
                 <div key={x.domaine.id} style={{ marginBottom: 10 }}>
                   <div className="small" style={{ marginBottom: 2 }}>
-                    {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉 {x.nbBronze}
+                    {x.domaine.nom} — 🥇 {x.nbOr} • 🥈 {x.nbArgent} • 🥉{" "}
+                    {x.nbBronze}
                   </div>
 
                   <div className="small" style={{ fontStyle: "italic" }}>
-                    Formation recommandée à organiser : renforcer ce domaine en priorité
+                    Formation recommandée à organiser : renforcer ce domaine en
+                    priorité
                   </div>
                 </div>
               ))}
           </div>
         </>
-      )}
-
-      <hr className="hr" />
-
-      <h2>Carte des compétences du réseau</h2>
-
-      {competencesReseau.length === 0 ? (
-        <p className="p">Aucune donnée disponible.</p>
-      ) : (
-        <div style={{ display: "grid", gap: 8 }}>
-          {competencesReseau.map((c: any) => (
-            <div key={c.domaine.id} className="small">
-              <b>{c.domaine.nom}</b> — 🏆 {c.nbExpert} • 🥇 {c.nbOr} • 🥈 {c.nbArgent} • 🥉 {c.nbBronze}
-            </div>
-          ))}
-        </div>
       )}
 
       <hr className="hr" />
@@ -594,6 +629,55 @@ export default function AdminPage() {
 
       <hr className="hr" />
 
+      <h2>Formations et avis des membres</h2>
+
+      {formations.length === 0 ? (
+        <p className="p">Aucune formation enregistrée.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 14 }}>
+          {formations.map((f: any) => {
+            const avis = avisParFormation[f.id];
+            const moyenne = avis?.moyenne ?? 0;
+            const count = avis?.count ?? 0;
+            const commentaires = avis?.commentaires ?? [];
+
+            return (
+              <div key={f.id} className="card" style={{ marginTop: 0 }}>
+                <div className="badge-tile-title">{f.titre}</div>
+
+                <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
+                  {f.duree_heures}h
+                  {f.date_formation ? ` — début : ${f.date_formation}` : ""}
+                  {f.date_fin_formation ? ` — fin : ${f.date_fin_formation}` : ""}
+                </div>
+
+                <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
+                  {count > 0 ? (
+                    <>⭐ {moyenne.toFixed(1)} / 5 — {count} avis</>
+                  ) : (
+                    <>Pas encore d’avis</>
+                  )}
+                </div>
+
+                {commentaires.length > 0 ? (
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {commentaires.slice(0, 3).map((c: any, idx: number) => (
+                      <div key={idx} className="small">
+                        <b>{c.nom}</b> — {"⭐".repeat(Number(c.note))}
+                        <br />
+                        {c.commentaire}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <hr className="hr" />
+
       <h2>Valider une formation pour un membre</h2>
 
       <div className="row">
@@ -674,7 +758,8 @@ export default function AdminPage() {
           )
           .map((a: any) => (
             <div key={a.id} className="small" style={{ marginBottom: 6 }}>
-              <b>{a.membres?.nom}</b> — {a.titre} — {a.duree_heures}h — {a.domaines?.nom}
+              <b>{a.membres?.nom}</b> — {a.titre} — {a.duree_heures}h —{" "}
+              {a.domaines?.nom}
             </div>
           ))
       )}
