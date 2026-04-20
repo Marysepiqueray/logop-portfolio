@@ -146,14 +146,21 @@ export default function AnnuairePage() {
   }, [membres, validations, activites, domaines]);
 
   const filtered = useMemo(() => {
-    return annuaire
-      .filter((m) => {
-        const languesTexte = (m.membre_langues_reeducation ?? [])
-          .map((x: any) => x.langues_reeducation?.nom ?? "")
-          .join(" ");
+  const normalize = (value: string) =>
+    (value || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
 
-        const okSearch = (
-          (m.nom ?? "") +
+  return annuaire
+    .filter((m) => {
+      const languesTexte = (m.membre_langues_reeducation ?? [])
+        .map((x: any) => x.langues_reeducation?.nom ?? "")
+        .join(" ");
+
+      const texteRecherche = normalize(
+        (m.nom ?? "") +
           " " +
           (m.ville ?? "") +
           " " +
@@ -162,20 +169,34 @@ export default function AnnuairePage() {
           m.domaines.map((d: any) => d.nom).join(" ") +
           " " +
           languesTexte
-        )
-          .toLowerCase()
-          .includes(search.toLowerCase());
+      );
 
-        const okVille = (m.ville ?? "").toLowerCase().includes(villeSearch.toLowerCase());
+      const motsRecherche = normalize(search)
+        .split(/\s+/)
+        .filter(Boolean);
 
-        const okDomaine =
-          !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
+      const okSearch =
+        motsRecherche.length === 0 ||
+        motsRecherche.every((mot) => texteRecherche.includes(mot));
 
-        const okLangue =
-          !langueSearch ||
-          (m.membre_langues_reeducation ?? []).some(
-            (x: any) => x.langue_id === langueSearch
-          );
+      const okVille = normalize(m.ville ?? "").includes(normalize(villeSearch));
+
+      const okDomaine =
+        !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
+
+      const okLangue =
+        !langueSearch ||
+        (m.membre_langues_reeducation ?? []).some(
+          (x: any) => x.langue_id === langueSearch
+        );
+
+      return okSearch && okVille && okDomaine && okLangue;
+    })
+    .sort((a, b) => {
+      if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
+      return a.nom.localeCompare(b.nom);
+    });
+}, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
 
         return okSearch && okVille && okDomaine && okLangue;
       })
