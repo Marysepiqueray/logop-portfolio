@@ -145,7 +145,7 @@ export default function AnnuairePage() {
     });
   }, [membres, validations, activites, domaines]);
 
-  const filtered = useMemo(() => {
+ const filtered = useMemo(() => {
   const normalize = (value: string) =>
     (value || "")
       .toLowerCase()
@@ -155,31 +155,33 @@ export default function AnnuairePage() {
 
   return annuaire
     .filter((m) => {
-      const languesTexte = (m.membre_langues_reeducation ?? [])
-        .map((x: any) => x.langues_reeducation?.nom ?? "")
-        .join(" ");
+      const searchValue = normalize(search);
+      const villeValue = normalize(villeSearch);
 
-      const texteRecherche = normalize(
-        (m.nom ?? "") +
-          " " +
-          (m.ville ?? "") +
-          " " +
-          (m.presentation ?? "") +
-          " " +
-          m.domaines.map((d: any) => d.nom).join(" ") +
-          " " +
-          languesTexte
+      const nom = normalize(m.nom ?? "");
+      const nomInverse = nom.split(" ").reverse().join(" ");
+
+      const presentation = normalize(m.presentation ?? "");
+      const domainesTexte = normalize(
+        m.domaines.map((d: any) => d.nom).join(" ")
       );
-
-      const motsRecherche = normalize(search)
-        .split(/\s+/)
-        .filter(Boolean);
+      const languesTexte = normalize(
+        (m.membre_langues_reeducation ?? [])
+          .map((x: any) => x.langues_reeducation?.nom ?? "")
+          .join(" ")
+      );
+      const lieuTexte = normalize(`${m.ville ?? ""} ${m.code_postal ?? ""}`);
 
       const okSearch =
-        motsRecherche.length === 0 ||
-        motsRecherche.every((mot) => texteRecherche.includes(mot));
+        !searchValue ||
+        nom.includes(searchValue) ||
+        nomInverse.includes(searchValue) ||
+        presentation.includes(searchValue) ||
+        domainesTexte.includes(searchValue) ||
+        languesTexte.includes(searchValue);
 
-      const okVille = normalize(m.ville ?? "").includes(normalize(villeSearch));
+      const okVille =
+        !villeValue || lieuTexte.includes(villeValue);
 
       const okDomaine =
         !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
@@ -197,7 +199,6 @@ export default function AnnuairePage() {
       return a.nom.localeCompare(b.nom);
     });
 }, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
-
         return okSearch && okVille && okDomaine && okLangue;
       })
       .sort((a, b) => {
