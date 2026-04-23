@@ -27,12 +27,15 @@ export async function POST(req: NextRequest) {
 
     if (temporaryPassword.length < 8) {
       return NextResponse.json(
-        { error: "Le mot de passe temporaire doit contenir au moins 8 caractères." },
+        {
+          error:
+            "Le mot de passe temporaire doit contenir au moins 8 caractères.",
+        },
         { status: 400 }
       );
     }
 
-    // Client standard pour vérifier l'utilisateur connecté à partir du JWT
+    // Vérifie l'utilisateur connecté à partir du JWT
     const authClient = createClient(supabaseUrl, supabaseAnonKey);
 
     const {
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Client admin sécurisé côté serveur
     const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Vérifier que l'appelant est bien admin dans la table membres
+    // Vérifie que la personne connectée est bien admin
     const { data: adminMembre, error: adminCheckError } = await adminClient
       .from("membres")
       .select("id, email, role, auth_id")
@@ -65,7 +68,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Chercher l'utilisateur cible dans Auth par email
+    // Recherche l'utilisateur cible dans Auth
     const { data: usersData, error: listError } =
       await adminClient.auth.admin.listUsers();
 
@@ -84,7 +87,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Aucun utilisateur Auth trouvé pour cet email. La personne doit au moins s’être connectée une première fois avec magic link.",
+            "Aucun utilisateur Auth trouvé pour cet email. La personne doit déjà avoir un compte Auth.",
         },
         { status: 404 }
       );
@@ -107,9 +110,6 @@ export async function POST(req: NextRequest) {
       message: "Mot de passe temporaire défini avec succès.",
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Erreur serveur." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
   }
 }
