@@ -354,3 +354,38 @@ a, button, input, select, textarea{
   background: radial-gradient(circle at 30% 30%, #fff7cc, #fbbf24, #d97706);
   font-size:28px;
 }
+/* Sécurité responsive formulaires et blocs */
+
+.input,
+.button,
+select,
+textarea {
+  max-width: 100%;
+}
+
+textarea {
+  width: 100%;
+}
+
+@media (max-width: 760px) {
+  .row > * {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .input,
+  .button,
+  select,
+  textarea {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .badge-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .badge-tile {
+    grid-template-columns: 1fr;
+  }
+}
