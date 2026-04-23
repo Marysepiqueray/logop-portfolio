@@ -35,7 +35,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Vérifie l'utilisateur connecté à partir du JWT
     const authClient = createClient(supabaseUrl, supabaseAnonKey);
 
     const {
@@ -50,10 +49,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Client admin sécurisé côté serveur
     const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Vérifie que la personne connectée est bien admin
     const { data: adminMembre, error: adminCheckError } = await adminClient
       .from("membres")
       .select("id, email, role, auth_id")
@@ -68,7 +65,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Recherche l'utilisateur cible dans Auth
     const { data: usersData, error: listError } =
       await adminClient.auth.admin.listUsers();
 
@@ -79,8 +75,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const targetUser = usersData.users.find(
-      (u) => (u.email || "").toLowerCase() === email
+    const users = (usersData?.users ?? []) as Array<{
+      id: string;
+      email?: string | null;
+    }>;
+
+    const targetUser = users.find(
+      (u) => (u.email ?? "").toLowerCase() === email
     );
 
     if (!targetUser) {
