@@ -46,6 +46,8 @@ export default function AdminTempPasswordPage() {
 
     setMessage("Mot de passe temporaire créé ✅");
     setLoading(false);
+    setEmail("");
+    setTemporaryPassword("");
   }
 
   return (
