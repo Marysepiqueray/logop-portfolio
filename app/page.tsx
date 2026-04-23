@@ -5,11 +5,14 @@ import { supabase } from "@/lib/supabaseClient";
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setSessionEmail(data.user?.email ?? null));
+    supabase.auth.getUser().then(({ data }) => {
+      setSessionEmail(data.user?.email ?? null);
+    });
   }, []);
 
   async function sendMagicLink(e: FormEvent) {
@@ -18,14 +21,36 @@ export default function HomePage() {
 
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: typeof window !== "undefined" ? window.location.origin : undefined },
+      options: {
+        emailRedirectTo:
+          typeof window !== "undefined"
+            ? window.location.origin
+            : undefined,
+      },
     });
 
     if (error) {
       alert(error.message);
       return;
     }
+
     setSent(true);
+  }
+
+  async function loginPassword(e: FormEvent) {
+    e.preventDefault();
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    window.location.reload();
   }
 
   async function logout() {
@@ -40,9 +65,9 @@ export default function HomePage() {
 
       {!sessionEmail ? (
         <>
-          <p className="p">Connexion membre via lien magique (email).</p>
+          <p className="p">Connexion membre</p>
 
-          <form onSubmit={sendMagicLink} className="row">
+          <form className="row" onSubmit={loginPassword}>
             <input
               className="input"
               value={email}
@@ -51,8 +76,27 @@ export default function HomePage() {
               type="email"
               required
             />
+
+            <input
+              className="input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mot de passe"
+              type="password"
+            />
+
             <button className="button" type="submit">
-              Envoyer le lien
+              Se connecter
+            </button>
+          </form>
+
+          <p className="small" style={{ marginTop: 12 }}>
+            Ou recevoir un lien magique :
+          </p>
+
+          <form onSubmit={sendMagicLink} className="row">
+            <button className="button secondary" type="submit">
+              Envoyer le lien magique
             </button>
           </form>
 
@@ -63,6 +107,7 @@ export default function HomePage() {
           )}
 
           <hr className="hr" />
+
           <p className="p">
             Admin :{" "}
             <a href="/admin">
@@ -75,13 +120,16 @@ export default function HomePage() {
           <p className="p">
             Connecté en tant que : <b>{sessionEmail}</b>
           </p>
+
           <div className="row">
             <a className="button secondary" href="/me">
               Mon espace
             </a>
+
             <a className="button secondary" href="/admin">
               Espace admin
             </a>
+
             <button className="button" onClick={logout}>
               Déconnexion
             </button>
