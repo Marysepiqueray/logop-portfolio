@@ -54,9 +54,9 @@ export default function AnnuairePage() {
 
       const { data: m } = await supabase
         .from("membres")
-       .select(
-  "id, nom, email, ville, code_postal, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
-)
+        .select(
+          "id, nom, email, ville, code_postal, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+        )
         .eq("annuaire_visible", true)
         .eq("role", "membre")
         .eq("membre_asbl", true);
@@ -145,64 +145,60 @@ export default function AnnuairePage() {
     });
   }, [membres, validations, activites, domaines]);
 
- const filtered = useMemo(() => {
-  const normalize = (value: string) =>
-    (value || "")
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim();
+  const filtered = useMemo(() => {
+    const normalize = (value: string) =>
+      (value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
 
-  return annuaire
-    .filter((m) => {
-      const searchValue = normalize(search);
-      const villeValue = normalize(villeSearch);
+    return annuaire
+      .filter((m) => {
+        const searchValue = normalize(search);
+        const villeValue = normalize(villeSearch);
 
-      const nom = normalize(m.nom ?? "");
-      const nomInverse = nom.split(" ").reverse().join(" ");
+        const nom = normalize(m.nom ?? "");
+        const nomInverse = nom.split(" ").reverse().join(" ");
+        const presentation = normalize(m.presentation ?? "");
+        const lieuTexte = normalize(`${m.ville ?? ""} ${m.code_postal ?? ""}`);
 
-      const presentation = normalize(m.presentation ?? "");
-      const domainesTexte = normalize(
-        m.domaines.map((d: any) => d.nom).join(" ")
-      );
-      const languesTexte = normalize(
-        (m.membre_langues_reeducation ?? [])
-          .map((x: any) => x.langues_reeducation?.nom ?? "")
-          .join(" ")
-      );
-      const lieuTexte = normalize(`${m.ville ?? ""} ${m.code_postal ?? ""}`);
-
-      const okSearch =
-        !searchValue ||
-        nom.includes(searchValue) ||
-        nomInverse.includes(searchValue) ||
-        presentation.includes(searchValue) ||
-        domainesTexte.includes(searchValue) ||
-        languesTexte.includes(searchValue);
-
-      const okVille =
-        !villeValue || lieuTexte.includes(villeValue);
-
-      const okDomaine =
-        !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
-
-      const okLangue =
-        !langueSearch ||
-        (m.membre_langues_reeducation ?? []).some(
-          (x: any) => x.langue_id === langueSearch
+        const domainesTexte = normalize(
+          (m.domaines ?? []).map((d: any) => d.nom).join(" ")
         );
 
-      return okSearch && okVille && okDomaine && okLangue;
-    })
-    .sort((a, b) => {
-      if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
-      return a.nom.localeCompare(b.nom);
-    });
-}, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
+        const languesTexte = normalize(
+          (m.membre_langues_reeducation ?? [])
+            .map((x: any) => x.langues_reeducation?.nom ?? "")
+            .join(" ")
+        );
+
+        const okSearch =
+          !searchValue ||
+          nom.includes(searchValue) ||
+          nomInverse.includes(searchValue) ||
+          presentation.includes(searchValue) ||
+          lieuTexte.includes(searchValue) ||
+          domainesTexte.includes(searchValue) ||
+          languesTexte.includes(searchValue);
+
+        const okVille = !villeValue || lieuTexte.includes(villeValue);
+
+        const okDomaine =
+          !domaineSearch || m.domaines.some((d: any) => d.id === domaineSearch);
+
+        const okLangue =
+          !langueSearch ||
+          (m.membre_langues_reeducation ?? []).some(
+            (x: any) => x.langue_id === langueSearch
+          );
+
         return okSearch && okVille && okDomaine && okLangue;
       })
       .sort((a, b) => {
-        if (b.expertiseScore !== a.expertiseScore) return b.expertiseScore - a.expertiseScore;
+        if (b.expertiseScore !== a.expertiseScore) {
+          return b.expertiseScore - a.expertiseScore;
+        }
         return a.nom.localeCompare(b.nom);
       });
   }, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
@@ -224,14 +220,14 @@ export default function AnnuairePage() {
         <div className="row">
           <input
             className="input"
-            placeholder="Rechercher un nom, un domaine…"
+            placeholder="Nom, domaine, langue…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
           <input
             className="input"
-            placeholder="Ville"
+            placeholder="Ville ou code postal"
             value={villeSearch}
             onChange={(e) => setVilleSearch(e.target.value)}
           />
@@ -283,11 +279,11 @@ export default function AnnuairePage() {
                   {m.nom}
                 </a>
 
-  {m.ville || m.code_postal ? (
-  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
-    📍 {[m.code_postal, m.ville].filter(Boolean).join(" ")}
-  </div>
-) : null}
+                {m.ville || m.code_postal ? (
+                  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
+                    📍 {[m.code_postal, m.ville].filter(Boolean).join(" ")}
+                  </div>
+                ) : null}
 
                 {m.permis_conduire ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
