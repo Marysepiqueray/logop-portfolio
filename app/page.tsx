@@ -53,6 +53,27 @@ export default function HomePage() {
     window.location.reload();
   }
 
+  async function resetPassword() {
+    if (!email) {
+      alert("Veuillez d’abord entrer votre email.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/reset-password`
+          : undefined,
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("Email de réinitialisation envoyé ✅ Vérifiez votre boîte mail.");
+  }
+
   async function logout() {
     await supabase.auth.signOut();
     setSessionEmail(null);
@@ -89,6 +110,24 @@ export default function HomePage() {
               Se connecter
             </button>
           </form>
+
+          <p className="small" style={{ marginTop: 10 }}>
+            <button
+              type="button"
+              onClick={resetPassword}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "#1d4ed8",
+                textDecoration: "underline",
+                cursor: "pointer",
+                font: "inherit",
+              }}
+            >
+              Mot de passe oublié ?
+            </button>
+          </p>
 
           <p className="small" style={{ marginTop: 12 }}>
             Ou recevoir un lien magique :
