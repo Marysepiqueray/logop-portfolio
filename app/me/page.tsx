@@ -82,6 +82,12 @@ export default function MePage() {
   // mot de passe
   const [newPassword, setNewPassword] = useState("");
 
+  // questions cliniques
+  const [questionsCliniques, setQuestionsCliniques] = useState<any[]>([]);
+  const [questionDomaine, setQuestionDomaine] = useState("");
+  const [questionTitre, setQuestionTitre] = useState("");
+  const [questionTexte, setQuestionTexte] = useState("");
+
   useEffect(() => {
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
@@ -97,7 +103,7 @@ export default function MePage() {
       let { data: m, error: mError } = await supabase
         .from("membres")
         .select("*")
-        .ilike("email", email.trim())
+        .ilike("email", email)
         .eq("membre_asbl", true)
         .maybeSingle();
 
@@ -220,6 +226,11 @@ export default function MePage() {
           avisMap[fid].count > 0 ? avisMap[fid].total / avisMap[fid].count : 0;
       }
 
+      const { data: qc } = await supabase
+        .from("questions_cliniques")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       setMembre(m);
       setDomaines((d ?? []) as any);
       setValidations(v ?? []);
@@ -239,6 +250,7 @@ export default function MePage() {
       setLanguesReeducation(lr ?? []);
       setLanguesSelectionnees((mlr ?? []).map((x: any) => x.langue_id));
       setAvisParFormation(avisMap);
+      setQuestionsCliniques(qc ?? []);
 
       setLoading(false);
     })();
@@ -488,6 +500,37 @@ export default function MePage() {
     }
 
     setAvisParFormation(avisMap);
+  }
+
+  async function publierQuestionClinique() {
+    if (!membre?.id) return alert("Membre introuvable");
+    if (!questionDomaine) return alert("Choisir un domaine");
+    if (!questionTitre.trim()) return alert("Titre obligatoire");
+    if (!questionTexte.trim()) return alert("Question obligatoire");
+
+    const { error } = await supabase.from("questions_cliniques").insert({
+      membre_id: membre.id,
+      domaine_id: questionDomaine,
+      titre: questionTitre.trim(),
+      question: questionTexte.trim(),
+    });
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const { data: qc } = await supabase
+      .from("questions_cliniques")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    setQuestionsCliniques(qc ?? []);
+    setQuestionDomaine("");
+    setQuestionTitre("");
+    setQuestionTexte("");
+
+    alert("Question publiée ✅");
   }
 
   async function generatePDF() {
@@ -910,6 +953,51 @@ export default function MePage() {
 
         <button className="button" onClick={saveAnnuaire}>
           Enregistrer
+        </button>
+      </div>
+
+      <hr className="hr" />
+
+      <h2>Questions cliniques</h2>
+
+      <p className="p">
+        Posez vos questions au réseau et échangez entre logopèdes.
+      </p>
+
+      <hr className="hr" />
+
+      <h2>Poser une question</h2>
+
+      <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
+        <select
+          className="input"
+          value={questionDomaine}
+          onChange={(e) => setQuestionDomaine(e.target.value)}
+        >
+          <option value="">Choisir un domaine</option>
+          {domaines.map((d) => (
+            <option key={d.id} value={d.id}>
+              {d.nom}
+            </option>
+          ))}
+        </select>
+
+        <input
+          className="input"
+          value={questionTitre}
+          onChange={(e) => setQuestionTitre(e.target.value)}
+          placeholder="Titre de la question"
+        />
+
+        <textarea
+          className="input"
+          value={questionTexte}
+          onChange={(e) => setQuestionTexte(e.target.value)}
+          placeholder="Décrivez votre question clinique"
+        />
+
+        <button className="button" onClick={publierQuestionClinique}>
+          Publier la question
         </button>
       </div>
     </main>
