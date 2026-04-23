@@ -287,8 +287,9 @@ export default function AdminPage() {
   }
 
   async function validateFormation() {
-    if (!selectedMembre || !selectedFormation)
+    if (!selectedMembre || !selectedFormation) {
       return alert("Choisir membre et formation");
+    }
 
     const { data: exist, error: exErr } = await supabase
       .from("validations")
@@ -426,6 +427,12 @@ export default function AdminPage() {
   return (
     <main className="card">
       <h1 className="h1">Administration</h1>
+
+      <div className="row" style={{ marginTop: 12, marginBottom: 12 }}>
+        <a className="button secondary" href="/admin/mot-de-passe-temp">
+          Mot de passe temporaire
+        </a>
+      </div>
 
       <hr className="hr" />
 
