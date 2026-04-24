@@ -389,3 +389,57 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+/* Barre mobile premium */
+
+.mobile-tabbar {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  body {
+    padding-bottom: 82px;
+  }
+
+  .navbar {
+    display: none;
+  }
+
+  .mobile-tabbar {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    z-index: 9999;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    padding: 10px 8px;
+  }
+
+  .mobile-tabbar a {
+    flex: 1;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 20px;
+    line-height: 1.1;
+    font-weight: 700;
+    padding: 6px 4px;
+    border-radius: 14px;
+  }
+
+  .mobile-tabbar a span {
+    display: block;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+
+  .mobile-tabbar a:hover {
+    background: #f3f4f6;
+  }
+}
