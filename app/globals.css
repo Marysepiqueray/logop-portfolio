@@ -392,8 +392,7 @@ textarea {
 /* Barre mobile premium */
 
 .mobile-tabbar {
-  display:flex;
-  background:red;
+  display: none;
 }
 
 @media (max-width: 760px) {
