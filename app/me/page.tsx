@@ -165,13 +165,13 @@ export default function MePage() {
         .select("id, ordre, nom, description")
         .order("ordre", { ascending: true });
 
-      const { data: v } = await supabase
-        .from("validations")
-        .select(
-          "date_validation, formation:formations(id, titre, domaine_id, duree_heures, date_formation, date_fin_formation)"
-        )
-        .eq("membre_id", m.id)
-        .order("date_validation", { ascending: false });
+const { data: v } = await supabase
+  .from("validations")
+  .select(
+    "date_validation, formation:formations(id, titre, domaine_id, duree_heures, date_formation, date_fin_formation, description, competences)"
+  )
+  .eq("membre_id", m.id)
+  .order("date_validation", { ascending: false });
 
       const { data: a } = await supabase
         .from("activites")
@@ -818,7 +818,18 @@ export default function MePage() {
             return (
               <div key={f.id} className="card" style={{ marginTop: 0 }}>
                 <div className="badge-tile-title">{f.titre}</div>
+{f.description ? (
+  <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
+    <b>Description :</b> {f.description}
+  </div>
+) : null}
 
+{f.competences ? (
+  <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
+    <b>Objectifs / compétences :</b> {f.competences}
+  </div>
+) : null}
+                
                 <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
                   {count > 0 ? (
                     <>⭐ {moyenne.toFixed(1)} / 5 — {count} avis</>
