@@ -41,6 +41,7 @@ export default function MePage() {
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [validations, setValidations] = useState<any[]>([]);
   const [activites, setActivites] = useState<any[]>([]);
+  const [formationDetail, setFormationDetail] = useState<any>(null);
 
   // annuaire
   const [ville, setVille] = useState("");
@@ -816,7 +817,12 @@ const { data: v } = await supabase
             const commentaires = avis?.commentaires ?? [];
 
             return (
-              <div key={f.id} className="card" style={{ marginTop: 0 }}>
+             <div
+  key={f.id}
+  className="card"
+  style={{ marginTop: 0, cursor: "pointer" }}
+  onClick={() => setFormationDetail(f)}
+>
                 <div className="badge-tile-title">{f.titre}</div>
 {f.description ? (
   <div className="badge-tile-meta" style={{ marginBottom: 8 }}>
@@ -1011,6 +1017,56 @@ const { data: v } = await supabase
           Publier la question
         </button>
       </div>
+      {formationDetail ? (
+  <div
+    className="card"
+    style={{
+      position: "fixed",
+      inset: 20,
+      zIndex: 999,
+      overflow: "auto",
+      maxWidth: 800,
+      margin: "auto",
+      maxHeight: "90vh",
+    }}
+  >
+    <h2>{formationDetail.titre}</h2>
+
+    <p className="p">
+      <b>Durée :</b> {formationDetail.duree_heures}h
+    </p>
+
+    {formationDetail.date_formation ? (
+      <p className="p">
+        <b>Date :</b> {formationDetail.date_formation}
+        {formationDetail.date_fin_formation
+          ? ` → ${formationDetail.date_fin_formation}`
+          : ""}
+      </p>
+    ) : null}
+
+    {formationDetail.description ? (
+      <>
+        <h3>Description</h3>
+        <p className="p">{formationDetail.description}</p>
+      </>
+    ) : null}
+
+    {formationDetail.competences ? (
+      <>
+        <h3>Objectifs / compétences</h3>
+        <p className="p">{formationDetail.competences}</p>
+      </>
+    ) : null}
+
+    <button
+      className="button secondary"
+      onClick={() => setFormationDetail(null)}
+    >
+      Fermer
+    </button>
+  </div>
+) : null}
     </main>
   );
 }
