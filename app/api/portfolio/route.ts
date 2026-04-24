@@ -15,6 +15,7 @@ const styles = StyleSheet.create({
   summary: { fontSize: 10, color: "#555", marginTop: 6 },
 
   sectionTitle: { fontSize: 13, marginTop: 16, marginBottom: 10 },
+  yearTitle: { fontSize: 15, marginTop: 14, marginBottom: 8 },
 
   badge: { borderWidth: 1, borderColor: "#ddd", borderRadius: 12, padding: 14, marginBottom: 10 },
   badgeRow: { flexDirection: "row", gap: 10, alignItems: "center", marginBottom: 4 },
@@ -24,14 +25,13 @@ const styles = StyleSheet.create({
 });
 
 export async function GET(request: Request) {
-  // Token
   const auth = request.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
   if (!token) return new NextResponse("Not authenticated", { status: 401 });
 
-  // Supabase client user-scoped
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
   const supabase = createClient(supabaseUrl, supabaseKey, {
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
@@ -49,7 +49,9 @@ export async function GET(request: Request) {
 
   const { data: validations, error } = await supabase
     .from("validations")
-    .select("date_validation, formation:formations(titre, duree_heures, niveau)")
+    .select(
+      "date_validation, formation:formations(titre, duree_heures, niveau, date_formation, date_fin_formation)"
+    )
     .eq("membre_id", membre.id)
     .order("date_validation", { ascending: false });
 
@@ -59,12 +61,27 @@ export async function GET(request: Request) {
     (sum: number, v: any) => sum + Number(v.formation?.duree_heures ?? 0),
     0
   );
-  const dateEdition = new Date().toLocaleDateString("fr-BE");
 
+  const dateEdition = new Date().toLocaleDateString("fr-BE");
   const origin = new URL(request.url).origin;
   const logoUrl = `${origin}/logo.png`;
 
-  // Document sans JSX
+  const groupedByYear = (validations ?? []).reduce((acc: Record<string, any[]>, v: any) => {
+    const date =
+      v.formation?.date_fin_formation ||
+      v.formation?.date_formation ||
+      v.date_validation;
+
+    const year = date ? String(date).slice(0, 4) : "Sans date";
+
+    if (!acc[year]) acc[year] = [];
+    acc[year].push(v);
+
+    return acc;
+  }, {});
+
+  const years = Object.keys(groupedByYear).sort((a, b) => Number(b) - Number(a));
+
   const doc = React.createElement(
     Document,
     null,
@@ -72,7 +89,6 @@ export async function GET(request: Request) {
       Page,
       { size: "A4", style: styles.page },
 
-      // Header
       React.createElement(
         View,
         { style: styles.header },
@@ -90,33 +106,38 @@ export async function GET(request: Request) {
         )
       ),
 
-      React.createElement(Text, { style: styles.sectionTitle }, "Certifications"),
+      React.createElement(Text, { style: styles.sectionTitle }, "Formations par année"),
 
-      ...(validations && validations.length
-        ? validations.map((v: any, i: number) =>
-            React.createElement(
-              View,
-              { key: String(i), style: styles.badge },
+      ...(years.length
+        ? years.flatMap((year) => [
+            React.createElement(Text, { key: `year-${year}`, style: styles.yearTitle }, year),
+
+            ...groupedByYear[year].map((v: any, i: number) =>
               React.createElement(
                 View,
-                { style: styles.badgeRow },
-                React.createElement(Text, { style: styles.medal }, "🏅"),
-                React.createElement(Text, { style: styles.badgeTitle }, v.formation?.titre ?? "Formation")
-              ),
-              React.createElement(Text, { style: styles.badgeMeta }, "Formation certifiée"),
-              React.createElement(
-                Text,
-                { style: styles.badgeMeta },
-                `Durée : ${Number(v.formation?.duree_heures ?? 0)}h${v.formation?.niveau ? ` • Niveau : ${v.formation.niveau}` : ""}`
-              ),
-              React.createElement(Text, { style: styles.badgeMeta }, `Validée le ${v.date_validation}`)
-            )
-          )
+                { key: `${year}-${i}`, style: styles.badge },
+                React.createElement(
+                  View,
+                  { style: styles.badgeRow },
+                  React.createElement(Text, { style: styles.medal }, "🏅"),
+                  React.createElement(Text, { style: styles.badgeTitle }, v.formation?.titre ?? "Formation")
+                ),
+                React.createElement(Text, { style: styles.badgeMeta }, "Formation certifiée"),
+                React.createElement(
+                  Text,
+                  { style: styles.badgeMeta },
+                  `Durée : ${Number(v.formation?.duree_heures ?? 0)}h${
+                    v.formation?.niveau ? ` • Niveau : ${v.formation.niveau}` : ""
+                  }`
+                ),
+                React.createElement(Text, { style: styles.badgeMeta }, `Validée le ${v.date_validation}`)
+              )
+            ),
+          ])
         : [React.createElement(Text, { key: "empty" }, "Aucune formation validée.")])
     )
   );
 
-  // Génération PDF compatible NextResponse
   const blob = await pdf(doc).toBlob();
   const arrayBuffer = await blob.arrayBuffer();
   const bytes = new Uint8Array(arrayBuffer);
