@@ -19,30 +19,36 @@ export default function NavBar() {
         .eq("auth_id", userId)
         .maybeSingle();
 
-      if (membre?.role === "admin") {
-        setIsAdmin(true);
-      }
+      if (membre?.role === "admin") setIsAdmin(true);
     }
 
     checkRole();
   }, []);
 
   return (
-    <nav className="navbar">
-      <a href="/">Accueil</a>
-      <a href="/me">Mon portfolio</a>
-      <a href="/annuaire">Annuaire</a>
-      <a href="/carte">Carte</a>
+    <>
+      <nav className="navbar">
+        <a href="/">Accueil</a>
+        <a href="/me">Mon portfolio</a>
+        <a href="/annuaire">Annuaire</a>
+        <a href="/carte">Carte</a>
+        <a
+          href="https://www.logopaidetvous.be/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Site ASBL
+        </a>
+        {isAdmin && <a href="/admin">Admin</a>}
+      </nav>
 
-      <a
-        href="https://www.logopaidetvous.be/"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Site ASBL
-      </a>
-
-      {isAdmin && <a href="/admin">Admin</a>}
-    </nav>
+      <nav className="mobile-tabbar">
+        <a href="/">🏠<span>Accueil</span></a>
+        <a href="/me">🎓<span>Portfolio</span></a>
+        <a href="/annuaire">🔎<span>Annuaire</span></a>
+        <a href="/carte">🗺️<span>Carte</span></a>
+        {isAdmin && <a href="/admin">⚙️<span>Admin</span></a>}
+      </nav>
+    </>
   );
 }
