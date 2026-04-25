@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+      return NextResponse.json(
+        { error: "Variable serveur manquante dans Vercel." },
+        { status: 500 }
+      );
+    }
+
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
 
@@ -27,10 +34,7 @@ export async function POST(req: NextRequest) {
 
     if (temporaryPassword.length < 8) {
       return NextResponse.json(
-        {
-          error:
-            "Le mot de passe temporaire doit contenir au moins 8 caractères.",
-        },
+        { error: "Le mot de passe doit contenir au moins 8 caractères." },
         { status: 400 }
       );
     }
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
       error: callerError,
     } = await authClient.auth.getUser(token);
 
-    if (callerError || !caller) {
+    if (callerError || !caller?.email) {
       return NextResponse.json(
         { error: "Session admin invalide." },
         { status: 401 }
@@ -70,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     if (listError) {
       return NextResponse.json(
-        { error: "Impossible de lire les utilisateurs Auth." },
+        { error: listError.message },
         { status: 500 }
       );
     }
@@ -84,33 +88,47 @@ export async function POST(req: NextRequest) {
       (u) => (u.email ?? "").toLowerCase() === email
     );
 
-    if (!targetUser) {
-      return NextResponse.json(
-        {
-          error:
-            "Aucun utilisateur Auth trouvé pour cet email. La personne doit déjà avoir un compte Auth.",
-        },
-        { status: 404 }
-      );
+    if (targetUser) {
+      const { error: updateError } =
+        await adminClient.auth.admin.updateUserById(targetUser.id, {
+          password: temporaryPassword,
+          email_confirm: true,
+        });
+
+      if (updateError) {
+        return NextResponse.json(
+          { error: updateError.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Mot de passe temporaire mis à jour.",
+      });
     }
 
-    const { error: updateError } = await adminClient.auth.admin.updateUserById(
-      targetUser.id,
-      { password: temporaryPassword }
-    );
+    const { error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+    });
 
-    if (updateError) {
+    if (createError) {
       return NextResponse.json(
-        { error: updateError.message },
+        { error: createError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: "Mot de passe temporaire défini avec succès.",
+      message: "Utilisateur créé avec mot de passe temporaire.",
     });
-  } catch (error) {
-    return NextResponse.json({ error: "Erreur serveur." }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Erreur serveur inconnue." },
+      { status: 500 }
+    );
   }
 }
