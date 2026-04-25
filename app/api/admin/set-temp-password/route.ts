@@ -7,9 +7,15 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export async function POST(req: NextRequest) {
   try {
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+    const missing = [];
+
+    if (!supabaseUrl) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+    if (!supabaseAnonKey) missing.push("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    if (!supabaseServiceRoleKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (missing.length > 0) {
       return NextResponse.json(
-        { error: "Variable serveur manquante dans Vercel." },
+        { error: `Variable(s) manquante(s) : ${missing.join(", ")}` },
         { status: 500 }
       );
     }
@@ -22,6 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
+
     const email = String(body.email || "").trim().toLowerCase();
     const temporaryPassword = String(body.temporaryPassword || "").trim();
 
@@ -62,7 +69,14 @@ export async function POST(req: NextRequest) {
       .eq("role", "admin")
       .maybeSingle();
 
-    if (adminCheckError || !adminMembre) {
+    if (adminCheckError) {
+      return NextResponse.json(
+        { error: adminCheckError.message },
+        { status: 500 }
+      );
+    }
+
+    if (!adminMembre) {
       return NextResponse.json(
         { error: "Accès réservé à l’admin." },
         { status: 403 }
@@ -104,7 +118,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: "Mot de passe temporaire mis à jour.",
+        message: "Mot de passe temporaire mis à jour ✅",
       });
     }
 
@@ -123,7 +137,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Utilisateur créé avec mot de passe temporaire.",
+      message: "Utilisateur créé avec mot de passe temporaire ✅",
     });
   } catch (error: any) {
     return NextResponse.json(
