@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import InstallAppButton from "./components/InstallAppButton";
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
@@ -83,6 +84,10 @@ export default function HomePage() {
   return (
     <main className="card">
       <h1 className="h1">Connexion</h1>
+
+      <div className="row" style={{ marginBottom: 16 }}>
+        <InstallAppButton />
+      </div>
 
       {!sessionEmail ? (
         <>
