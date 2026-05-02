@@ -20,8 +20,6 @@ const labels = {
     duration: "Durée (heures)",
     chooseDomain: "Choisir un domaine",
     add: "Ajouter",
-  
-    clinicalQuestions: "Questions cliniques",
     askQuestion: "Poser une question",
     questionTitle: "Titre de la question",
     questionText: "Décrivez votre question clinique",
