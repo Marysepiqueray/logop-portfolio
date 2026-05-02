@@ -35,6 +35,7 @@ reviewText:
 chooseTraining: "Choisir une formation suivie",
     comment: "Votre commentaire (optionnel)",
     saveReview: "Enregistrer mon avis",
+    memberReviews: "Avis des membres sur les formations suivies",
   },
   nl: {
     loading: "Laden…",
@@ -67,6 +68,7 @@ reviewText:
 chooseTraining: "Kies een gevolgde opleiding",
     comment: "Uw commentaar (optioneel)",
     saveReview: "Mijn beoordeling opslaan",
+    memberReviews: "Beoordelingen van leden over gevolgde opleidingen",
   },
   de: {
     loading: "Wird geladen…",
@@ -99,6 +101,7 @@ reviewText:
 chooseTraining: "Fortbildung auswählen",
     comment: "Ihr Kommentar (optional)",
     saveReview: "Bewertung speichern",
+    memberReviews: "Bewertungen der Mitglieder zu absolvierten Fortbildungen",
   },
 };
 
