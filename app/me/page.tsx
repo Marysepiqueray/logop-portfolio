@@ -34,6 +34,7 @@ reviewText:
   "Vous pouvez attribuer une note de 1 à 5 étoiles et laisser un commentaire pour aider les autres membres.",
 chooseTraining: "Choisir une formation suivie",
     comment: "Votre commentaire (optionnel)",
+    saveReview: "Enregistrer mon avis",
   },
   nl: {
     loading: "Laden…",
@@ -65,6 +66,7 @@ reviewText:
   "Geef een score van 1 tot 5 sterren en een korte reactie om anderen te helpen.",
 chooseTraining: "Kies een gevolgde opleiding",
     comment: "Uw commentaar (optioneel)",
+    saveReview: "Mijn beoordeling opslaan",
   },
   de: {
     loading: "Wird geladen…",
@@ -96,6 +98,7 @@ reviewText:
   "Geben Sie eine Bewertung von 1 bis 5 Sternen und einen Kommentar ab.",
 chooseTraining: "Fortbildung auswählen",
     comment: "Ihr Kommentar (optional)",
+    saveReview: "Bewertung speichern",
   },
 };
 
