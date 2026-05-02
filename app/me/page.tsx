@@ -50,6 +50,8 @@ clinicalIntro: "Posez vos questions au réseau et échangez entre logopèdes.",
 askQuestion: "Poser une question",
 questionTitle: "Titre de la question",
 questionText: "Décrivez votre question clinique",
+    directoryIntro:
+  "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
   },
   nl: {
     loading: "Laden…",
@@ -95,6 +97,8 @@ noSpecify: "Niet specificeren",
 allowPublic: "Publieke weergave toestaan",
 languages: "Klinische revalidatietalen",
 publishQuestion: "Vraag publiceren",
+    directoryIntro:
+  "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
   },
   de: {
     loading: "Wird geladen…",
@@ -142,6 +146,8 @@ chooseDomain: "Bereich wählen",
 questionTitle: "Fragetitel",
 questionText: "Beschreiben Sie Ihre klinische Frage",
 publishQuestion: "Frage veröffentlichen",
+    directoryIntro:
+  "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
   },
 };
 
@@ -1009,9 +1015,7 @@ const t = labels[lang];
 
       <h2>{t.directoryProfile}</h2>
 
-      <p className="p">
-        Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.
-      </p>
+    <p className="p">{t.directoryIntro}</p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 600 }}>
         <label className="small">Ville</label>
