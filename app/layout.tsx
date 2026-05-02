@@ -1,3 +1,4 @@
+import LanguageSwitcher from "./components/LanguageSwitcher";
 import "./globals.css";
 import NavBar from "./components/NavBar";
 
@@ -41,7 +42,9 @@ export default function RootLayout({
                 </div>
               </div>
             </div>
-
+<div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+  <LanguageSwitcher />
+</div>
             <NavBar />
           </header>
 
