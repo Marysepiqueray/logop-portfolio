@@ -414,7 +414,13 @@ const { data: v } = await supabase
       setLoading(false);
     })();
   }, []);
-
+  
+function getText(d: any, field: "nom" | "description", lang: string) {
+  if (lang === "nl") return d[`${field}_nl`] || d[field];
+  if (lang === "de") return d[`${field}_de`] || d[field];
+  return d[field];
+}
+  
   const passeport = useMemo(() => {
     const heures: Record<string, number> = {};
 
