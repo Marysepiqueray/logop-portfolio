@@ -54,7 +54,6 @@ questionText: "Décrivez votre question clinique",
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
   presentation: "Présentation",
   presentationPlaceholder: "Décrivez brièvement votre pratique.",
-}
   },
   nl: {
     loading: "Laden…",
@@ -104,7 +103,6 @@ publishQuestion: "Vraag publiceren",
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
   presentation: "Voorstelling",
   presentationPlaceholder: "Beschrijf kort uw praktijk.",
-}
   },
   de: {
     loading: "Wird geladen…",
@@ -156,7 +154,6 @@ publishQuestion: "Frage veröffentlichen",
   "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
   presentation: "Vorstellung",
   presentationPlaceholder: "Beschreiben Sie kurz Ihre Praxis.",
-}
   },
 };
 
