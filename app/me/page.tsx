@@ -841,12 +841,9 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-      <h2>Donner mon avis sur une formation suivie</h2>
+     <h2>{t.giveReview}</h2>
 
-      <p className="p">
-        Vous pouvez attribuer une note de 1 à 5 étoiles et laisser un court
-        commentaire pour aider les autres membres à choisir une formation.
-      </p>
+      <p className="p">{t.reviewText}</p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
         <select
@@ -854,7 +851,7 @@ const t = labels[lang];
           value={formationAvis}
           onChange={(e) => setFormationAvis(e.target.value)}
         >
-          <option value="">Choisir une formation suivie</option>
+          <option value="">{t.chooseTraining}</option>
           {formationsValidees.map((f: any) => (
             <option key={f.id} value={f.id}>
               {f.titre}
@@ -876,22 +873,22 @@ const t = labels[lang];
 
         <textarea
           className="input"
-          placeholder="Votre commentaire (optionnel)"
+          placeholder={t.comment}
           value={commentaireAvis}
           onChange={(e) => setCommentaireAvis(e.target.value)}
         />
 
         <button className="button" onClick={saveAvisFormation}>
-          Enregistrer mon avis
+          {t.saveReview}
         </button>
       </div>
 
       <hr className="hr" />
 
-      <h2>Avis des membres sur les formations suivies</h2>
+      <h2>{t.memberReviews}</h2>
 
       {formationsValidees.length === 0 ? (
-        <p className="p">Aucune formation suivie pour le moment.</p>
+       <p className="p">{t.noTrainingYet}</p>
       ) : (
         <div style={{ display: "grid", gap: 14 }}>
           {formationsValidees.map((f: any) => {
@@ -924,7 +921,7 @@ const t = labels[lang];
                   {count > 0 ? (
                     <>⭐ {moyenne.toFixed(1)} / 5 — {count} avis</>
                   ) : (
-                    <>Pas encore d’avis</>
+                    <>{t.noReviews}</>
                   )}
                 </div>
 
