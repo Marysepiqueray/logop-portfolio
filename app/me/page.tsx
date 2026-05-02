@@ -29,6 +29,10 @@ const labels = {
     close: "Fermer",
     description: "Description",
     goals: "Objectifs / compétences",
+    giveReview: "Donner mon avis sur une formation suivie",
+reviewText:
+  "Vous pouvez attribuer une note de 1 à 5 étoiles et laisser un commentaire pour aider les autres membres.",
+chooseTraining: "Choisir une formation suivie",
   },
   nl: {
     loading: "Laden…",
@@ -55,6 +59,10 @@ const labels = {
     close: "Sluiten",
     description: "Beschrijving",
     goals: "Doelen / competenties",
+    giveReview: "Mijn mening over een opleiding",
+reviewText:
+  "Geef een score van 1 tot 5 sterren en een korte reactie om anderen te helpen.",
+chooseTraining: "Kies een gevolgde opleiding",
   },
   de: {
     loading: "Wird geladen…",
@@ -81,6 +89,10 @@ const labels = {
     close: "Schließen",
     description: "Beschreibung",
     goals: "Ziele / Kompetenzen",
+    giveReview: "Meine Bewertung einer Fortbildung",
+reviewText:
+  "Geben Sie eine Bewertung von 1 bis 5 Sternen und einen Kommentar ab.",
+chooseTraining: "Fortbildung auswählen",
   },
 };
 
