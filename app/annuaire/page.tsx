@@ -10,6 +10,63 @@ type Domaine = {
   description: string;
 };
 
+const labels = {
+  fr: {
+    loading: "Chargement…",
+    title: "Annuaire des logopèdes",
+    intro:
+      "Retrouvez les membres visibles dans l’annuaire selon leur localisation, leurs domaines de compétence et leurs langues cliniques de rééducation.",
+    search: "Nom, domaine, langue…",
+    city: "Ville ou code postal",
+    allDomains: "Tous les domaines",
+    allLanguages: "Toutes les langues cliniques de rééducation",
+    noResult: "Aucun membre ne correspond à votre recherche.",
+    driving: "Agréé.e permis de conduire",
+    conventionne: "Conventionné.e",
+    deconventionne: "Déconventionné.e",
+    languages: "Langues cliniques de rééducation :",
+    domains: "Domaines de compétence",
+    noDomain: "Aucun domaine encore atteint.",
+    contact: "Contacter",
+  },
+  nl: {
+    loading: "Laden…",
+    title: "Gids van logopedisten",
+    intro:
+      "Vind zichtbare leden op basis van locatie, competentiedomeinen en klinische revalidatietalen.",
+    search: "Naam, domein, taal…",
+    city: "Stad of postcode",
+    allDomains: "Alle domeinen",
+    allLanguages: "Alle klinische revalidatietalen",
+    noResult: "Geen lid komt overeen met uw zoekopdracht.",
+    driving: "Erkend voor rijgeschiktheid",
+    conventionne: "Geconventioneerd",
+    deconventionne: "Niet-geconventioneerd",
+    languages: "Klinische revalidatietalen:",
+    domains: "Competentiedomeinen",
+    noDomain: "Nog geen domein bereikt.",
+    contact: "Contact opnemen",
+  },
+  de: {
+    loading: "Wird geladen…",
+    title: "Verzeichnis der Logopädinnen und Logopäden",
+    intro:
+      "Finden Sie sichtbare Mitglieder nach Standort, Kompetenzbereichen und klinischen Rehabilitationssprachen.",
+    search: "Name, Bereich, Sprache…",
+    city: "Stadt oder Postleitzahl",
+    allDomains: "Alle Bereiche",
+    allLanguages: "Alle klinischen Rehabilitationssprachen",
+    noResult: "Kein Mitglied entspricht Ihrer Suche.",
+    driving: "Anerkannt für Fahreignung",
+    conventionne: "Konventioniert",
+    deconventionne: "Nicht konventioniert",
+    languages: "Klinische Rehabilitationssprachen:",
+    domains: "Kompetenzbereiche",
+    noDomain: "Noch kein Bereich erreicht.",
+    contact: "Kontaktieren",
+  },
+};
+
 function medal(hours: number) {
   if (hours >= 120) return { label: "EXPERT", icon: "🏆", score: 4 };
   if (hours >= 90) return { label: "OR", icon: "🥇", score: 3 };
@@ -20,6 +77,7 @@ function medal(hours: number) {
 
 export default function AnnuairePage() {
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<"fr" | "nl" | "de">("fr");
 
   const [domaines, setDomaines] = useState<Domaine[]>([]);
   const [membres, setMembres] = useState<any[]>([]);
@@ -33,6 +91,11 @@ export default function AnnuairePage() {
   const [langueSearch, setLangueSearch] = useState("");
 
   useEffect(() => {
+    const savedLang = localStorage.getItem("lang") as "fr" | "nl" | "de" | null;
+    if (savedLang === "fr" || savedLang === "nl" || savedLang === "de") {
+      setLang(savedLang);
+    }
+
     (async () => {
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user?.id;
@@ -135,7 +198,10 @@ export default function AnnuairePage() {
           return b.heures - a.heures;
         });
 
-      const expertiseScore = domainesMembre.reduce((sum, d) => sum + d.medal.score, 0);
+      const expertiseScore = domainesMembre.reduce(
+        (sum, d) => sum + d.medal.score,
+        0
+      );
 
       return {
         ...m,
@@ -203,31 +269,30 @@ export default function AnnuairePage() {
       });
   }, [annuaire, search, villeSearch, domaineSearch, langueSearch]);
 
+  const t = labels[lang];
+
   if (loading) {
-    return <main className="card">Chargement…</main>;
+    return <main className="card">{t.loading}</main>;
   }
 
   return (
     <main className="card">
-      <h1 className="h1">Annuaire des logopèdes</h1>
+      <h1 className="h1">{t.title}</h1>
 
-      <p className="p">
-        Retrouvez les membres visibles dans l’annuaire selon leur localisation,
-        leurs domaines de compétence et leurs langues cliniques de rééducation.
-      </p>
+      <p className="p">{t.intro}</p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 900, marginTop: 10 }}>
         <div className="row">
           <input
             className="input"
-            placeholder="Nom, domaine, langue…"
+            placeholder={t.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
           <input
             className="input"
-            placeholder="Ville ou code postal"
+            placeholder={t.city}
             value={villeSearch}
             onChange={(e) => setVilleSearch(e.target.value)}
           />
@@ -239,7 +304,7 @@ export default function AnnuairePage() {
             value={domaineSearch}
             onChange={(e) => setDomaineSearch(e.target.value)}
           >
-            <option value="">Tous les domaines</option>
+            <option value="">{t.allDomains}</option>
             {domaines.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.nom}
@@ -252,7 +317,7 @@ export default function AnnuairePage() {
             value={langueSearch}
             onChange={(e) => setLangueSearch(e.target.value)}
           >
-            <option value="">Toutes les langues cliniques de rééducation</option>
+            <option value="">{t.allLanguages}</option>
             {languesDisponibles.map((l: any) => (
               <option key={l.id} value={l.id}>
                 {l.nom}
@@ -265,11 +330,15 @@ export default function AnnuairePage() {
       <hr className="hr" />
 
       {filtered.length === 0 ? (
-        <p className="p">Aucun membre ne correspond à votre recherche.</p>
+        <p className="p">{t.noResult}</p>
       ) : (
         <div className="badge-grid">
           {filtered.map((m) => (
-            <div key={m.id} className="badge-tile" style={{ gridTemplateColumns: "1fr" }}>
+            <div
+              key={m.id}
+              className="badge-tile"
+              style={{ gridTemplateColumns: "1fr" }}
+            >
               <div>
                 <a
                   href={`/annuaire/${m.id}`}
@@ -287,22 +356,22 @@ export default function AnnuairePage() {
 
                 {m.permis_conduire ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
-                    🚗 Agréé.e permis de conduire
+                    🚗 {t.driving}
                   </div>
                 ) : null}
 
                 {m.convention_visible && m.statut_convention ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
                     {m.statut_convention === "conventionne"
-                      ? "✅ Conventionné.e"
-                      : "⚪ Déconventionné.e"}
+                      ? `✅ ${t.conventionne}`
+                      : `⚪ ${t.deconventionne}`}
                   </div>
                 ) : null}
 
                 {m.membre_langues_reeducation &&
                 m.membre_langues_reeducation.length > 0 ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
-                    🌍 Langues cliniques de rééducation :{" "}
+                    🌍 {t.languages}{" "}
                     {m.membre_langues_reeducation
                       .map((x: any) => x.langues_reeducation?.nom)
                       .filter(Boolean)
@@ -316,12 +385,15 @@ export default function AnnuairePage() {
                   </div>
                 ) : null}
 
-                <div className="badge-tile-meta" style={{ marginBottom: 6, fontWeight: 700 }}>
-                  Domaines de compétence
+                <div
+                  className="badge-tile-meta"
+                  style={{ marginBottom: 6, fontWeight: 700 }}
+                >
+                  {t.domains}
                 </div>
 
                 {m.domaines.length === 0 ? (
-                  <div className="badge-tile-meta">Aucun domaine encore atteint.</div>
+                  <div className="badge-tile-meta">{t.noDomain}</div>
                 ) : (
                   <div style={{ display: "grid", gap: 6 }}>
                     {m.domaines.slice(0, 4).map((d: any) => (
@@ -334,7 +406,7 @@ export default function AnnuairePage() {
 
                 <div style={{ marginTop: 12 }}>
                   <a className="button secondary" href={`mailto:${m.email}`}>
-                    Contacter
+                    {t.contact}
                   </a>
                 </div>
               </div>
