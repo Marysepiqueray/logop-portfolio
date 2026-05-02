@@ -3,6 +3,87 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 
+const labels = {
+  fr: {
+    loading: "Chargement…",
+    title: "Mon portfolio",
+    changePassword: "Changer mon mot de passe",
+    newPassword: "Nouveau mot de passe",
+    savePassword: "Enregistrer le nouveau mot de passe",
+    downloadPdf: "Télécharger le portfolio PDF",
+    myDomains: "Mes domaines",
+    addActivity: "Ajouter une activité",
+    activityText:
+      "Vous pouvez ajouter vous-même une formation externe, une conférence ou un webinaire. Ces activités seront marquées comme non validées par Logop’Aide et vous.",
+    activityTitle: "Titre de l’activité",
+    organisation: "Organisme (optionnel)",
+    duration: "Durée (heures)",
+    chooseDomain: "Choisir un domaine",
+    add: "Ajouter",
+    save: "Enregistrer",
+    clinicalQuestions: "Questions cliniques",
+    askQuestion: "Poser une question",
+    questionTitle: "Titre de la question",
+    questionText: "Décrivez votre question clinique",
+    publishQuestion: "Publier la question",
+    close: "Fermer",
+    description: "Description",
+    goals: "Objectifs / compétences",
+  },
+  nl: {
+    loading: "Laden…",
+    title: "Mijn portfolio",
+    changePassword: "Mijn wachtwoord wijzigen",
+    newPassword: "Nieuw wachtwoord",
+    savePassword: "Nieuw wachtwoord opslaan",
+    downloadPdf: "Portfolio als PDF downloaden",
+    myDomains: "Mijn domeinen",
+    addActivity: "Activiteit toevoegen",
+    activityText:
+      "U kunt zelf een externe opleiding, conferentie of webinar toevoegen. Deze activiteiten worden gemarkeerd als niet gevalideerd door Logop’Aide et vous.",
+    activityTitle: "Titel van de activiteit",
+    organisation: "Organisatie (optioneel)",
+    duration: "Duur (uren)",
+    chooseDomain: "Domein kiezen",
+    add: "Toevoegen",
+    save: "Opslaan",
+    clinicalQuestions: "Klinische vragen",
+    askQuestion: "Een vraag stellen",
+    questionTitle: "Titel van de vraag",
+    questionText: "Beschrijf uw klinische vraag",
+    publishQuestion: "Vraag publiceren",
+    close: "Sluiten",
+    description: "Beschrijving",
+    goals: "Doelen / competenties",
+  },
+  de: {
+    loading: "Wird geladen…",
+    title: "Mein Portfolio",
+    changePassword: "Mein Passwort ändern",
+    newPassword: "Neues Passwort",
+    savePassword: "Neues Passwort speichern",
+    downloadPdf: "Portfolio als PDF herunterladen",
+    myDomains: "Meine Bereiche",
+    addActivity: "Aktivität hinzufügen",
+    activityText:
+      "Sie können selbst eine externe Fortbildung, Konferenz oder ein Webinar hinzufügen. Diese Aktivitäten werden als nicht von Logop’Aide et vous validiert markiert.",
+    activityTitle: "Titel der Aktivität",
+    organisation: "Organisation (optional)",
+    duration: "Dauer (Stunden)",
+    chooseDomain: "Bereich auswählen",
+    add: "Hinzufügen",
+    save: "Speichern",
+    clinicalQuestions: "Klinische Fragen",
+    askQuestion: "Eine Frage stellen",
+    questionTitle: "Titel der Frage",
+    questionText: "Beschreiben Sie Ihre klinische Frage",
+    publishQuestion: "Frage veröffentlichen",
+    close: "Schließen",
+    description: "Beschreibung",
+    goals: "Ziele / Kompetenzen",
+  },
+};
+
 type Domaine = {
   id: string;
   ordre: number;
@@ -36,6 +117,7 @@ function getDomaineIcon(nom: string) {
 
 export default function MePage() {
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState<"fr" | "nl" | "de">("fr");
 
   const [membre, setMembre] = useState<any>(null);
   const [domaines, setDomaines] = useState<Domaine[]>([]);
@@ -91,6 +173,10 @@ export default function MePage() {
 
   useEffect(() => {
     (async () => {
+      const savedLang = localStorage.getItem("lang") as "fr" | "nl" | "de" | null;
+if (savedLang === "fr" || savedLang === "nl" || savedLang === "de") {
+  setLang(savedLang);
+}
       const { data: userData } = await supabase.auth.getUser();
       const user = userData.user;
       const userId = user?.id;
@@ -562,26 +648,28 @@ const { data: v } = await supabase
   if (loading) {
     return <main className="card">Chargement…</main>;
   }
-
+  
+const t = labels[lang];
+  
   return (
     <main className="card">
-      <h1 className="h1">Mon portfolio</h1>
+   <h1 className="h1">{t.title}</h1>
 
       <hr className="hr" />
 
-      <h2>Changer mon mot de passe</h2>
+    <h2>{t.changePassword}</h2>>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 500 }}>
         <input
           className="input"
           type="password"
-          placeholder="Nouveau mot de passe"
+         placeholder={t.newPassword}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
         />
 
         <button className="button secondary" onClick={changePassword}>
-          Enregistrer le nouveau mot de passe
+          {t.savePassword}
         </button>
       </div>
 
@@ -589,13 +677,13 @@ const { data: v } = await supabase
 
       <div className="row">
         <button className="button" onClick={generatePDF}>
-          Télécharger le portfolio PDF
+         {t.downloadPdf}
         </button>
       </div>
 
       <hr className="hr" />
 
-      <h2>Mes domaines</h2>
+      <h2>{t.myDomains}</h2>
 
       <div className="badge-grid">
         {passeport.map((p: any) => {
