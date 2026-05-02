@@ -306,9 +306,9 @@ export default function AnnuairePage() {
           >
             <option value="">{t.allDomains}</option>
             {domaines.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.nom}
-              </option>
+             <option key={d.id} value={d.id}>
+  {getText(d, "nom", lang)}
+</option>
             ))}
           </select>
 
