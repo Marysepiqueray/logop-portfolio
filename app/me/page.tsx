@@ -858,8 +858,8 @@ const t = labels[lang];
          <option value="">{t.chooseDomain}</option>
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.nom}
-            </option>
+  {getText(d, "nom", lang)}
+</option>
           ))}
         </select>
 
