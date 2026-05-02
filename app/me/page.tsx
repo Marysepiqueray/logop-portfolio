@@ -53,6 +53,7 @@ questionText: "Décrivez votre question clinique",
     directoryIntro:
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
   presentationPlaceholder: "Décrivez brièvement votre pratique.",
+    saveLanguages: "Enregistrer les langues",
   },
   nl: {
     loading: "Laden…",
@@ -101,6 +102,7 @@ publishQuestion: "Vraag publiceren",
     directoryIntro:
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
   presentationPlaceholder: "Beschrijf kort uw praktijk.",
+    saveLanguages: "Talen opslaan",
   },
   de: {
     loading: "Wird geladen…",
