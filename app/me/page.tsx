@@ -657,7 +657,7 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-    <h2>{t.changePassword}</h2>>
+    <h2>{t.changePassword}</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 500 }}>
         <input
