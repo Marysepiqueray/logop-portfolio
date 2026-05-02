@@ -50,7 +50,6 @@ clinicalIntro: "Posez vos questions au réseau et échangez entre logopèdes.",
 askQuestion: "Poser une question",
 questionTitle: "Titre de la question",
 questionText: "Décrivez votre question clinique",
-publishQuestion: "Publier la question",
   },
   nl: {
     loading: "Laden…",
