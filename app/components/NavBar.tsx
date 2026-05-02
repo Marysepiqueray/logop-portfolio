@@ -77,7 +77,7 @@ export default function NavBar() {
 
         {isAdmin && <a href="/admin">{t.admin}</a>}
 
-        <LanguageSwitcher />
+        
       </nav>
 
       <nav className="mobile-tabbar">
