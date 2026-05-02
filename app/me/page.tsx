@@ -1155,11 +1155,11 @@ const t = labels[lang];
           onChange={(e) => setQuestionDomaine(e.target.value)}
         >
           <option value="">Choisir un domaine</option>
-          {domaines.map((d) => (
-            <option key={d.id} value={d.id}>
-              {d.nom}
-            </option>
-          ))}
+         {domaines.map((d) => (
+  <option key={d.id} value={d.id}>
+    {getText(d, "nom", lang)}
+  </option>
+))}
         </select>
 
         <input
