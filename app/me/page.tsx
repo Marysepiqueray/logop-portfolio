@@ -720,13 +720,9 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-      <h2>Ajouter une activité</h2>
+      <h2>{t.addActivity}</h2>
 
-      <p className="p">
-        Vous pouvez ajouter vous-même une formation externe, une conférence ou
-        un webinaire. Ces activités seront marquées comme{" "}
-        <b>non validées par Logop’Aide et vous</b>.
-      </p>
+   <p className="p">{t.activityText}</p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
         <select
@@ -743,14 +739,14 @@ const t = labels[lang];
           className="input"
           value={titreActivite}
           onChange={(e) => setTitreActivite(e.target.value)}
-          placeholder="Titre de l’activité"
+          placeholder={t.activityTitle}
         />
 
         <input
           className="input"
           value={organismeActivite}
           onChange={(e) => setOrganismeActivite(e.target.value)}
-          placeholder="Organisme (optionnel)"
+          placeholder={t.organisation}
         />
 
         <div className="row">
@@ -762,7 +758,7 @@ const t = labels[lang];
             step="1"
             value={dureeActivite}
             onChange={(e) => setDureeActivite(Number(e.target.value))}
-            placeholder="Durée (heures)"
+            placeholder={t.duration}
           />
 
           <input
@@ -779,7 +775,7 @@ const t = labels[lang];
           value={domaineActivite}
           onChange={(e) => setDomaineActivite(e.target.value)}
         >
-          <option value="">Choisir un domaine</option>
+         <option value="">{t.chooseDomain}</option>
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
               {d.nom}
@@ -788,7 +784,7 @@ const t = labels[lang];
         </select>
 
         <button className="button" onClick={addActivite}>
-          Ajouter l’activité
+          {t.addActivity}
         </button>
       </div>
 
