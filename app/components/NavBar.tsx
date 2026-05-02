@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const labels = {
   fr: {
@@ -75,6 +76,8 @@ export default function NavBar() {
         </a>
 
         {isAdmin && <a href="/admin">{t.admin}</a>}
+
+        <LanguageSwitcher />
       </nav>
 
       <nav className="mobile-tabbar">
