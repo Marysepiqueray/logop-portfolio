@@ -1089,7 +1089,7 @@ const t = labels[lang];
         {t.allowPublic}
         </label>
 
-        <label className="small">Langues cliniques de rééducation</label>
+       <label className="small">{t.languages}</label>
 
         <div style={{ display: "grid", gap: 6 }}>
           {languesReeducation.map((langue: any) => (
