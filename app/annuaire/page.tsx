@@ -152,6 +152,11 @@ export default function AnnuairePage() {
       setLoading(false);
     })();
   }, []);
+  function getText(d: any, field: "nom" | "description", lang: string) {
+  if (lang === "nl") return d[`${field}_nl`] || d[field];
+  if (lang === "de") return d[`${field}_de`] || d[field];
+  return d[field];
+}
 
   const annuaire = useMemo(() => {
     const heuresParMembre: Record<string, Record<string, number>> = {};
