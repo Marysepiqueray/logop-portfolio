@@ -321,7 +321,7 @@ if (savedLang === "fr" || savedLang === "nl" || savedLang === "de") {
 
       const { data: d } = await supabase
         .from("domaines")
-        .select("id, ordre, nom, description")
+        .select("id, ordre, nom, description, nom_nl, nom_de, description_nl, description_de")
         .order("ordre", { ascending: true });
 
 const { data: v } = await supabase
