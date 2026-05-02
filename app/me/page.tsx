@@ -36,6 +36,7 @@ chooseTraining: "Choisir une formation suivie",
     comment: "Votre commentaire (optionnel)",
     saveReview: "Enregistrer mon avis",
     memberReviews: "Avis des membres sur les formations suivies",
+    noTrainingYet: "Aucune formation suivie pour le moment",
   },
   nl: {
     loading: "Laden…",
@@ -69,6 +70,7 @@ chooseTraining: "Kies een gevolgde opleiding",
     comment: "Uw commentaar (optioneel)",
     saveReview: "Mijn beoordeling opslaan",
     memberReviews: "Beoordelingen van leden over gevolgde opleidingen",
+    noTrainingYet: "Nog geen gevolgde opleiding",
   },
   de: {
     loading: "Wird geladen…",
@@ -102,6 +104,7 @@ chooseTraining: "Fortbildung auswählen",
     comment: "Ihr Kommentar (optional)",
     saveReview: "Bewertung speichern",
     memberReviews: "Bewertungen der Mitglieder zu absolvierten Fortbildungen",
+    noTrainingYet: "Noch keine absolvierte Fortbildung",
   },
 };
 
