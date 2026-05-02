@@ -779,9 +779,11 @@ const t = labels[lang];
               </div>
 
               <div>
-                <div className="badge-tile-title">{p.domaine.nom}</div>
+              <div className="badge-tile-title">
+  {getText(p.domaine, "nom", lang)}
+</div>
 
-                <div className="badge-tile-meta">{p.domaine.description}</div>
+                <div className="badge-tile-meta">{getText(p.domaine, "description", lang)}</div>
 
                 <div className="badge-tile-meta">
                   {p.medal.icon} {p.medal.label} — {p.heures}h
