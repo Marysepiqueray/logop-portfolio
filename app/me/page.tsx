@@ -52,6 +52,10 @@ questionTitle: "Titre de la question",
 questionText: "Décrivez votre question clinique",
     directoryIntro:
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
+    fr: {
+  presentation: "Présentation",
+  presentationPlaceholder: "Décrivez brièvement votre pratique.",
+}
   },
   nl: {
     loading: "Laden…",
@@ -99,6 +103,10 @@ languages: "Klinische revalidatietalen",
 publishQuestion: "Vraag publiceren",
     directoryIntro:
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
+    nl: {
+  presentation: "Voorstelling",
+  presentationPlaceholder: "Beschrijf kort uw praktijk.",
+}
   },
   de: {
     loading: "Wird geladen…",
@@ -148,6 +156,10 @@ questionText: "Beschreiben Sie Ihre klinische Frage",
 publishQuestion: "Frage veröffentlichen",
     directoryIntro:
   "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
+    de: {
+  presentation: "Vorstellung",
+  presentationPlaceholder: "Beschreiben Sie kurz Ihre Praxis.",
+}
   },
 };
 
@@ -1018,7 +1030,7 @@ const t = labels[lang];
     <p className="p">{t.directoryIntro}</p>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 600 }}>
-        <label className="small">Ville</label>
+       <label className="small">{t.city}</label>
 
         <input
           className="input"
@@ -1027,7 +1039,7 @@ const t = labels[lang];
           placeholder="Ex : Bruxelles"
         />
 
-        <label className="small">Code postal</label>
+        <label className="small">{t.postalCode}</label>
 
         <input
           className="input"
@@ -1036,13 +1048,13 @@ const t = labels[lang];
           placeholder="Ex : 4000"
         />
 
-        <label className="small">Présentation</label>
+        <label className="small">{t.presentation}</label>
 
         <textarea
           className="input"
           value={presentation}
           onChange={(e) => setPresentation(e.target.value)}
-          placeholder="Décrivez brièvement votre pratique."
+          placeholder={t.presentationPlaceholder}
         />
 
         <label className="small">
@@ -1051,7 +1063,7 @@ const t = labels[lang];
             checked={annuaireVisible}
             onChange={(e) => setAnnuaireVisible(e.target.checked)}
           />{" "}
-          Apparaître dans l’annuaire
+          {t.showInDirectory}
         </label>
 
         <label className="small">
@@ -1060,17 +1072,17 @@ const t = labels[lang];
             checked={permisConduire}
             onChange={(e) => setPermisConduire(e.target.checked)}
           />{" "}
-          Agréé.e permis de conduire
+         {t.drivingLicense}
         </label>
 
-        <label className="small">Statut de conventionnement</label>
+        <label className="small">{t.conventionStatus}</label>
 
         <select
           className="input"
           value={statutConvention}
           onChange={(e) => setStatutConvention(e.target.value)}
         >
-          <option value="">Ne pas préciser</option>
+          <option value="">{t.noSpecify}</option>
           <option value="conventionne">Conventionné.e</option>
           <option value="deconventionne">Déconventionné.e</option>
         </select>
@@ -1081,7 +1093,7 @@ const t = labels[lang];
             checked={conventionVisible}
             onChange={(e) => setConventionVisible(e.target.checked)}
           />{" "}
-          Autoriser l’affichage public de ce statut dans l’annuaire
+        {t.allowPublic}
         </label>
 
         <label className="small">Langues cliniques de rééducation</label>
