@@ -53,6 +53,8 @@ questionText: "Décrivez votre question clinique",
     directoryIntro:
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
   presentationPlaceholder: "Décrivez brièvement votre pratique.",
+    saveLanguages: "Enregistrer les langues",
+save: "Enregistrer",
   },
   nl: {
     loading: "Laden…",
@@ -101,6 +103,8 @@ publishQuestion: "Vraag publiceren",
     directoryIntro:
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
   presentationPlaceholder: "Beschrijf kort uw praktijk.",
+    saveLanguages: "Talen opslaan",
+save: "Opslaan",
   },
   de: {
     loading: "Wird geladen…",
@@ -151,6 +155,8 @@ publishQuestion: "Frage veröffentlichen",
     directoryIntro:
   "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
   presentationPlaceholder: "Beschreiben Sie kurz Ihre Praxis.",
+    saveLanguages: "Sprachen speichern",
+save: "Speichern",
   },
 };
 
@@ -1113,9 +1119,13 @@ const t = labels[lang];
           ))}
         </div>
 
-        <button className="button secondary" onClick={saveLanguesReeducation}>
-          Enregistrer les langues
-        </button>
+        <button className="button secondary">
+  {t.saveLanguages}
+</button>
+
+<button className="button">
+  {t.save}
+</button>
 
         <button className="button" onClick={saveAnnuaire}>
           Enregistrer
