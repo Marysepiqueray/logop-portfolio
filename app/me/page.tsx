@@ -52,7 +52,6 @@ questionTitle: "Titre de la question",
 questionText: "Décrivez votre question clinique",
     directoryIntro:
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
-    fr: {
   presentation: "Présentation",
   presentationPlaceholder: "Décrivez brièvement votre pratique.",
 }
@@ -103,7 +102,6 @@ languages: "Klinische revalidatietalen",
 publishQuestion: "Vraag publiceren",
     directoryIntro:
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
-    nl: {
   presentation: "Voorstelling",
   presentationPlaceholder: "Beschrijf kort uw praktijk.",
 }
@@ -156,7 +154,6 @@ questionText: "Beschreiben Sie Ihre klinische Frage",
 publishQuestion: "Frage veröffentlichen",
     directoryIntro:
   "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
-    de: {
   presentation: "Vorstellung",
   presentationPlaceholder: "Beschreiben Sie kurz Ihre Praxis.",
 }
