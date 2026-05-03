@@ -373,7 +373,7 @@ const { data: v } = await supabase
 
       const { data: mlr } = await supabase
         .from("membre_langues_reeducation")
-        .select("langue_id")
+       .select("id, nom, nom_nl, nom_de")
         .eq("membre_id", m.id);
 
       const { data: avis } = await supabase
@@ -910,7 +910,7 @@ const t = labels[lang];
         ><option value="">{t.chooseDomain}</option>
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
-              {d.nom}
+             {getText(d, "nom", lang)}
             </option>
           ))}
         </select>
@@ -1141,7 +1141,7 @@ const t = labels[lang];
                   }
                 }}
               />{" "}
-              {langue.nom}
+             {getText(langue, "nom", lang)}
             </label>
           ))}
         </div>
@@ -1194,7 +1194,7 @@ const t = labels[lang];
           className="input"
           value={questionTexte}
           onChange={(e) => setQuestionTexte(e.target.value)}
-          placeholder="Décrivez votre question clinique"
+        placeholder={t.questionText}
         />
 
         <button className="button" onClick={publierQuestionClinique}>
