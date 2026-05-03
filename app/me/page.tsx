@@ -53,6 +53,14 @@ questionText: "Décrivez votre question clinique",
     directoryIntro:
   "Choisissez si vous souhaitez apparaître dans l’annuaire des logopèdes.",
   presentationPlaceholder: "Décrivez brièvement votre pratique.",
+    trainingWishTitle: "Domaines dans lesquels je souhaite me former",
+trainingWishText:
+  "Indiquez les domaines dans lesquels vous souhaiteriez suivre une formation. Ces informations permettent à Logop'Aide et vous d'organiser les prochaines formations.",
+add: "Ajouter",
+    chooseDomain: "Choisir un domaine",
+    myActivities: "Mes activités ajoutées",
+noActivities: "Aucune activité ajoutée pour le moment.",
+notValidated: "non validée par Logop’Aide et vous",
   },
   nl: {
     loading: "Laden…",
@@ -102,7 +110,14 @@ publishQuestion: "Vraag publiceren",
     directoryIntro:
   "Kies of u zichtbaar wilt zijn in de logopedistenlijst.",
   presentationPlaceholder: "Beschrijf kort uw praktijk.",
-    
+    trainingWishTitle: "Domeinen waarin ik mij wil bijscholen",
+trainingWishText:
+  "Geef aan in welke domeinen u een opleiding wilt volgen. Deze informatie helpt bij het organiseren van toekomstige opleidingen.",
+add: "Toevoegen",
+    chooseDomain: "Domein kiezen",
+    myActivities: "Mijn toegevoegde activiteiten",
+noActivities: "Nog geen activiteiten toegevoegd.",
+notValidated: "niet gevalideerd door Logop’Aide et vous",
   },
   de: {
     loading: "Wird geladen…",
@@ -153,6 +168,14 @@ publishQuestion: "Frage veröffentlichen",
     directoryIntro:
   "Wählen Sie, ob Sie im Verzeichnis erscheinen möchten.",
   presentationPlaceholder: "Beschreiben Sie kurz Ihre Praxis.",
+    trainingWishTitle: "Bereiche, in denen ich mich weiterbilden möchte",
+trainingWishText:
+  "Geben Sie an, in welchen Bereichen Sie eine Fortbildung machen möchten. Diese Informationen helfen bei der Organisation zukünftiger Schulungen.",
+add: "Hinzufügen",
+    chooseDomain: "Bereich wählen",
+    myActivities: "Meine hinzugefügten Aktivitäten",
+noActivities: "Noch keine Aktivitäten hinzugefügt.",
+notValidated: "nicht validiert durch Logop’Aide et vous",
   },
 };
 
@@ -870,21 +893,16 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-      <h2>Domaines dans lesquels je souhaite me former</h2>
+      <h2>{t.trainingWishTitle}</h2>
 
-      <p className="p">
-        Indiquez les domaines dans lesquels vous souhaiteriez suivre une
-        formation. Ces informations permettent à Logop'Aide et vous d'organiser
-        les prochaines formations.
-      </p>
+     <p className="p">{t.trainingWishText}</p>
 
       <div className="row">
         <select
           className="input"
           value={souhaitDomaine}
           onChange={(e) => setSouhaitDomaine(e.target.value)}
-        >
-          <option value="">Choisir un domaine</option>
+        ><option value="">{t.chooseDomain}</option>
           {domaines.map((d) => (
             <option key={d.id} value={d.id}>
               {d.nom}
@@ -893,16 +911,16 @@ const t = labels[lang];
         </select>
 
         <button className="button" onClick={addSouhait}>
-          Ajouter
-        </button>
+  {t.add}
+</button>
       </div>
 
       <hr className="hr" />
 
-      <h2>Mes activités ajoutées</h2>
+      <h2>{t.myActivities}</h2>
 
       {activites.length === 0 ? (
-        <p className="p">Aucune activité ajoutée pour le moment.</p>
+        <p className="p">{t.noActivities}</p>
       ) : (
         <div style={{ display: "grid", gap: 8 }}>
           {activites.map((a: any) => {
@@ -911,8 +929,8 @@ const t = labels[lang];
             return (
               <div key={a.id} className="small">
                 <b>{a.titre}</b> — {a.duree_heures}h —{" "}
-                {d?.nom ?? "Domaine non défini"} —{" "}
-                <i>non validée par Logop’Aide et vous</i>
+                {d ? getText(d, "nom", lang) : "Domaine non défini"} —{" "}
+                <i>{t.notValidated}</i>
               </div>
             );
           })}
