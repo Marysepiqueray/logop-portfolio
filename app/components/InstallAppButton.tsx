@@ -2,11 +2,43 @@
 
 import { useEffect, useState } from "react";
 
+const labels = {
+  fr: {
+    install: "Installer l’application",
+    iphone:
+      "Sur iPhone : ouvrez dans Safari puis Partager > Ajouter à l’écran d’accueil.",
+    browser: "Installation disponible depuis le navigateur.",
+  },
+  nl: {
+    install: "App installeren",
+    iphone:
+      "Op iPhone: open in Safari en kies Delen > Zet op beginscherm.",
+    browser: "Installatie beschikbaar via de browser.",
+  },
+  de: {
+    install: "App installieren",
+    iphone:
+      "Auf dem iPhone: in Safari öffnen und dann Teilen > Zum Home-Bildschirm.",
+    browser: "Installation über den Browser verfügbar.",
+  },
+};
+
 export default function InstallAppButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIphone, setIsIphone] = useState(false);
+  const [lang, setLang] = useState<"fr" | "nl" | "de">("fr");
 
   useEffect(() => {
+    const savedLang = localStorage.getItem("lang") as
+      | "fr"
+      | "nl"
+      | "de"
+      | null;
+
+    if (savedLang === "fr" || savedLang === "nl" || savedLang === "de") {
+      setLang(savedLang);
+    }
+
     const ua = window.navigator.userAgent.toLowerCase();
 
     if (
@@ -28,6 +60,8 @@ export default function InstallAppButton() {
     };
   }, []);
 
+  const t = labels[lang];
+
   async function installApp() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -37,18 +71,16 @@ export default function InstallAppButton() {
     }
 
     if (isIphone) {
-      alert(
-        "Sur iPhone : ouvrez dans Safari puis Partager > Ajouter à l’écran d’accueil."
-      );
+      alert(t.iphone);
       return;
     }
 
-    alert("Installation disponible depuis le navigateur.");
+    alert(t.browser);
   }
 
   return (
     <button className="button" onClick={installApp}>
-      📲 Installer l’application
+      📲 {t.install}
     </button>
   );
 }
