@@ -112,7 +112,7 @@ export default function AnnuairePage() {
 
       const { data: langues } = await supabase
         .from("langues_reeducation")
-        .select("id, nom")
+       .select("id, nom, nom_nl, nom_de")
         .order("nom", { ascending: true });
 
       const { data: m } = await supabase
@@ -325,7 +325,7 @@ export default function AnnuairePage() {
             <option value="">{t.allLanguages}</option>
             {languesDisponibles.map((l: any) => (
               <option key={l.id} value={l.id}>
-                {l.nom}
+              {getText(l, "nom", lang)}
               </option>
             ))}
           </select>
@@ -378,7 +378,7 @@ export default function AnnuairePage() {
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
                     🌍 {t.languages}{" "}
                     {m.membre_langues_reeducation
-                      .map((x: any) => x.langues_reeducation?.nom)
+                   .map((x: any) => getText(x.langues_reeducation, "nom", lang))
                       .filter(Boolean)
                       .join(", ")}
                   </div>
