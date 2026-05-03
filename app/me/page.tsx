@@ -170,6 +170,7 @@ trainingWishText:
     myActivities: "Meine hinzugefügten Aktivitäten",
 noActivities: "Noch keine Aktivitäten hinzugefügt.",
 notValidated: "nicht validiert durch Logop’Aide et vous",
+    add: "Hinzufügen",
   },
 };
 
