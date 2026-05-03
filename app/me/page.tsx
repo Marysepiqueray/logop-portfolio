@@ -59,7 +59,6 @@ trainingWishText:
     myActivities: "Mes activités ajoutées",
 noActivities: "Aucune activité ajoutée pour le moment.",
 notValidated: "non validée par Logop’Aide et vous",
-    clinicalQuestions: "Questions cliniques",
 clinicalIntro: "Posez vos questions au réseau et échangez entre logopèdes.",
 askQuestion: "Poser une question",
 questionTitle: "Titre de la question",
