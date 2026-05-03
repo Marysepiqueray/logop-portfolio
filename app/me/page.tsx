@@ -59,7 +59,6 @@ trainingWishText:
     myActivities: "Mes activités ajoutées",
 noActivities: "Aucune activité ajoutée pour le moment.",
 notValidated: "non validée par Logop’Aide et vous",
-publishQuestion: "Publier la question",
   },
   nl: {
     loading: "Laden…",
