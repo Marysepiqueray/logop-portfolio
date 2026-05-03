@@ -59,10 +59,6 @@ trainingWishText:
     myActivities: "Mes activités ajoutées",
 noActivities: "Aucune activité ajoutée pour le moment.",
 notValidated: "non validée par Logop’Aide et vous",
-clinicalIntro: "Posez vos questions au réseau et échangez entre logopèdes.",
-askQuestion: "Poser une question",
-questionTitle: "Titre de la question",
-questionText: "Décrivez votre question clinique",
 publishQuestion: "Publier la question",
   },
   nl: {
@@ -120,10 +116,6 @@ trainingWishText:
 noActivities: "Nog geen activiteiten toegevoegd.",
 notValidated: "niet gevalideerd door Logop’Aide et vous",
     clinicalQuestions: "Klinische vragen",
-clinicalIntro: "Stel uw vragen aan het netwerk en wissel uit.",
-askQuestion: "Een vraag stellen",
-questionTitle: "Titel van de vraag",
-questionText: "Beschrijf uw klinische vraag",
 publishQuestion: "Vraag publiceren",
   },
   de: {
@@ -182,12 +174,6 @@ trainingWishText:
 noActivities: "Noch keine Aktivitäten hinzugefügt.",
 notValidated: "nicht validiert durch Logop’Aide et vous",
     add: "Hinzufügen",
-    clinicalQuestions: "Klinische Fragen",
-clinicalIntro: "Stellen Sie Ihre Fragen an das Netzwerk.",
-askQuestion: "Eine Frage stellen",
-questionTitle: "Titel der Frage",
-questionText: "Beschreiben Sie Ihre klinische Frage",
-publishQuestion: "Frage veröffentlichen",
   },
 };
 
