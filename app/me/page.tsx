@@ -114,8 +114,6 @@ trainingWishText:
     myActivities: "Mijn toegevoegde activiteiten",
 noActivities: "Nog geen activiteiten toegevoegd.",
 notValidated: "niet gevalideerd door Logop’Aide et vous",
-    clinicalQuestions: "Klinische vragen",
-publishQuestion: "Vraag publiceren",
   },
   de: {
     loading: "Wird geladen…",
