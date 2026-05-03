@@ -59,6 +59,12 @@ trainingWishText:
     myActivities: "Mes activités ajoutées",
 noActivities: "Aucune activité ajoutée pour le moment.",
 notValidated: "non validée par Logop’Aide et vous",
+    clinicalQuestions: "Questions cliniques",
+clinicalIntro: "Posez vos questions au réseau et échangez entre logopèdes.",
+askQuestion: "Poser une question",
+questionTitle: "Titre de la question",
+questionText: "Décrivez votre question clinique",
+publishQuestion: "Publier la question",
   },
   nl: {
     loading: "Laden…",
@@ -114,6 +120,12 @@ trainingWishText:
     myActivities: "Mijn toegevoegde activiteiten",
 noActivities: "Nog geen activiteiten toegevoegd.",
 notValidated: "niet gevalideerd door Logop’Aide et vous",
+    clinicalQuestions: "Klinische vragen",
+clinicalIntro: "Stel uw vragen aan het netwerk en wissel uit.",
+askQuestion: "Een vraag stellen",
+questionTitle: "Titel van de vraag",
+questionText: "Beschrijf uw klinische vraag",
+publishQuestion: "Vraag publiceren",
   },
   de: {
     loading: "Wird geladen…",
@@ -171,6 +183,12 @@ trainingWishText:
 noActivities: "Noch keine Aktivitäten hinzugefügt.",
 notValidated: "nicht validiert durch Logop’Aide et vous",
     add: "Hinzufügen",
+    clinicalQuestions: "Klinische Fragen",
+clinicalIntro: "Stellen Sie Ihre Fragen an das Netzwerk.",
+askQuestion: "Eine Frage stellen",
+questionTitle: "Titel der Frage",
+questionText: "Beschreiben Sie Ihre klinische Frage",
+publishQuestion: "Frage veröffentlichen",
   },
 };
 
@@ -1151,15 +1169,13 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-      <h2>Questions cliniques</h2>
+      <h2>{t.clinicalQuestions}</h2>
 
-      <p className="p">
-        Posez vos questions au réseau et échangez entre logopèdes.
-      </p>
+      <p className="p">{t.clinicalIntro}</p>
 
       <hr className="hr" />
 
-      <h2>Poser une question</h2>
+     <h2>{t.askQuestion}</h2>
 
       <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
         <select
@@ -1167,7 +1183,7 @@ const t = labels[lang];
           value={questionDomaine}
           onChange={(e) => setQuestionDomaine(e.target.value)}
         >
-          <option value="">Choisir un domaine</option>
+          <option value="">{t.chooseDomain}</option>
          {domaines.map((d) => (
   <option key={d.id} value={d.id}>
     {getText(d, "nom", lang)}
@@ -1179,7 +1195,7 @@ const t = labels[lang];
           className="input"
           value={questionTitre}
           onChange={(e) => setQuestionTitre(e.target.value)}
-          placeholder="Titre de la question"
+          placeholder={t.questionTitle}
         />
 
         <textarea
@@ -1190,7 +1206,7 @@ const t = labels[lang];
         />
 
         <button className="button" onClick={publierQuestionClinique}>
-          Publier la question
+          {t.publishQuestion}
         </button>
       </div>
       {formationDetail ? (
