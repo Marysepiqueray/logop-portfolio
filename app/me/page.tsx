@@ -368,7 +368,7 @@ const { data: v } = await supabase
 
       const { data: lr } = await supabase
         .from("langues_reeducation")
-        .select("id, nom")
+       .select("id, nom, nom_nl, nom_de")
         .order("nom", { ascending: true });
 
       const { data: mlr } = await supabase
