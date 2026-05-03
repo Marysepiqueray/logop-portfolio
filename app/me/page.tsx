@@ -59,6 +59,9 @@ trainingWishText:
     myActivities: "Mes activités ajoutées",
 noActivities: "Aucune activité ajoutée pour le moment.",
 notValidated: "non validée par Logop’Aide et vous",
+    externalTraining: "Formation externe",
+conference: "Conférence",
+webinar: "Webinaire",
   },
   nl: {
     loading: "Laden…",
@@ -115,6 +118,9 @@ trainingWishText:
     myActivities: "Mijn toegevoegde activiteiten",
 noActivities: "Nog geen activiteiten toegevoegd.",
 notValidated: "niet gevalideerd door Logop’Aide et vous",
+    externalTraining: "Externe opleiding",
+conference: "Conferentie",
+webinar: "Webinar",
   },
   de: {
     loading: "Wird geladen…",
@@ -172,6 +178,9 @@ trainingWishText:
 noActivities: "Noch keine Aktivitäten hinzugefügt.",
 notValidated: "nicht validiert durch Logop’Aide et vous",
     add: "Hinzufügen",
+    externalTraining: "Externe Fortbildung",
+conference: "Konferenz",
+webinar: "Webinar",
   },
 };
 
@@ -829,9 +838,9 @@ const t = labels[lang];
           value={typeActivite}
           onChange={(e) => setTypeActivite(e.target.value)}
         >
-          <option value="formation_externe">Formation externe</option>
-          <option value="conference">Conférence</option>
-          <option value="webinaire">Webinaire</option>
+         <option value="formation_externe">{t.externalTraining}</option>
+<option value="conference">{t.conference}</option>
+<option value="webinaire">{t.webinar}</option>
         </select>
 
         <input
