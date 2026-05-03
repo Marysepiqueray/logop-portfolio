@@ -71,6 +71,14 @@ async function getCoords(codePostal: string): Promise<[number, number] | null> {
 }
 
 export default function CarteClient() {
+
+  const [lang, setLang] = useState("fr");
+
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang) setLang(savedLang);
+  }, []);
+  const t = labels[lang];
   const [membres, setMembres] = useState<MembreCarte[]>([]);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
@@ -127,10 +135,10 @@ export default function CarteClient() {
 
   return (
     <main className="card">
-      <h1 className="h1">Carte des logopèdes</h1>
+     <h1>{t.mapTitle}</h1>
 
       <p className="p">
-        Visualisez les membres de l’annuaire sur une carte de Belgique.
+       <p>{t.mapIntro}</p>
       </p>
 
       <div className="row" style={{ marginBottom: 12 }}>
