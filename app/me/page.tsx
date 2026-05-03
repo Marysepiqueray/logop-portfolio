@@ -1147,7 +1147,7 @@ const t = labels[lang];
         </div>
 
     <button className="button" onClick={saveAnnuaire}>
-  Enregistrer le profil
+    {t.save}
 </button>
       </div>
 
