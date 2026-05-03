@@ -15,6 +15,35 @@ import {
 
 import L from "leaflet";
 
+const labels = {
+  fr: {
+    mapTitle: "Carte des logopèdes",
+    mapIntro: "Visualisez les membres de l’annuaire sur une carte de Belgique.",
+    locateMe: "📍 Me localiser",
+    geolocationUnavailable: "Géolocalisation non disponible.",
+    geolocationError: "Impossible de vous localiser.",
+    youAreHere: "Vous êtes ici",
+  },
+  nl: {
+    mapTitle: "Kaart van logopedisten",
+    mapIntro: "Bekijk de leden van de gids op een kaart van België.",
+    locateMe: "📍 Mijn locatie",
+    geolocationUnavailable: "Geolocatie is niet beschikbaar.",
+    geolocationError: "Kan uw locatie niet bepalen.",
+    youAreHere: "U bent hier",
+  },
+  de: {
+    mapTitle: "Karte der Logopädinnen und Logopäden",
+    mapIntro: "Sehen Sie die Mitglieder des Verzeichnisses auf einer Karte von Belgien.",
+    locateMe: "📍 Meinen Standort anzeigen",
+    geolocationUnavailable: "Geolokalisierung ist nicht verfügbar.",
+    geolocationError: "Ihr Standort konnte nicht ermittelt werden.",
+    youAreHere: "Sie sind hier",
+  },
+};
+
+type Lang = "fr" | "nl" | "de";
+
 type MembreCarte = {
   id: string;
   nom: string;
@@ -71,16 +100,19 @@ async function getCoords(codePostal: string): Promise<[number, number] | null> {
 }
 
 export default function CarteClient() {
-
-  const [lang, setLang] = useState("fr");
+  const [lang, setLang] = useState<Lang>("fr");
+  const [membres, setMembres] = useState<MembreCarte[]>([]);
+  const [userPosition, setUserPosition] = useState<[number, number] | null>(
+    null
+  );
 
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
-    if (savedLang) setLang(savedLang);
+
+    if (savedLang === "fr" || savedLang === "nl" || savedLang === "de") {
+      setLang(savedLang);
+    }
   }, []);
-  const t = labels[lang];
-  const [membres, setMembres] = useState<MembreCarte[]>([]);
-  const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     async function loadMembres() {
@@ -114,36 +146,33 @@ export default function CarteClient() {
     loadMembres();
   }, []);
 
+  const t = labels[lang];
+
   function meLocaliser() {
     if (!navigator.geolocation) {
-      alert("Géolocalisation non disponible.");
+      alert(t.geolocationUnavailable);
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setUserPosition([
-          pos.coords.latitude,
-          pos.coords.longitude,
-        ]);
+        setUserPosition([pos.coords.latitude, pos.coords.longitude]);
       },
       () => {
-        alert("Impossible de vous localiser.");
+        alert(t.geolocationError);
       }
     );
   }
 
   return (
     <main className="card">
-     <h1>{t.mapTitle}</h1>
+      <h1 className="h1">{t.mapTitle}</h1>
 
-      <p className="p">
-       <p>{t.mapIntro}</p>
-      </p>
+      <p className="p">{t.mapIntro}</p>
 
       <div className="row" style={{ marginBottom: 12 }}>
         <button className="button" onClick={meLocaliser}>
-          📍 Me localiser
+          {t.locateMe}
         </button>
       </div>
 
@@ -170,7 +199,7 @@ export default function CarteClient() {
                 fillOpacity: 0.8,
               }}
             >
-              <Popup>Vous êtes ici</Popup>
+              <Popup>{t.youAreHere}</Popup>
             </CircleMarker>
           )}
 
@@ -178,17 +207,11 @@ export default function CarteClient() {
             if (!m.coords) return null;
 
             return (
-              <Marker
-                key={m.id}
-                position={m.coords}
-                icon={icon}
-              >
+              <Marker key={m.id} position={m.coords} icon={icon}>
                 <Popup>
                   <strong>{m.nom}</strong>
                   <br />
-                  {[m.code_postal, m.ville]
-                    .filter(Boolean)
-                    .join(" ")}
+                  {[m.code_postal, m.ville].filter(Boolean).join(" ")}
                 </Popup>
               </Marker>
             );
