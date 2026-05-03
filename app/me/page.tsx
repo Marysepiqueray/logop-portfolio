@@ -1146,12 +1146,8 @@ const t = labels[lang];
           ))}
         </div>
 
-    <button className="button secondary" onClick={saveLanguesReeducation}>
-  {t.saveLanguages}
-</button>
-
-<button className="button" onClick={saveAnnuaire}>
-  {t.save}
+    <button className="button" onClick={saveAnnuaire}>
+  Enregistrer le profil
 </button>
       </div>
 
