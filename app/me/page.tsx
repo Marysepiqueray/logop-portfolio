@@ -68,6 +68,18 @@ transmissionActivities: "Transmission / cours donnés",
 scientificActivities: "Travaux scientifiques",
 undefinedDomain: "Domaine non défini",
 viewLink: "Voir le lien",
+    lecture: "Lecture professionnelle",
+article: "Article scientifique",
+book: "Livre",
+podcast: "Podcast",
+tfe: "TFE / mémoire",
+publication: "Publication",
+courseGiven: "Cours donné",
+supervision: "Supervision",
+innovationAI: "Approches innovantes, outils numériques et IA",
+optionalLink: "Lien (optionnel)",
+personalReflection: "Description / réflexion personnelle",
+optionalDuration: "Durée facultative",
   },
   nl: {
     loading: "Laden…",
@@ -133,6 +145,18 @@ transmissionActivities: "Overdracht / gegeven lessen",
 scientificActivities: "Wetenschappelijke werken",
 undefinedDomain: "Domein niet gedefinieerd",
 viewLink: "Link bekijken",
+    lecture: "Professionele lectuur",
+article: "Wetenschappelijk artikel",
+book: "Boek",
+podcast: "Podcast",
+tfe: "Eindwerk / scriptie",
+publication: "Publicatie",
+courseGiven: "Gegeven cursus",
+supervision: "Supervisie",
+innovationAI: "Innovatieve benaderingen, digitale tools en AI",
+optionalLink: "Link (optioneel)",
+personalReflection: "Beschrijving / persoonlijke reflectie",
+optionalDuration: "Optionele duur",
   },
   de: {
     loading: "Wird geladen…",
@@ -199,6 +223,18 @@ transmissionActivities: "Vermittlung / gehaltene Kurse",
 scientificActivities: "Wissenschaftliche Arbeiten",
 undefinedDomain: "Bereich nicht definiert",
 viewLink: "Link ansehen",
+    lecture: "Fachlektüre",
+article: "Wissenschaftlicher Artikel",
+book: "Buch",
+podcast: "Podcast",
+tfe: "Abschlussarbeit",
+publication: "Veröffentlichung",
+courseGiven: "Gehaltener Kurs",
+supervision: "Supervision",
+innovationAI: "Innovative Ansätze, digitale Werkzeuge und KI",
+optionalLink: "Link (optional)",
+personalReflection: "Beschreibung / persönliche Reflexion",
+optionalDuration: "Optionale Dauer",
   },
 };
 
@@ -883,15 +919,15 @@ const t = labels[lang];
     <option value="formation_externe">{t.externalTraining}</option>
 <option value="conference">{t.conference}</option>
 <option value="webinaire">{t.webinar}</option>
-<option value="lecture">Lecture professionnelle</option>
-<option value="article">Article scientifique</option>
-<option value="livre">Livre</option>
-<option value="podcast">Podcast</option>
-<option value="tfe">TFE / mémoire</option>
-<option value="publication">Publication</option>
-<option value="cours_donne">Cours donné</option>
-<option value="supervision">Supervision</option>
-<option value="innovation_ia">Approches innovantes, outils numériques et IA</option>
+<option value="lecture">{t.lecture}</option>
+<option value="article">{t.article}</option>
+<option value="livre">{t.book}</option>
+<option value="podcast">{t.podcast}</option>
+<option value="tfe">{t.tfe}</option>
+<option value="publication">{t.publication}</option>
+<option value="cours_donne">{t.courseGiven}</option>
+<option value="supervision">{t.supervision}</option>
+<option value="innovation_ia">{t.innovationAI}</option>
   </select>
 
         <input
@@ -918,14 +954,14 @@ const t = labels[lang];
   className="input"
   value={descriptionActivite}
   onChange={(e) => setDescriptionActivite(e.target.value)}
-  placeholder="Description / réflexion personnelle"
+ placeholder={t.personalReflection}
 />
 
 <input
   className="input"
   value={lienActivite}
   onChange={(e) => setLienActivite(e.target.value)}
-  placeholder="Lien (optionnel)"
+  placeholder={t.optionalLink}
 />
 
         <div className="row">
@@ -937,7 +973,11 @@ const t = labels[lang];
             step="1"
             value={dureeActivite}
             onChange={(e) => setDureeActivite(Number(e.target.value))}
-            placeholder={t.duration}
+          placeholder={
+  ["lecture", "article", "livre", "podcast", "innovation_ia"].includes(typeActivite)
+    ? t.optionalDuration
+    : t.duration
+}
           />
 
           <input
