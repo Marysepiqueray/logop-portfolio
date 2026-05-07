@@ -174,15 +174,18 @@ export async function GET(request: Request) {
     .eq("auth_id", userData.user.id)
     .maybeSingle();
 
-  if (!membre) 
-    const lang =
+if (!membre) {
+  return new NextResponse("Membre introuvable", { status: 404 });
+}
+
+const lang =
   membre.langue === "nl"
     ? "nl"
     : membre.langue === "de"
     ? "de"
     : "fr";
 
-const t = labels[lang]; {
+const t = labels[lang];
     return new NextResponse("Membre introuvable", { status: 404 });
   }
 
