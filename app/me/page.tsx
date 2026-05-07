@@ -870,6 +870,14 @@ const t = labels[lang];
           onChange={(e) => setOrganismeActivite(e.target.value)}
           placeholder={t.organisation}
         <textarea
+  <input
+  className="input"
+  value={organismeActivite}
+  onChange={(e) => setOrganismeActivite(e.target.value)}
+  placeholder={t.organisation}
+/>
+
+<textarea
   className="input"
   value={descriptionActivite}
   onChange={(e) => setDescriptionActivite(e.target.value)}
