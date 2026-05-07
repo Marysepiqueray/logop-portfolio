@@ -62,6 +62,12 @@ notValidated: "non validée par Logop’Aide et vous",
     externalTraining: "Formation externe",
 conference: "Conférence",
 webinar: "Webinaire",
+    formalActivities: "Activités formelles",
+autonomousActivities: "Activités autonomes",
+transmissionActivities: "Transmission / cours donnés",
+scientificActivities: "Travaux scientifiques",
+undefinedDomain: "Domaine non défini",
+viewLink: "Voir le lien",
   },
   nl: {
     loading: "Laden…",
@@ -121,6 +127,12 @@ notValidated: "niet gevalideerd door Logop’Aide et vous",
     externalTraining: "Externe opleiding",
 conference: "Conferentie",
 webinar: "Webinar",
+    formalActivities: "Formele activiteiten",
+autonomousActivities: "Autonome activiteiten",
+transmissionActivities: "Overdracht / gegeven lessen",
+scientificActivities: "Wetenschappelijke werken",
+undefinedDomain: "Domein niet gedefinieerd",
+viewLink: "Link bekijken",
   },
   de: {
     loading: "Wird geladen…",
@@ -181,6 +193,12 @@ notValidated: "nicht validiert durch Logop’Aide et vous",
     externalTraining: "Externe Fortbildung",
 conference: "Konferenz",
 webinar: "Webinar",
+    formalActivities: "Formelle Aktivitäten",
+autonomousActivities: "Selbstständige Aktivitäten",
+transmissionActivities: "Vermittlung / gehaltene Kurse",
+scientificActivities: "Wissenschaftliche Arbeiten",
+undefinedDomain: "Bereich nicht definiert",
+viewLink: "Link ansehen",
   },
 };
 
@@ -982,11 +1000,11 @@ const t = labels[lang];
 ) : (
   <div style={{ display: "grid", gap: 18 }}>
     {[
-      ["formelle", "Activités formelles"],
-      ["autonome", "Activités autonomes"],
-      ["transmission", "Transmission / cours donnés"],
-      ["scientifique", "Travaux scientifiques"],
-    ].map(([categorie, titre]) => {
+  ["formelle", t.formalActivities],
+  ["autonome", t.autonomousActivities],
+  ["transmission", t.transmissionActivities],
+  ["scientifique", t.scientificActivities],
+].map(([categorie, titre]) => {
       const items = activites.filter(
         (a: any) => (a.categorie ?? "formelle") === categorie
       );
@@ -1006,7 +1024,7 @@ const t = labels[lang];
                   <b>{a.titre}</b>
                   {a.duree_heures ? <> — {a.duree_heures}h</> : null}
                   {" — "}
-                  {d ? getText(d, "nom", lang) : "Domaine non défini"}{" "}
+                  {d ? getText(d, "nom", lang) : "t.undefinedDomain"}{" "}
                   — <i>{t.notValidated}</i>
 
                   {a.description ? (
@@ -1024,7 +1042,7 @@ const t = labels[lang];
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        📎 Voir le lien
+                       📎 {t.viewLink}
                       </a>
                     </>
                   ) : null}
