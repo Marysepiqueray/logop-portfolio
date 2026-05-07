@@ -970,20 +970,21 @@ const t = labels[lang];
   {t.copyInami}
 </button>
         
+<button className="button secondary" onClick={copyLinkedinSummary}>
+  {t.copyLinkedin}
+</button>
         {copied ? (
   <div className="small" style={{ color: "#16a34a", marginTop: 8 }}>
     ✅ {t.inamiCopied}
   </div>
 ) : null}
-<button className="button secondary" onClick={copyLinkedinSummary}>
-  {t.copyLinkedin}
-</button>
+
 {linkedinCopied ? (
   <div className="small" style={{ color: "#16a34a", marginTop: 8 }}>
     ✅ {t.linkedinCopied}
   </div>
 ) : null}
-     
+
       </div>
 
       <hr className="hr" />
