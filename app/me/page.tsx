@@ -83,6 +83,9 @@ optionalDuration: "Durée facultative",
     copyInami: "Copier résumé INAMI / ProSanté",
 inamiCopied:
   "Résumé copié dans le presse-papiers ✅ Vous pouvez maintenant le coller dans un document, un email ou le portail INAMI / ProSanté.",
+    copyLinkedin: "Copier résumé LinkedIn",
+linkedinCopied:
+  "Résumé LinkedIn copié dans le presse-papiers ✅ Vous pouvez maintenant le coller sur LinkedIn.",
   },
   nl: {
     loading: "Laden…",
@@ -163,6 +166,9 @@ optionalDuration: "Optionele duur",
     copyInami: "INAMI / ProSanté-samenvatting kopiëren",
 inamiCopied:
   "Samenvatting gekopieerd naar het klembord ✅ U kunt deze nu plakken in een document, e-mail of het INAMI / ProSanté-portaal.",
+    copyLinkedin: "LinkedIn-samenvatting kopiëren",
+linkedinCopied:
+  "LinkedIn-samenvatting gekopieerd naar het klembord ✅ U kunt deze nu op LinkedIn plakken.",
   },
   de: {
     loading: "Wird geladen…",
@@ -244,6 +250,9 @@ optionalDuration: "Optionale Dauer",
     copyInami: "INAMI / ProSanté-Zusammenfassung kopieren",
 inamiCopied:
   "Zusammenfassung in die Zwischenablage kopiert ✅ Sie können sie jetzt in ein Dokument, eine E-Mail oder das INAMI / ProSanté-Portal einfügen.",
+    copyLinkedin: "LinkedIn-Zusammenfassung kopieren",
+linkedinCopied:
+  "LinkedIn-Zusammenfassung in die Zwischenablage kopiert ✅ Sie können sie jetzt auf LinkedIn einfügen.",
   },
 };
 
@@ -329,6 +338,8 @@ const [lienActivite, setLienActivite] = useState("");
 
   // mot de passe
   const [newPassword, setNewPassword] = useState("");
+  const [copied, setCopied] = useState(false);
+const [linkedinCopied, setLinkedinCopied] = useState(false);
 
   // questions cliniques
   const [questionsCliniques, setQuestionsCliniques] = useState<any[]>([]);
@@ -812,7 +823,42 @@ setLienActivite("");
     alert("Question publiée ✅");
   }
 
-  async function copyInamiSummary() {
+  async function copyLinkedinSummary() {
+  const topDomaines = passeport
+    .filter((p: any) => p.heures > 0)
+    .sort((a: any, b: any) => b.heures - a.heures)
+    .slice(0, 3)
+    .map((p: any) => getText(p.domaine, "nom", lang));
+
+  const totalHeures = [...validations, ...activites].reduce(
+    (sum: number, item: any) => {
+      const heures =
+        item.formation?.duree_heures ?? item.duree_heures ?? 0;
+
+      return sum + Number(heures);
+    },
+    0
+  );
+
+  const texte = `${membre?.profession ?? "Logopède"} spécialisée en ${topDomaines.join(
+    ", "
+  )}.
+
+Engagée dans une démarche de formation continue avec plus de ${totalHeures}h documentées : formations certifiées, activités autonomes, transmission et veille professionnelle.
+
+Domaines principaux :
+${topDomaines.map((d: string) => `• ${d}`).join("\n")}
+
+#logopédie #formationcontinue #santé`;
+
+  await navigator.clipboard.writeText(texte);
+
+  setLinkedinCopied(true);
+
+  setTimeout(() => {
+    setLinkedinCopied(false);
+  }, 3000);
+}
   const totalHeures = [...validations, ...activites].reduce((sum: number, item: any) => {
     const heures = item.formation?.duree_heures ?? item.duree_heures ?? 0;
     return sum + Number(heures);
@@ -923,6 +969,21 @@ const t = labels[lang];
         <button className="button secondary" onClick={copyInamiSummary}>
   {t.copyInami}
 </button>
+        <button className="button secondary" onClick={copyLinkedinSummary}>
+  {t.copyLinkedin}
+</button>
+        {copied ? (
+  <div className="small" style={{ color: "#16a34a", marginTop: 8 }}>
+    ✅ {t.inamiCopied}
+  </div>
+) : null}
+
+{linkedinCopied ? (
+  <div className="small" style={{ color: "#16a34a", marginTop: 8 }}>
+    ✅ {t.linkedinCopied}
+  </div>
+) : null}
+     
       </div>
 
       <hr className="hr" />
