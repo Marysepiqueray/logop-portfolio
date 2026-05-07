@@ -862,7 +862,6 @@ ${validations.length} formations
 ${activites.length} activités
 `;
 
-Ce portfolio documente les activités de formation continue, les activités autonomes, les travaux scientifiques et les activités de transmission en lien avec la pratique professionnelle.`;
 
   await navigator.clipboard.writeText(texte);
 
