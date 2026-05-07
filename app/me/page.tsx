@@ -550,6 +550,11 @@ function getText(d: any, field: "nom" | "description", lang: string) {
       duree_heures: Number(dureeActivite),
       domaine_id: domaineActivite,
       type: typeActivite,
+
+      categorie: categorieActivite,
+description: descriptionActivite.trim() || null,
+lien: lienActivite.trim() || null,
+      
       statut: "non_validee",
     });
 
