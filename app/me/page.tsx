@@ -81,7 +81,8 @@ optionalLink: "Lien (optionnel)",
 personalReflection: "Description / réflexion personnelle",
 optionalDuration: "Durée facultative",
     copyInami: "Copier résumé INAMI / ProSanté",
-inamiCopied: "Résumé INAMI / ProSanté copié ✅",
+inamiCopied:
+  "Résumé copié dans le presse-papiers ✅ Vous pouvez maintenant le coller dans un document, un email ou le portail INAMI / ProSanté.",
   },
   nl: {
     loading: "Laden…",
@@ -160,7 +161,8 @@ optionalLink: "Link (optioneel)",
 personalReflection: "Beschrijving / persoonlijke reflectie",
 optionalDuration: "Optionele duur",
     copyInami: "INAMI / ProSanté-samenvatting kopiëren",
-inamiCopied: "INAMI / ProSanté-samenvatting gekopieerd ✅",
+inamiCopied:
+  "Samenvatting gekopieerd naar het klembord ✅ U kunt deze nu plakken in een document, e-mail of het INAMI / ProSanté-portaal.",
   },
   de: {
     loading: "Wird geladen…",
@@ -240,7 +242,8 @@ optionalLink: "Link (optional)",
 personalReflection: "Beschreibung / persönliche Reflexion",
 optionalDuration: "Optionale Dauer",
     copyInami: "INAMI / ProSanté-Zusammenfassung kopieren",
-inamiCopied: "INAMI / ProSanté-Zusammenfassung kopiert ✅",
+inamiCopied:
+  "Zusammenfassung in die Zwischenablage kopiert ✅ Sie können sie jetzt in ein Dokument, eine E-Mail oder das INAMI / ProSanté-Portal einfügen.",
   },
 };
 
