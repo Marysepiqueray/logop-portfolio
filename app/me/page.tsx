@@ -807,7 +807,7 @@ setLienActivite("");
     const { data: session } = await supabase.auth.getSession();
     const token = session.session?.access_token;
 
-    const res = await fetch("/api/portfolio", {
+    const res = await fetch(`/api/portfolio?lang=${lang}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
