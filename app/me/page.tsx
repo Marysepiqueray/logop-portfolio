@@ -823,128 +823,69 @@ setLienActivite("");
     alert("Question publiée ✅");
   }
 
-  async function copyInamiSummary() {
-  const totalHeures = [...validations, ...activites].reduce(
-    (sum: number, item: any) => {
-      const heures = item.formation?.duree_heures ?? item.duree_heures ?? 0;
-      return sum + Number(heures);
-    },
-    0
-  );
-
-  const domainesTexte = passeport
-    .filter((p: any) => p.heures > 0)
-    .map((p: any) => `- ${getText(p.domaine, "nom", lang)} : ${p.heures}h`)
-    .join("\n");
-
-  const activitesFormelles = activites.filter(
-    (a: any) => (a.categorie ?? "formelle") === "formelle"
-  ).length;
-
-  const activitesAutonomes = activites.filter(
-    (a: any) => a.categorie === "autonome"
-  ).length;
-
-  const transmission = activites.filter(
-    (a: any) => a.categorie === "transmission"
-  ).length;
-
-  const scientifiques = activites.filter(
-    (a: any) => a.categorie === "scientifique"
-  ).length;
-
+async function copyInamiSummary() {
   const texte = `Portfolio professionnel — Synthèse INAMI / ProSanté
 
 Nom : ${membre?.nom ?? ""}
 Email : ${membre?.email ?? ""}
 
-Domaines principaux de formation continue :
-${domainesTexte || "- Aucun domaine renseigné"}
-
 Formations validées : ${validations.length}
-Activités formelles : ${activitesFormelles}
-Activités autonomes : ${activitesAutonomes}
-Activités de transmission : ${transmission}
-Travaux scientifiques : ${scientifiques}
-
-Total d’heures documentées : ${totalHeures}h
+Activités ajoutées : ${activites.length}
 
 Ce portfolio documente les activités de formation continue, les activités autonomes, les travaux scientifiques et les activités de transmission en lien avec la pratique professionnelle.`;
 
   await navigator.clipboard.writeText(texte);
 
   setCopied(true);
-
-  setTimeout(() => {
-    setCopied(false);
-  }, 2500);
+  setTimeout(() => setCopied(false), 2500);
 }
-  
-  async function copyLinkedinSummary() {
+
+async function copyLinkedinSummary() {
   const topDomaines = passeport
     .filter((p: any) => p.heures > 0)
     .sort((a: any, b: any) => b.heures - a.heures)
     .slice(0, 3)
     .map((p: any) => getText(p.domaine, "nom", lang));
 
-  const totalHeures = [...validations, ...activites].reduce(
-    (sum: number, item: any) => {
-      const heures =
-        item.formation?.duree_heures ?? item.duree_heures ?? 0;
-
-      return sum + Number(heures);
-    },
-    0
-  );
-
-  const texte = `${membre?.profession ?? "Logopède"} spécialisée en ${topDomaines.join(
-    ", "
-  )}.
-
-Engagée dans une démarche de formation continue avec plus de ${totalHeures}h documentées : formations certifiées, activités autonomes, transmission et veille professionnelle.
+  const texte = `Logopède engagée dans une démarche de formation continue.
 
 Domaines principaux :
 ${topDomaines.map((d: string) => `• ${d}`).join("\n")}
+
+Portfolio professionnel incluant formations, activités autonomes, transmission et travaux scientifiques.
 
 #logopédie #formationcontinue #santé`;
 
   await navigator.clipboard.writeText(texte);
 
   setLinkedinCopied(true);
-
-  setTimeout(() => {
-    setLinkedinCopied(false);
-  }, 3000);
+  setTimeout(() => setLinkedinCopied(false), 3000);
 }
- 
-  async function generatePDF() {
-    const { data: session } = await supabase.auth.getSession();
-    const token = session.session?.access_token;
 
-    const res = await fetch(`/api/portfolio?lang=${lang}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+async function generatePDF() {
+  const { data: session } = await supabase.auth.getSession();
+  const token = session.session?.access_token;
 
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      alert("Erreur génération PDF\n" + txt);
-      return;
-    }
+  const res = await fetch(`/api/portfolio?lang=${lang}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "portfolio.pdf";
-    a.click();
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    alert("Erreur génération PDF\n" + txt);
+    return;
   }
 
-  if (loading) {
-    return <main className="card">Chargement…</main>;
-  }
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "portfolio.pdf";
+  a.click();
+}
   
 const t = labels[lang];
   
