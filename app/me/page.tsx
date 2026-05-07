@@ -236,7 +236,6 @@ export default function MePage() {
 
   // activités externes
   const [typeActivite, setTypeActivite] = useState("formation_externe");
-  const [categorieActivite, setCategorieActivite] = useState("formelle");
 const [descriptionActivite, setDescriptionActivite] = useState("");
 const [lienActivite, setLienActivite] = useState("");
   const [titreActivite, setTitreActivite] = useState("");
@@ -591,7 +590,6 @@ lien: lienActivite.trim() || null,
     setDomaineActivite("");
     setTypeActivite("formation_externe");
     setDateActivite(new Date().toISOString().slice(0, 10));
-    setCategorieActivite("formelle");
 setDescriptionActivite("");
 setLienActivite("");
 
