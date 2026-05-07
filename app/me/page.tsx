@@ -823,6 +823,63 @@ setLienActivite("");
     alert("Question publiée ✅");
   }
 
+  async function copyInamiSummary() {
+  const totalHeures = [...validations, ...activites].reduce(
+    (sum: number, item: any) => {
+      const heures = item.formation?.duree_heures ?? item.duree_heures ?? 0;
+      return sum + Number(heures);
+    },
+    0
+  );
+
+  const domainesTexte = passeport
+    .filter((p: any) => p.heures > 0)
+    .map((p: any) => `- ${getText(p.domaine, "nom", lang)} : ${p.heures}h`)
+    .join("\n");
+
+  const activitesFormelles = activites.filter(
+    (a: any) => (a.categorie ?? "formelle") === "formelle"
+  ).length;
+
+  const activitesAutonomes = activites.filter(
+    (a: any) => a.categorie === "autonome"
+  ).length;
+
+  const transmission = activites.filter(
+    (a: any) => a.categorie === "transmission"
+  ).length;
+
+  const scientifiques = activites.filter(
+    (a: any) => a.categorie === "scientifique"
+  ).length;
+
+  const texte = `Portfolio professionnel — Synthèse INAMI / ProSanté
+
+Nom : ${membre?.nom ?? ""}
+Email : ${membre?.email ?? ""}
+
+Domaines principaux de formation continue :
+${domainesTexte || "- Aucun domaine renseigné"}
+
+Formations validées : ${validations.length}
+Activités formelles : ${activitesFormelles}
+Activités autonomes : ${activitesAutonomes}
+Activités de transmission : ${transmission}
+Travaux scientifiques : ${scientifiques}
+
+Total d’heures documentées : ${totalHeures}h
+
+Ce portfolio documente les activités de formation continue, les activités autonomes, les travaux scientifiques et les activités de transmission en lien avec la pratique professionnelle.`;
+
+  await navigator.clipboard.writeText(texte);
+
+  setCopied(true);
+
+  setTimeout(() => {
+    setCopied(false);
+  }, 2500);
+}
+  
   async function copyLinkedinSummary() {
   const topDomaines = passeport
     .filter((p: any) => p.heures > 0)
