@@ -975,41 +975,70 @@ const t = labels[lang];
 
       <hr className="hr" />
 
-      <h2>{t.myActivities}</h2>
+    <h2>{t.myActivities}</h2>
 
-      {activites.length === 0 ? (
-        <p className="p">{t.noActivities}</p>
-      ) : (
-        <div style={{ display: "grid", gap: 8 }}>
-          {activites.map((a: any) => {
-            const d = domaines.find((x) => x.id === a.domaine_id);
+{activites.length === 0 ? (
+  <p className="p">{t.noActivities}</p>
+) : (
+  <div style={{ display: "grid", gap: 18 }}>
+    {[
+      ["formelle", "Activités formelles"],
+      ["autonome", "Activités autonomes"],
+      ["transmission", "Transmission / cours donnés"],
+      ["scientifique", "Travaux scientifiques"],
+    ].map(([categorie, titre]) => {
+      const items = activites.filter(
+        (a: any) => (a.categorie ?? "formelle") === categorie
+      );
 
-            return (
-              <div key={a.id} className="small">
-                <b>{a.titre}</b> — {a.duree_heures}h —{" "}
-                {d ? getText(d, "nom", lang) : "Domaine non défini"} —{" "}
-                <i>{t.notValidated}</i>
-                {a.lien ? (
-  <>
-    {" "}
-    —{" "}
-    <a
-      href={a.lien}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      📎 Voir le lien
-    </a>
-  </>
-) : null}
-              </div>
-            );
-          })}
+      if (items.length === 0) return null;
+
+      return (
+        <div key={categorie}>
+          <h3 style={{ marginBottom: 8 }}>{titre}</h3>
+
+          <div style={{ display: "grid", gap: 8 }}>
+            {items.map((a: any) => {
+              const d = domaines.find((x) => x.id === a.domaine_id);
+
+              return (
+                <div key={a.id} className="small">
+                  <b>{a.titre}</b>
+                  {a.duree_heures ? <> — {a.duree_heures}h</> : null}
+                  {" — "}
+                  {d ? getText(d, "nom", lang) : "Domaine non défini"}{" "}
+                  — <i>{t.notValidated}</i>
+
+                  {a.description ? (
+                    <>
+                      <br />
+                      {a.description}
+                    </>
+                  ) : null}
+
+                  {a.lien ? (
+                    <>
+                      <br />
+                      <a
+                        href={a.lien}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        📎 Voir le lien
+                      </a>
+                    </>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      )}
+      );
+    })}
+  </div>
+)}
 
-      <hr className="hr" />
-
+<hr className="hr" />
      <h2>{t.giveReview}</h2>
 
       <p className="p">{t.reviewText}</p>
