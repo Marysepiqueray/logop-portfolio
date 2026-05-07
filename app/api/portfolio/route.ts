@@ -14,6 +14,61 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import React from "react";
+const labels = {
+  fr: {
+    portfolio: "Portfolio professionnel",
+    validatedTrainings: "Formations validées par année",
+    formal: "Activités formelles",
+    autonomous: "Activités autonomes",
+    transmission: "Transmission / cours donnés",
+    scientific: "Travaux scientifiques",
+    certified: "Formation certifiée",
+    duration: "Durée",
+    level: "Niveau",
+    validatedOn: "Validée le",
+    editedOn: "Édité le",
+    activities: "activités",
+    trainings: "formations",
+    total: "Total",
+    viewLink: "Voir le lien",
+  },
+
+  nl: {
+    portfolio: "Professioneel portfolio",
+    validatedTrainings: "Gevalideerde opleidingen per jaar",
+    formal: "Formele activiteiten",
+    autonomous: "Autonome activiteiten",
+    transmission: "Overdracht / gegeven lessen",
+    scientific: "Wetenschappelijke werken",
+    certified: "Gecertificeerde opleiding",
+    duration: "Duur",
+    level: "Niveau",
+    validatedOn: "Gevalideerd op",
+    editedOn: "Gegenereerd op",
+    activities: "activiteiten",
+    trainings: "opleidingen",
+    total: "Totaal",
+    viewLink: "Link bekijken",
+  },
+
+  de: {
+    portfolio: "Professionelles Portfolio",
+    validatedTrainings: "Validierte Fortbildungen nach Jahr",
+    formal: "Formelle Aktivitäten",
+    autonomous: "Selbstständige Aktivitäten",
+    transmission: "Vermittlung / gehaltene Kurse",
+    scientific: "Wissenschaftliche Arbeiten",
+    certified: "Zertifizierte Fortbildung",
+    duration: "Dauer",
+    level: "Niveau",
+    validatedOn: "Validiert am",
+    editedOn: "Erstellt am",
+    activities: "Aktivitäten",
+    trainings: "Fortbildungen",
+    total: "Gesamt",
+    viewLink: "Link ansehen",
+  },
+};
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 11 },
@@ -115,11 +170,19 @@ export async function GET(request: Request) {
 
   const { data: membre } = await supabase
     .from("membres")
-    .select("id, nom, email")
+   .select("id, nom, email, langue")
     .eq("auth_id", userData.user.id)
     .maybeSingle();
 
-  if (!membre) {
+  if (!membre) 
+    const lang =
+  membre.langue === "nl"
+    ? "nl"
+    : membre.langue === "de"
+    ? "de"
+    : "fr";
+
+const t = labels[lang]; {
     return new NextResponse("Membre introuvable", { status: 404 });
   }
 
