@@ -989,6 +989,19 @@ const t = labels[lang];
                 <b>{a.titre}</b> — {a.duree_heures}h —{" "}
                 {d ? getText(d, "nom", lang) : "Domaine non défini"} —{" "}
                 <i>{t.notValidated}</i>
+                {a.lien ? (
+  <>
+    {" "}
+    —{" "}
+    <a
+      href={a.lien}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      📎 Voir le lien
+    </a>
+  </>
+) : null}
               </div>
             );
           })}
