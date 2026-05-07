@@ -532,7 +532,21 @@ function getText(d: any, field: "nom" | "description", lang: string) {
 
     alert("Profil annuaire enregistré");
   }
+function getCategorieFromType(type: string) {
+  if (["lecture", "article", "livre", "podcast", "innovation_ia"].includes(type)) {
+    return "autonome";
+  }
 
+  if (["cours_donne", "supervision"].includes(type)) {
+    return "transmission";
+  }
+
+  if (["tfe", "publication"].includes(type)) {
+    return "scientifique";
+  }
+
+  return "formelle";
+}
   async function addActivite() {
     if (!membre?.id) return alert("Membre introuvable");
     if (!titreActivite.trim()) return alert("Titre obligatoire");
@@ -551,7 +565,7 @@ function getText(d: any, field: "nom" | "description", lang: string) {
       domaine_id: domaineActivite,
       type: typeActivite,
 
-      categorie: categorieActivite,
+      categorie: getCategorieFromType(typeActivite),
 description: descriptionActivite.trim() || null,
 lien: lienActivite.trim() || null,
       
