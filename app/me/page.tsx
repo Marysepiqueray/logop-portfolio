@@ -936,13 +936,7 @@ const t = labels[lang];
           onChange={(e) => setTitreActivite(e.target.value)}
           placeholder={t.activityTitle}
         />
-
-        <input
-          className="input"
-          value={organismeActivite}
-          onChange={(e) => setOrganismeActivite(e.target.value)}
-          placeholder={t.organisation}
-          />
+  
        <input
   className="input"
   value={organismeActivite}
