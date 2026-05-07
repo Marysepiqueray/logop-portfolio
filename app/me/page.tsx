@@ -833,28 +833,29 @@ const t = labels[lang];
 
       <h2>{t.addActivity}</h2>
 
-   <p className="p">{t.activityText}</p>
+<p className="p">{t.activityText}</p>
 
-      <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
-        <select
-          className="input"
-          <select
-  className="input"
-  value={categorieActivite}
-  onChange={(e) => setCategorieActivite(e.target.value)}
->
-  <option value="formelle">Activité formelle</option>
-  <option value="autonome">Activité autonome</option>
-  <option value="transmission">Transmission / cours donnés</option>
-  <option value="scientifique">Travail scientifique</option>
-</select>
-          value={typeActivite}
-          onChange={(e) => setTypeActivite(e.target.value)}
-        >
-         <option value="formation_externe">{t.externalTraining}</option>
-<option value="conference">{t.conference}</option>
-<option value="webinaire">{t.webinar}</option>
-        </select>
+<div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
+  <select
+    className="input"
+    value={categorieActivite}
+    onChange={(e) => setCategorieActivite(e.target.value)}
+  >
+    <option value="formelle">Activité formelle</option>
+    <option value="autonome">Activité autonome</option>
+    <option value="transmission">Transmission / cours donnés</option>
+    <option value="scientifique">Travail scientifique</option>
+  </select>
+
+  <select
+    className="input"
+    value={typeActivite}
+    onChange={(e) => setTypeActivite(e.target.value)}
+  >
+    <option value="formation_externe">{t.externalTraining}</option>
+    <option value="conference">{t.conference}</option>
+    <option value="webinaire">{t.webinar}</option>
+  </select>
 
         <input
           className="input"
