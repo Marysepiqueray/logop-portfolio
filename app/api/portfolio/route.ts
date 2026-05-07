@@ -14,10 +14,12 @@ import {
   StyleSheet,
 } from "@react-pdf/renderer";
 import React from "react";
+
 const labels = {
   fr: {
     portfolio: "Portfolio professionnel",
     validatedTrainings: "Formations validées par année",
+    otherActivities: "Autres activités du portfolio",
     formal: "Activités formelles",
     autonomous: "Activités autonomes",
     transmission: "Transmission / cours donnés",
@@ -31,11 +33,28 @@ const labels = {
     trainings: "formations",
     total: "Total",
     viewLink: "Voir le lien",
+    noTraining: "Aucune formation validée.",
+    activity: "Activité",
+    noDate: "Sans date",
+    types: {
+      formation_externe: "Formation externe",
+      conference: "Conférence",
+      webinaire: "Webinaire",
+      lecture: "Lecture professionnelle",
+      article: "Article scientifique",
+      livre: "Livre",
+      podcast: "Podcast",
+      tfe: "TFE / mémoire",
+      publication: "Publication",
+      cours_donne: "Cours donné",
+      supervision: "Supervision",
+      innovation_ia: "Approches innovantes, outils numériques et IA",
+    },
   },
-
   nl: {
     portfolio: "Professioneel portfolio",
     validatedTrainings: "Gevalideerde opleidingen per jaar",
+    otherActivities: "Andere portfolio-activiteiten",
     formal: "Formele activiteiten",
     autonomous: "Autonome activiteiten",
     transmission: "Overdracht / gegeven lessen",
@@ -49,11 +68,28 @@ const labels = {
     trainings: "opleidingen",
     total: "Totaal",
     viewLink: "Link bekijken",
+    noTraining: "Geen gevalideerde opleiding.",
+    activity: "Activiteit",
+    noDate: "Zonder datum",
+    types: {
+      formation_externe: "Externe opleiding",
+      conference: "Conferentie",
+      webinaire: "Webinar",
+      lecture: "Professionele lectuur",
+      article: "Wetenschappelijk artikel",
+      livre: "Boek",
+      podcast: "Podcast",
+      tfe: "Eindwerk / scriptie",
+      publication: "Publicatie",
+      cours_donne: "Gegeven cursus",
+      supervision: "Supervisie",
+      innovation_ia: "Innovatieve benaderingen, digitale tools en AI",
+    },
   },
-
   de: {
     portfolio: "Professionelles Portfolio",
     validatedTrainings: "Validierte Fortbildungen nach Jahr",
+    otherActivities: "Weitere Portfolio-Aktivitäten",
     formal: "Formelle Aktivitäten",
     autonomous: "Selbstständige Aktivitäten",
     transmission: "Vermittlung / gehaltene Kurse",
@@ -67,6 +103,23 @@ const labels = {
     trainings: "Fortbildungen",
     total: "Gesamt",
     viewLink: "Link ansehen",
+    noTraining: "Keine validierte Fortbildung.",
+    activity: "Aktivität",
+    noDate: "Ohne Datum",
+    types: {
+      formation_externe: "Externe Fortbildung",
+      conference: "Konferenz",
+      webinaire: "Webinar",
+      lecture: "Fachlektüre",
+      article: "Wissenschaftlicher Artikel",
+      livre: "Buch",
+      podcast: "Podcast",
+      tfe: "Abschlussarbeit",
+      publication: "Veröffentlichung",
+      cours_donne: "Gehaltener Kurs",
+      supervision: "Supervision",
+      innovation_ia: "Innovative Ansätze, digitale Werkzeuge und KI",
+    },
   },
 };
 
@@ -82,7 +135,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, marginBottom: 4 },
   subtitle: { fontSize: 12, color: "#555" },
   summary: { fontSize: 10, color: "#555", marginTop: 6 },
-
   sectionTitle: {
     fontSize: 14,
     marginTop: 18,
@@ -90,7 +142,6 @@ const styles = StyleSheet.create({
     fontWeight: 700,
   },
   yearTitle: { fontSize: 13, marginTop: 12, marginBottom: 8 },
-
   card: {
     borderWidth: 1,
     borderColor: "#ddd",
@@ -110,50 +161,39 @@ const styles = StyleSheet.create({
   link: { fontSize: 10, color: "#2563eb", marginTop: 4 },
 });
 
-function getYear(date?: string | null) {
-  return date ? String(date).slice(0, 4) : "Sans date";
+type Lang = "fr" | "nl" | "de";
+
+function getYear(date: string | null | undefined, t: any) {
+  return date ? String(date).slice(0, 4) : t.noDate;
 }
 
-function groupByYear(items: any[], getDate: (item: any) => string | null) {
+function groupByYear(items: any[], getDate: (item: any) => string | null, t: any) {
   return items.reduce((acc: Record<string, any[]>, item: any) => {
-    const year = getYear(getDate(item));
+    const year = getYear(getDate(item), t);
     if (!acc[year]) acc[year] = [];
     acc[year].push(item);
     return acc;
   }, {});
 }
 
-function sectionLabel(categorie?: string | null) {
-  if (categorie === "autonome") return "Activités autonomes";
-  if (categorie === "transmission") return "Transmission / cours donnés";
-  if (categorie === "scientifique") return "Travaux scientifiques";
-  return "Activités formelles";
+function sectionLabel(categorie: string | null | undefined, t: any) {
+  if (categorie === "autonome") return t.autonomous;
+  if (categorie === "transmission") return t.transmission;
+  if (categorie === "scientifique") return t.scientific;
+  return t.formal;
 }
 
-function typeLabel(type?: string | null) {
-  const labels: Record<string, string> = {
-    formation_externe: "Formation externe",
-    conference: "Conférence",
-    webinaire: "Webinaire",
-    lecture: "Lecture professionnelle",
-    article: "Article scientifique",
-    livre: "Livre",
-    podcast: "Podcast",
-    tfe: "TFE / mémoire",
-    publication: "Publication",
-    cours_donne: "Cours donné",
-    supervision: "Supervision",
-    innovation_ia: "Approches innovantes, outils numériques et IA",
-  };
-
-  return labels[type ?? ""] ?? "Activité";
+function typeLabel(type: string | null | undefined, t: any) {
+  return t.types[type ?? ""] ?? t.activity;
 }
 
 export async function GET(request: Request) {
   const auth = request.headers.get("authorization") || "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7) : null;
 
-  if (!token) return new NextResponse("Not authenticated", { status: 401 });
+  if (!token) {
+    return new NextResponse("Not authenticated", { status: 401 });
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -170,24 +210,18 @@ export async function GET(request: Request) {
 
   const { data: membre } = await supabase
     .from("membres")
-   .select("id, nom, email, langue")
+    .select("id, nom, email, langue")
     .eq("auth_id", userData.user.id)
     .maybeSingle();
 
-if (!membre) {
-  return new NextResponse("Membre introuvable", { status: 404 });
-}
-
-const lang =
-  membre.langue === "nl"
-    ? "nl"
-    : membre.langue === "de"
-    ? "de"
-    : "fr";
-
-const t = labels[lang];
+  if (!membre) {
     return new NextResponse("Membre introuvable", { status: 404 });
   }
+
+  const lang: Lang =
+    membre.langue === "nl" ? "nl" : membre.langue === "de" ? "de" : "fr";
+
+  const t = labels[lang];
 
   const { data: validations, error: validationsError } = await supabase
     .from("validations")
@@ -227,18 +261,21 @@ const t = labels[lang];
   const origin = new URL(request.url).origin;
   const logoUrl = `${origin}/logo.png`;
 
-  const formationsByYear = groupByYear(validations ?? [], (v: any) => {
-    return (
+  const formationsByYear = groupByYear(
+    validations ?? [],
+    (v: any) =>
       v.formation?.date_fin_formation ||
       v.formation?.date_formation ||
       v.date_validation ||
-      null
-    );
-  });
-
-  const formationYears = Object.keys(formationsByYear).sort(
-    (a, b) => Number(b) - Number(a)
+      null,
+    t
   );
+
+  const formationYears = Object.keys(formationsByYear).sort((a, b) => {
+    if (a === t.noDate) return 1;
+    if (b === t.noDate) return -1;
+    return Number(b) - Number(a);
+  });
 
   const activitesByCategory = (activites ?? []).reduce(
     (acc: Record<string, any[]>, a: any) => {
@@ -266,7 +303,7 @@ const t = labels[lang];
         React.createElement(
           View,
           null,
-          React.createElement(Text, { style: styles.title }, "Portfolio professionnel"),
+          React.createElement(Text, { style: styles.title }, t.portfolio),
           React.createElement(
             Text,
             { style: styles.subtitle },
@@ -275,14 +312,16 @@ const t = labels[lang];
           React.createElement(
             Text,
             { style: styles.summary },
-            `Édité le ${dateEdition} - ${(validations ?? []).length} formations - ${
-              (activites ?? []).length
-            } activités - Total : ${totalHeuresFormations + totalHeuresActivites}h`
+            `${t.editedOn} ${dateEdition} - ${(validations ?? []).length} ${
+              t.trainings
+            } - ${(activites ?? []).length} ${t.activities} - ${t.total} : ${
+              totalHeuresFormations + totalHeuresActivites
+            }h`
           )
         )
       ),
 
-      React.createElement(Text, { style: styles.sectionTitle }, "Formations validées par année"),
+      React.createElement(Text, { style: styles.sectionTitle }, t.validatedTrainings),
 
       ...(formationYears.length
         ? formationYears.flatMap((year) => [
@@ -306,18 +345,20 @@ const t = labels[lang];
                     v.formation?.titre ?? "Formation"
                   )
                 ),
-                React.createElement(Text, { style: styles.meta }, "Formation certifiée"),
+                React.createElement(Text, { style: styles.meta }, t.certified),
                 React.createElement(
                   Text,
                   { style: styles.meta },
-                  `Durée : ${Number(v.formation?.duree_heures ?? 0)}h${
-                    v.formation?.niveau ? ` - Niveau : ${v.formation.niveau}` : ""
+                  `${t.duration} : ${Number(v.formation?.duree_heures ?? 0)}h${
+                    v.formation?.niveau
+                      ? ` - ${t.level} : ${v.formation.niveau}`
+                      : ""
                   }`
                 ),
                 React.createElement(
                   Text,
                   { style: styles.meta },
-                  `Validée le ${v.date_validation}`
+                  `${t.validatedOn} ${v.date_validation}`
                 )
               )
             ),
@@ -326,11 +367,11 @@ const t = labels[lang];
             React.createElement(
               Text,
               { key: "empty-formations", style: styles.meta },
-              "Aucune formation validée."
+              t.noTraining
             ),
           ]),
 
-      React.createElement(Text, { style: styles.sectionTitle }, "Autres activités du portfolio"),
+      React.createElement(Text, { style: styles.sectionTitle }, t.otherActivities),
 
       ...categories.flatMap((categorie) => {
         const items = activitesByCategory[categorie] ?? [];
@@ -340,7 +381,7 @@ const t = labels[lang];
           React.createElement(
             Text,
             { key: `section-${categorie}`, style: styles.yearTitle },
-            sectionLabel(categorie)
+            sectionLabel(categorie, t)
           ),
 
           ...items.map((a: any, i: number) =>
@@ -351,22 +392,26 @@ const t = labels[lang];
                 View,
                 { style: styles.row },
                 React.createElement(Text, { style: styles.icon }, "📌"),
-                React.createElement(Text, { style: styles.cardTitle }, a.titre ?? "Activité")
+                React.createElement(
+                  Text,
+                  { style: styles.cardTitle },
+                  a.titre ?? t.activity
+                )
               ),
 
               React.createElement(
                 Text,
                 { style: styles.meta },
-                `${typeLabel(a.type)}${
-                  a.organisme ? ` - ${a.organisme}` : ""
-                }${a.date ? ` - ${a.date}` : ""}`
+                `${typeLabel(a.type, t)}${a.organisme ? ` - ${a.organisme}` : ""}${
+                  a.date ? ` - ${a.date}` : ""
+                }`
               ),
 
               Number(a.duree_heures ?? 0) > 0
                 ? React.createElement(
                     Text,
                     { style: styles.meta },
-                    `Durée : ${Number(a.duree_heures)}h`
+                    `${t.duration} : ${Number(a.duree_heures)}h`
                   )
                 : null,
 
@@ -378,7 +423,7 @@ const t = labels[lang];
                 ? React.createElement(
                     Link,
                     { src: a.lien, style: styles.link },
-                    "Voir le lien"
+                    t.viewLink
                   )
                 : null
             )
