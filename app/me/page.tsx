@@ -1463,6 +1463,7 @@ const t = labels[lang];
       Fermer
     </button>
   </div>
+  ) : null}
     </main>
   );
 }
