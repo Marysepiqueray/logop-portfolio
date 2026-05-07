@@ -844,16 +844,6 @@ const t = labels[lang];
 <p className="p">{t.activityText}</p>
 
 <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
-  <select
-    className="input"
-    value={categorieActivite}
-    onChange={(e) => setCategorieActivite(e.target.value)}
-  >
-    <option value="formelle">Activité formelle</option>
-    <option value="autonome">Activité autonome</option>
-    <option value="transmission">Transmission / cours donnés</option>
-    <option value="scientifique">Travail scientifique</option>
-  </select>
 
   <select
     className="input"
@@ -861,8 +851,17 @@ const t = labels[lang];
     onChange={(e) => setTypeActivite(e.target.value)}
   >
     <option value="formation_externe">{t.externalTraining}</option>
-    <option value="conference">{t.conference}</option>
-    <option value="webinaire">{t.webinar}</option>
+<option value="conference">{t.conference}</option>
+<option value="webinaire">{t.webinar}</option>
+<option value="lecture">Lecture professionnelle</option>
+<option value="article">Article scientifique</option>
+<option value="livre">Livre</option>
+<option value="podcast">Podcast</option>
+<option value="tfe">TFE / mémoire</option>
+<option value="publication">Publication</option>
+<option value="cours_donne">Cours donné</option>
+<option value="supervision">Supervision</option>
+<option value="innovation_ia">Approches innovantes, outils numériques et IA</option>
   </select>
 
         <input
