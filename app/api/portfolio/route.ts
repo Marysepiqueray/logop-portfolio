@@ -15,9 +15,17 @@ import {
 } from "@react-pdf/renderer";
 import React from "react";
 
+type Lang = "fr" | "nl" | "de";
+
 const labels = {
   fr: {
     portfolio: "Portfolio professionnel",
+    editedOn: "Édité le",
+    trainings: "formations",
+    activities: "activités",
+    total: "Total",
+    hours: "heures",
+    domainsTitle: "Domaines de compétence",
     validatedTrainings: "Formations validées par année",
     otherActivities: "Autres activités du portfolio",
     formal: "Activités formelles",
@@ -28,12 +36,9 @@ const labels = {
     duration: "Durée",
     level: "Niveau",
     validatedOn: "Validée le",
-    editedOn: "Édité le",
-    activities: "activités",
-    trainings: "formations",
-    total: "Total",
     viewLink: "Voir le lien",
     noTraining: "Aucune formation validée.",
+    noDomain: "Aucun domaine atteint pour le moment.",
     activity: "Activité",
     noDate: "Sans date",
     types: {
@@ -53,6 +58,12 @@ const labels = {
   },
   nl: {
     portfolio: "Professioneel portfolio",
+    editedOn: "Gegenereerd op",
+    trainings: "opleidingen",
+    activities: "activiteiten",
+    total: "Totaal",
+    hours: "uren",
+    domainsTitle: "Competentiedomeinen",
     validatedTrainings: "Gevalideerde opleidingen per jaar",
     otherActivities: "Andere portfolio-activiteiten",
     formal: "Formele activiteiten",
@@ -63,12 +74,9 @@ const labels = {
     duration: "Duur",
     level: "Niveau",
     validatedOn: "Gevalideerd op",
-    editedOn: "Gegenereerd op",
-    activities: "activiteiten",
-    trainings: "opleidingen",
-    total: "Totaal",
     viewLink: "Link bekijken",
     noTraining: "Geen gevalideerde opleiding.",
+    noDomain: "Nog geen domein bereikt.",
     activity: "Activiteit",
     noDate: "Zonder datum",
     types: {
@@ -88,6 +96,12 @@ const labels = {
   },
   de: {
     portfolio: "Professionelles Portfolio",
+    editedOn: "Erstellt am",
+    trainings: "Fortbildungen",
+    activities: "Aktivitäten",
+    total: "Gesamt",
+    hours: "Stunden",
+    domainsTitle: "Kompetenzbereiche",
     validatedTrainings: "Validierte Fortbildungen nach Jahr",
     otherActivities: "Weitere Portfolio-Aktivitäten",
     formal: "Formelle Aktivitäten",
@@ -98,12 +112,9 @@ const labels = {
     duration: "Dauer",
     level: "Niveau",
     validatedOn: "Validiert am",
-    editedOn: "Erstellt am",
-    activities: "Aktivitäten",
-    trainings: "Fortbildungen",
-    total: "Gesamt",
     viewLink: "Link ansehen",
     noTraining: "Keine validierte Fortbildung.",
+    noDomain: "Noch kein Bereich erreicht.",
     activity: "Aktivität",
     noDate: "Ohne Datum",
     types: {
@@ -124,30 +135,72 @@ const labels = {
 };
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 11 },
+  page: {
+    padding: 36,
+    fontSize: 10.5,
+    backgroundColor: "#FAFAF7",
+    color: "#1F2937",
+  },
   header: {
+    borderRadius: 16,
+    padding: 18,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    marginBottom: 16,
+  },
+  headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 18,
   },
-  logo: { width: 120 },
-  title: { fontSize: 22, marginBottom: 4 },
-  subtitle: { fontSize: 12, color: "#555" },
-  summary: { fontSize: 10, color: "#555", marginTop: 6 },
-  sectionTitle: {
-    fontSize: 14,
-    marginTop: 18,
-    marginBottom: 10,
+  logo: { width: 112 },
+  title: { fontSize: 22, marginBottom: 4, fontWeight: 700 },
+  subtitle: { fontSize: 11, color: "#6B7280" },
+  summary: { fontSize: 10, color: "#6B7280", marginTop: 8 },
+
+  statRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  statBox: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
+  statNumber: {
+    fontSize: 16,
     fontWeight: 700,
   },
-  yearTitle: { fontSize: 13, marginTop: 12, marginBottom: 8 },
+  statLabel: {
+    fontSize: 9,
+    color: "#6B7280",
+    marginTop: 2,
+  },
+
+  sectionTitle: {
+    fontSize: 14,
+    marginTop: 16,
+    marginBottom: 9,
+    fontWeight: 700,
+    color: "#111827",
+  },
+  yearTitle: {
+    fontSize: 12.5,
+    marginTop: 10,
+    marginBottom: 7,
+    fontWeight: 700,
+    color: "#374151",
+  },
   card: {
     borderWidth: 1,
-    borderColor: "#ddd",
+    borderColor: "#E5E7EB",
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
+    backgroundColor: "#FFFFFF",
   },
   row: {
     flexDirection: "row",
@@ -155,13 +208,53 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
-  icon: { fontSize: 14 },
-  cardTitle: { fontSize: 12, fontWeight: 700 },
-  meta: { fontSize: 10, color: "#555", marginTop: 2 },
-  link: { fontSize: 10, color: "#2563eb", marginTop: 4 },
+  icon: { fontSize: 13 },
+  cardTitle: { fontSize: 11.5, fontWeight: 700 },
+  meta: { fontSize: 9.5, color: "#4B5563", marginTop: 2, lineHeight: 1.4 },
+  link: { fontSize: 9.5, color: "#2563EB", marginTop: 4 },
+
+  domainGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  domainCard: {
+    width: "48%",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 8,
+    backgroundColor: "#FFFFFF",
+  },
+  domainName: {
+    fontSize: 10.5,
+    fontWeight: 700,
+    marginBottom: 4,
+  },
+  domainHours: {
+    fontSize: 9.5,
+    color: "#6B7280",
+  },
+  progress: {
+    height: 5,
+    backgroundColor: "#E5E7EB",
+    borderRadius: 99,
+    marginTop: 6,
+  },
+  progressFill: {
+    height: 5,
+    backgroundColor: "#7C3AED",
+    borderRadius: 99,
+  },
 });
 
-type Lang = "fr" | "nl" | "de";
+function getText(item: any, field: "nom" | "description", lang: Lang) {
+  if (!item) return "";
+  if (lang === "nl") return item[`${field}_nl`] || item[field] || "";
+  if (lang === "de") return item[`${field}_de`] || item[field] || "";
+  return item[field] || "";
+}
 
 function getYear(date: string | null | undefined, t: any) {
   return date ? String(date).slice(0, 4) : t.noDate;
@@ -195,6 +288,13 @@ export async function GET(request: Request) {
     return new NextResponse("Not authenticated", { status: 401 });
   }
 
+  const url = new URL(request.url);
+  const requestedLang = url.searchParams.get("lang");
+  const lang: Lang =
+    requestedLang === "nl" ? "nl" : requestedLang === "de" ? "de" : "fr";
+
+  const t = labels[lang];
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
@@ -210,7 +310,7 @@ export async function GET(request: Request) {
 
   const { data: membre } = await supabase
     .from("membres")
-    .select("id, nom, email, langue")
+    .select("id, nom, email")
     .eq("auth_id", userData.user.id)
     .maybeSingle();
 
@@ -218,15 +318,15 @@ export async function GET(request: Request) {
     return new NextResponse("Membre introuvable", { status: 404 });
   }
 
-  const lang: Lang =
-    membre.langue === "nl" ? "nl" : membre.langue === "de" ? "de" : "fr";
-
-  const t = labels[lang];
+  const { data: domaines } = await supabase
+    .from("domaines")
+    .select("id, ordre, nom, description, nom_nl, nom_de, description_nl, description_de")
+    .order("ordre", { ascending: true });
 
   const { data: validations, error: validationsError } = await supabase
     .from("validations")
     .select(
-      "date_validation, formation:formations(titre, duree_heures, niveau, date_formation, date_fin_formation)"
+      "date_validation, formation:formations(titre, duree_heures, niveau, domaine_id, date_formation, date_fin_formation)"
     )
     .eq("membre_id", membre.id)
     .order("date_validation", { ascending: false });
@@ -238,7 +338,7 @@ export async function GET(request: Request) {
   const { data: activites, error: activitesError } = await supabase
     .from("activites")
     .select(
-      "titre, organisme, date, duree_heures, type, categorie, description, lien, statut"
+      "titre, organisme, date, duree_heures, type, categorie, description, lien, statut, domaine_id"
     )
     .eq("membre_id", membre.id)
     .order("date", { ascending: false });
@@ -256,6 +356,33 @@ export async function GET(request: Request) {
     (sum: number, a: any) => sum + Number(a.duree_heures ?? 0),
     0
   );
+
+  const heuresParDomaine: Record<string, number> = {};
+
+  for (const v of validations ?? []) {
+    const domaineId = v.formation?.domaine_id;
+    if (!domaineId) continue;
+
+    heuresParDomaine[domaineId] =
+      (heuresParDomaine[domaineId] ?? 0) +
+      Number(v.formation?.duree_heures ?? 0);
+  }
+
+  for (const a of activites ?? []) {
+    const domaineId = a.domaine_id;
+    if (!domaineId) continue;
+
+    heuresParDomaine[domaineId] =
+      (heuresParDomaine[domaineId] ?? 0) + Number(a.duree_heures ?? 0);
+  }
+
+  const domainesAvecHeures = (domaines ?? [])
+    .map((d: any) => ({
+      ...d,
+      heures: Number(heuresParDomaine[d.id] ?? 0),
+    }))
+    .filter((d: any) => d.heures > 0)
+    .sort((a: any, b: any) => b.heures - a.heures);
 
   const dateEdition = new Date().toLocaleDateString("fr-BE");
   const origin = new URL(request.url).origin;
@@ -299,27 +426,87 @@ export async function GET(request: Request) {
       React.createElement(
         View,
         { style: styles.header },
-        React.createElement(Image, { src: logoUrl, style: styles.logo }),
         React.createElement(
           View,
-          null,
-          React.createElement(Text, { style: styles.title }, t.portfolio),
+          { style: styles.headerTop },
+          React.createElement(Image, { src: logoUrl, style: styles.logo }),
           React.createElement(
-            Text,
-            { style: styles.subtitle },
-            `${membre.nom} - ${membre.email}`
+            View,
+            null,
+            React.createElement(Text, { style: styles.title }, t.portfolio),
+            React.createElement(
+              Text,
+              { style: styles.subtitle },
+              `${membre.nom} - ${membre.email}`
+            ),
+            React.createElement(
+              Text,
+              { style: styles.summary },
+              `${t.editedOn} ${dateEdition}`
+            )
+          )
+        ),
+        React.createElement(
+          View,
+          { style: styles.statRow },
+          React.createElement(
+            View,
+            { style: styles.statBox },
+            React.createElement(Text, { style: styles.statNumber }, String((validations ?? []).length)),
+            React.createElement(Text, { style: styles.statLabel }, t.trainings)
           ),
           React.createElement(
-            Text,
-            { style: styles.summary },
-            `${t.editedOn} ${dateEdition} - ${(validations ?? []).length} ${
-              t.trainings
-            } - ${(activites ?? []).length} ${t.activities} - ${t.total} : ${
-              totalHeuresFormations + totalHeuresActivites
-            }h`
+            View,
+            { style: styles.statBox },
+            React.createElement(Text, { style: styles.statNumber }, String((activites ?? []).length)),
+            React.createElement(Text, { style: styles.statLabel }, t.activities)
+          ),
+          React.createElement(
+            View,
+            { style: styles.statBox },
+            React.createElement(
+              Text,
+              { style: styles.statNumber },
+              `${totalHeuresFormations + totalHeuresActivites}h`
+            ),
+            React.createElement(Text, { style: styles.statLabel }, t.total)
           )
         )
       ),
+
+      React.createElement(Text, { style: styles.sectionTitle }, t.domainsTitle),
+
+      domainesAvecHeures.length
+        ? React.createElement(
+            View,
+            { style: styles.domainGrid },
+            ...domainesAvecHeures.map((d: any) => {
+              const pct = Math.min(100, (d.heures / 90) * 100);
+
+              return React.createElement(
+                View,
+                { key: d.id, style: styles.domainCard },
+                React.createElement(
+                  Text,
+                  { style: styles.domainName },
+                  getText(d, "nom", lang)
+                ),
+                React.createElement(
+                  Text,
+                  { style: styles.domainHours },
+                  `${d.heures} ${t.hours}`
+                ),
+                React.createElement(
+                  View,
+                  { style: styles.progress },
+                  React.createElement(View, {
+                    style: { ...styles.progressFill, width: `${pct}%` },
+                  })
+                )
+              );
+            })
+          )
+        : React.createElement(Text, { style: styles.meta }, t.noDomain),
 
       React.createElement(Text, { style: styles.sectionTitle }, t.validatedTrainings),
 
