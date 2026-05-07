@@ -80,6 +80,8 @@ innovationAI: "Approches innovantes, outils numériques et IA",
 optionalLink: "Lien (optionnel)",
 personalReflection: "Description / réflexion personnelle",
 optionalDuration: "Durée facultative",
+    copyInami: "Copier résumé INAMI / ProSanté",
+inamiCopied: "Résumé INAMI / ProSanté copié ✅",
   },
   nl: {
     loading: "Laden…",
@@ -157,6 +159,8 @@ innovationAI: "Innovatieve benaderingen, digitale tools en AI",
 optionalLink: "Link (optioneel)",
 personalReflection: "Beschrijving / persoonlijke reflectie",
 optionalDuration: "Optionele duur",
+    copyInami: "INAMI / ProSanté-samenvatting kopiëren",
+inamiCopied: "INAMI / ProSanté-samenvatting gekopieerd ✅",
   },
   de: {
     loading: "Wird geladen…",
@@ -235,6 +239,8 @@ innovationAI: "Innovative Ansätze, digitale Werkzeuge und KI",
 optionalLink: "Link (optional)",
 personalReflection: "Beschreibung / persönliche Reflexion",
 optionalDuration: "Optionale Dauer",
+    copyInami: "INAMI / ProSanté-Zusammenfassung kopieren",
+inamiCopied: "INAMI / ProSanté-Zusammenfassung kopiert ✅",
   },
 };
 
@@ -849,7 +855,7 @@ Total d’heures documentées : ${totalHeures}h
 Ce portfolio documente les activités de formation continue, les activités autonomes, les travaux scientifiques et les activités de transmission en lien avec la pratique professionnelle.`;
 
   await navigator.clipboard.writeText(texte);
-  alert("Résumé INAMI / ProSanté copié ✅");
+  alert(t.inamiCopied);
 }
   
   async function generatePDF() {
@@ -912,7 +918,7 @@ const t = labels[lang];
          {t.downloadPdf}
         </button>
         <button className="button secondary" onClick={copyInamiSummary}>
-  Copier résumé INAMI / ProSanté
+  {t.copyInami}
 </button>
       </div>
 
