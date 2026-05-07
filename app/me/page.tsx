@@ -236,6 +236,9 @@ export default function MePage() {
 
   // activités externes
   const [typeActivite, setTypeActivite] = useState("formation_externe");
+  const [categorieActivite, setCategorieActivite] = useState("formelle");
+const [descriptionActivite, setDescriptionActivite] = useState("");
+const [lienActivite, setLienActivite] = useState("");
   const [titreActivite, setTitreActivite] = useState("");
   const [organismeActivite, setOrganismeActivite] = useState("");
   const [dureeActivite, setDureeActivite] = useState<number>(2);
