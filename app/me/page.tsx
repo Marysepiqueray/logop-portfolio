@@ -824,13 +824,43 @@ setLienActivite("");
   }
 
 async function copyInamiSummary() {
-  const texte = `Portfolio professionnel — Synthèse INAMI / ProSanté
+ const formationsTexte = validations
+  .map((v: any) => {
+    const f = v.formation;
+
+    return `• ${f?.titre ?? "Formation"}${
+      f?.duree_heures ? ` — ${f.duree_heures}h` : ""
+    }${
+      f?.date_formation ? ` — ${f.date_formation}` : ""
+    }`;
+  })
+  .join("\n");
+
+const activitesTexte = activites
+  .map((a: any) => {
+    return `• ${a.titre}${
+      a.duree_heures ? ` — ${a.duree_heures}h` : ""
+    }${
+      a.date ? ` — ${a.date}` : ""
+    }`;
+  })
+  .join("\n");
+
+const texte = `Portfolio professionnel — Synthèse INAMI / ProSanté
 
 Nom : ${membre?.nom ?? ""}
 Email : ${membre?.email ?? ""}
 
-Formations validées : ${validations.length}
-Activités ajoutées : ${activites.length}
+FORMATIONS VALIDÉES
+${formationsTexte || "Aucune formation"}
+
+AUTRES ACTIVITÉS
+${activitesTexte || "Aucune activité"}
+
+Total :
+${validations.length} formations
+${activites.length} activités
+`;
 
 Ce portfolio documente les activités de formation continue, les activités autonomes, les travaux scientifiques et les activités de transmission en lien avec la pratique professionnelle.`;
 
