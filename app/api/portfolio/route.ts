@@ -359,14 +359,18 @@ export async function GET(request: Request) {
 
   const heuresParDomaine: Record<string, number> = {};
 
-  for (const v of validations ?? []) {
-    const domaineId = v.formation?.domaine_id;
-    if (!domaineId) continue;
+ for (const v of validations ?? []) {
+  const formation = Array.isArray(v.formation)
+    ? v.formation[0]
+    : v.formation;
 
-    heuresParDomaine[domaineId] =
-      (heuresParDomaine[domaineId] ?? 0) +
-      Number(v.formation?.duree_heures ?? 0);
-  }
+  const domaineId = formation?.domaine_id;
+  if (!domaineId) continue;
+
+  heuresParDomaine[domaineId] =
+    (heuresParDomaine[domaineId] ?? 0) +
+    Number(formation?.duree_heures ?? 0);
+}
 
   for (const a of activites ?? []) {
     const domaineId = a.domaine_id;
