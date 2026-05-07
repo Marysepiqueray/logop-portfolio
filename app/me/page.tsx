@@ -838,6 +838,16 @@ const t = labels[lang];
       <div style={{ display: "grid", gap: 10, maxWidth: 700 }}>
         <select
           className="input"
+          <select
+  className="input"
+  value={categorieActivite}
+  onChange={(e) => setCategorieActivite(e.target.value)}
+>
+  <option value="formelle">Activité formelle</option>
+  <option value="autonome">Activité autonome</option>
+  <option value="transmission">Transmission / cours donnés</option>
+  <option value="scientifique">Travail scientifique</option>
+</select>
           value={typeActivite}
           onChange={(e) => setTypeActivite(e.target.value)}
         >
