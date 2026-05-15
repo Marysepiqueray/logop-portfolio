@@ -315,6 +315,7 @@ const [lienActivite, setLienActivite] = useState("");
   const [dureeActivite, setDureeActivite] = useState<number>(2);
   const [domaineActivite, setDomaineActivite] = useState("");
   const [dateActivite, setDateActivite] = useState(
+    const [dateFinActivite, setDateFinActivite] = useState("");
     new Date().toISOString().slice(0, 10)
   );
 
@@ -1067,7 +1068,7 @@ const t = labels[lang];
             type="number"
             min="1"
             max="200"
-            step="1"
+            step="0.5"
             value={dureeActivite}
             onChange={(e) => setDureeActivite(Number(e.target.value))}
           placeholder={
@@ -1081,9 +1082,17 @@ const t = labels[lang];
             className="input"
             type="date"
             min="2016-01-01"
-            value={dateActivite}
+            value={dateActivite} 
             onChange={(e) => setDateActivite(e.target.value)}
           />
+            <input
+  className="input"
+  type="date"
+  min="2016-01-01"
+  value={dateFinActivite}
+  onChange={(e) => setDateFinActivite(e.target.value)}
+/>
+           
         </div>
 
         <select
