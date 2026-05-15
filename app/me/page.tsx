@@ -201,7 +201,7 @@ city: "Stadt",
 postalCode: "Postleitzahl",
 presentation: "Vorstellung",
 showInDirectory: "Im Verzeichnis anzeigen",
-drivingLicense: "Anerkannt für Fahreignung",
+drivingLicense: "Anerkannt für Fahreignung", 
 conventionStatus: "Konventionsstatus",
 noSpecify: "Nicht angeben",
 allowPublic: "Öffentliche Anzeige erlauben",
@@ -314,10 +314,11 @@ const [lienActivite, setLienActivite] = useState("");
   const [organismeActivite, setOrganismeActivite] = useState("");
   const [dureeActivite, setDureeActivite] = useState<number>(2);
   const [domaineActivite, setDomaineActivite] = useState("");
-  const [dateActivite, setDateActivite] = useState(
-    const [dateFinActivite, setDateFinActivite] = useState("");
-    new Date().toISOString().slice(0, 10)
-  );
+ const [dateActivite, setDateActivite] = useState(
+  new Date().toISOString().slice(0, 10)
+);
+
+const [dateFinActivite, setDateFinActivite] = useState("");
 
   // souhaits
   const [souhaitDomaine, setSouhaitDomaine] = useState("");
