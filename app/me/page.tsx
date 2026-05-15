@@ -636,6 +636,7 @@ function getCategorieFromType(type: string) {
       titre: titreActivite.trim(),
       organisme: organismeActivite.trim() || null,
       date: dateActivite,
+      date_fin: dateFinActivite || null,
       duree_heures: Number(dureeActivite),
       domaine_id: domaineActivite,
       type: typeActivite,
@@ -666,6 +667,7 @@ lien: lienActivite.trim() || null,
     setDomaineActivite("");
     setTypeActivite("formation_externe");
     setDateActivite(new Date().toISOString().slice(0, 10));
+    setDateFinActivite("");
 setDescriptionActivite("");
 setLienActivite("");
 
