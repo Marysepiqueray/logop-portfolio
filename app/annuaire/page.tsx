@@ -118,7 +118,7 @@ export default function AnnuairePage() {
       const { data: m } = await supabase
         .from("membres")
         .select(
-          "id, nom, email, ville, code_postal, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
+          "id, nom, email, ville, code_postal,ville_secondaire, code_postal_secondaire, presentation, annuaire_visible, role, permis_conduire, statut_convention, convention_visible, membre_langues_reeducation(langue_id, langues_reeducation(nom))"
         )
         .eq("annuaire_visible", true)
         .eq("role", "membre")
@@ -232,7 +232,9 @@ export default function AnnuairePage() {
         const nom = normalize(m.nom ?? "");
         const nomInverse = nom.split(" ").reverse().join(" ");
         const presentation = normalize(m.presentation ?? "");
-        const lieuTexte = normalize(`${m.ville ?? ""} ${m.code_postal ?? ""}`);
+      const lieuTexte = normalize(
+  `${m.ville ?? ""} ${m.code_postal ?? ""} ${m.ville_secondaire ?? ""} ${m.code_postal_secondaire ?? ""}`
+);
 
         const domainesTexte = normalize(
           (m.domaines ?? []).map((d: any) => d.nom).join(" ")
@@ -358,6 +360,14 @@ export default function AnnuairePage() {
                     📍 {[m.code_postal, m.ville].filter(Boolean).join(" ")}
                   </div>
                 ) : null}
+
+                {m.ville_secondaire || m.code_postal_secondaire ? (
+  <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
+    📍 {[m.code_postal_secondaire, m.ville_secondaire]
+      .filter(Boolean)
+      .join(" ")}
+  </div>
+) : null}
 
                 {m.permis_conduire ? (
                   <div className="badge-tile-meta" style={{ marginBottom: 6 }}>
