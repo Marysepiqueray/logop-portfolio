@@ -300,6 +300,8 @@ export default function MePage() {
   // annuaire
   const [ville, setVille] = useState("");
   const [codePostal, setCodePostal] = useState("");
+  const [villeSecondaire, setVilleSecondaire] = useState("");
+const [codePostalSecondaire, setCodePostalSecondaire] = useState("");
   const [presentation, setPresentation] = useState("");
   const [annuaireVisible, setAnnuaireVisible] = useState(false);
   const [permisConduire, setPermisConduire] = useState(false);
@@ -506,6 +508,8 @@ const { data: v } = await supabase
 
       setVille(m.ville ?? "");
       setCodePostal(m.code_postal ?? "");
+      setVilleSecondaire(m.ville_secondaire ?? "");
+setCodePostalSecondaire(m.code_postal_secondaire ?? "");
       setPresentation(m.presentation ?? "");
       setAnnuaireVisible(m.annuaire_visible ?? false);
       setPermisConduire(m.permis_conduire ?? false);
@@ -592,6 +596,8 @@ function getText(d: any, field: "nom" | "description", lang: string) {
       .update({
         ville,
         code_postal: codePostal,
+        ville_secondaire: villeSecondaire || null,
+code_postal_secondaire: codePostalSecondaire || null,
         presentation,
         annuaire_visible: annuaireVisible,
         permis_conduire: permisConduire,
@@ -1333,6 +1339,24 @@ const t = labels[lang];
           onChange={(e) => setCodePostal(e.target.value)}
           placeholder="Ex : 4000"
         />
+
+        <label className="small">Ville secondaire (optionnel)</label>
+
+<input
+  className="input"
+  value={villeSecondaire}
+  onChange={(e) => setVilleSecondaire(e.target.value)}
+  placeholder="Ex : Namur"
+/>
+
+<label className="small">Code postal secondaire (optionnel)</label>
+
+<input
+  className="input"
+  value={codePostalSecondaire}
+  onChange={(e) => setCodePostalSecondaire(e.target.value)}
+  placeholder="Ex : 5000"
+/>
 
         <label className="small">{t.presentation}</label>
 
