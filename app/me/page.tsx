@@ -86,6 +86,8 @@ inamiCopied:
     copyLinkedin: "Copier résumé LinkedIn",
 linkedinCopied:
   "Résumé LinkedIn copié dans le presse-papiers ✅ Vous pouvez maintenant le coller sur LinkedIn.",
+    secondaryCity: "Ville secondaire (optionnel)",
+secondaryPostalCode: "Code postal secondaire (optionnel)",
   },
   nl: {
     loading: "Laden…",
@@ -169,6 +171,8 @@ inamiCopied:
     copyLinkedin: "LinkedIn-samenvatting kopiëren",
 linkedinCopied:
   "LinkedIn-samenvatting gekopieerd naar het klembord ✅ U kunt deze nu op LinkedIn plakken.",
+    secondaryCity: "Tweede stad (optioneel)",
+secondaryPostalCode: "Tweede postcode (optioneel)",
   },
   de: {
     loading: "Wird geladen…",
@@ -253,6 +257,8 @@ inamiCopied:
     copyLinkedin: "LinkedIn-Zusammenfassung kopieren",
 linkedinCopied:
   "LinkedIn-Zusammenfassung in die Zwischenablage kopiert ✅ Sie können sie jetzt auf LinkedIn einfügen.",
+    secondaryCity: "Zweite Stadt (optional)",
+secondaryPostalCode: "Zweite Postleitzahl (optional)",
   },
 };
 
@@ -1340,7 +1346,7 @@ const t = labels[lang];
           placeholder="Ex : 4000"
         />
 
-        <label className="small">Ville secondaire (optionnel)</label>
+       <label className="small">{t.secondaryCity}</label>
 
 <input
   className="input"
@@ -1349,7 +1355,7 @@ const t = labels[lang];
   placeholder="Ex : Namur"
 />
 
-<label className="small">Code postal secondaire (optionnel)</label>
+<label className="small">{t.secondaryPostalCode}</label>
 
 <input
   className="input"
