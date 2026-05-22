@@ -211,20 +211,22 @@ if (coords || coords_secondaires) {
             </CircleMarker>
           )}
 
-          {membres.map((m) => {
-            if (!m.coords) return null;
+         {membres.map((m) => {
+  if (!m.coords) return null;
 
-            return (
-              <Marker key={m.id} position={m.coords} icon={icon}>
-                <Popup>
-                  <strong>{m.nom}</strong>
-                  <br />
-                  {[m.code_postal, m.ville].filter(Boolean).join(" ")}
-                </Popup>
-              </Marker>
-            );
-          })}
-            if (!m.coords_secondaires) return null;
+  return (
+    <Marker key={m.id} position={m.coords} icon={icon}>
+      <Popup>
+        <strong>{m.nom}</strong>
+        <br />
+        {[m.code_postal, m.ville].filter(Boolean).join(" ")}
+      </Popup>
+    </Marker>
+  );
+})}
+
+{membres.map((m) => {
+  if (!m.coords_secondaires) return null;
 
   return (
     <Marker
@@ -242,6 +244,7 @@ if (coords || coords_secondaires) {
     </Marker>
   );
 })}
+
         </MapContainer>
       </div>
     </main>
