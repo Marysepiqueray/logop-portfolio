@@ -250,5 +250,3 @@ if (coords || coords_secondaires) {
     </main>
   );
 }
-{membres.map((m) => {
-
