@@ -49,7 +49,10 @@ type MembreCarte = {
   nom: string;
   ville: string | null;
   code_postal: string | null;
+  ville_secondaire: string | null;
+  code_postal_secondaire: string | null;
   coords?: [number, number];
+  coords_secondaires?: [number, number];
 };
 
 const centreBelgique: [number, number] = [50.5, 4.5];
@@ -118,7 +121,7 @@ export default function CarteClient() {
     async function loadMembres() {
       const { data, error } = await supabase
         .from("membres")
-        .select("id, nom, ville, code_postal")
+        .select("id, nom, ville, code_postal, ville_secondaire, code_postal_secondaire")
         .eq("annuaire_visible", true)
         .eq("membre_asbl", true)
         .eq("role", "membre");
@@ -128,16 +131,21 @@ export default function CarteClient() {
       const liste: MembreCarte[] = [];
 
       for (const m of (data ?? []) as MembreCarte[]) {
-        if (!m.code_postal) continue;
+       const coords = m.code_postal
+  ? await getCoords(m.code_postal)
+  : null;
 
-        const coords = await getCoords(m.code_postal);
+const coords_secondaires = m.code_postal_secondaire
+  ? await getCoords(m.code_postal_secondaire)
+  : null;
 
-        if (coords) {
-          liste.push({
-            ...m,
-            coords,
-          });
-        }
+if (coords || coords_secondaires) {
+  liste.push({
+    ...m,
+    coords: coords ?? undefined,
+    coords_secondaires: coords_secondaires ?? undefined,
+  });
+}
       }
 
       setMembres(liste);
@@ -221,3 +229,22 @@ export default function CarteClient() {
     </main>
   );
 }
+{membres.map((m) => {
+  if (!m.coords_secondaires) return null;
+
+  return (
+    <Marker
+      key={`${m.id}-secondary`}
+      position={m.coords_secondaires}
+      icon={icon}
+    >
+      <Popup>
+        <strong>{m.nom}</strong>
+        <br />
+        {[m.code_postal_secondaire, m.ville_secondaire]
+          .filter(Boolean)
+          .join(" ")}
+      </Popup>
+    </Marker>
+  );
+})}
