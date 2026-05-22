@@ -224,13 +224,7 @@ if (coords || coords_secondaires) {
               </Marker>
             );
           })}
-        </MapContainer>
-      </div>
-    </main>
-  );
-}
-{membres.map((m) => {
-  if (!m.coords_secondaires) return null;
+            if (!m.coords_secondaires) return null;
 
   return (
     <Marker
@@ -248,3 +242,10 @@ if (coords || coords_secondaires) {
     </Marker>
   );
 })}
+        </MapContainer>
+      </div>
+    </main>
+  );
+}
+{membres.map((m) => {
+
