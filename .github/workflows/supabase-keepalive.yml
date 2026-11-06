@@ -17,5 +17,5 @@ jobs:
         run: |
           curl --fail --silent --show-error \
             --max-time 30 \
-            "$SUPABASE_URL/auth/v1/health" \
+           "$SUPABASE_URL/rest/v1/keepalive?select=message&id=eq.1" \
             -H "apikey: $SUPABASE_ANON_KEY"
