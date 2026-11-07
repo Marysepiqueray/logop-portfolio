@@ -717,11 +717,17 @@ export default function AdminPage() {
           ))}
         </select>
 
-        <select
-          className="input"
-          value={selectedFormation}
-          onChange={(e) => setSelectedFormation(e.target.value)}
-        >
+       <select
+  className="input"
+  style={{
+    width: "100%",
+    minWidth: 0,
+    maxWidth: "100%",
+    fontSize: "14px",
+  }}
+  value={selectedFormation}
+  onChange={(e) => setSelectedFormation(e.target.value)}
+>
           <option value="">Choisir une formation</option>
 {formationsFiltrees.map((f) => (
   <option key={f.id} value={f.id}>
