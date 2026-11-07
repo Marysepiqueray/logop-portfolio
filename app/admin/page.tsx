@@ -723,11 +723,14 @@ export default function AdminPage() {
           onChange={(e) => setSelectedFormation(e.target.value)}
         >
           <option value="">Choisir une formation</option>
-          {formationsFiltrees.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.titre}
-            </option>
-          ))}
+{formationsFiltrees.map((f) => (
+  <option key={f.id} value={f.id}>
+    {f.date_formation
+      ? new Date(f.date_formation + "T12:00:00").toLocaleDateString("fr-BE")
+      : "Date inconnue"}{" "}
+    — {f.titre}
+  </option>
+))}
         </select>
 
         <button className="button" onClick={validateFormation}>
